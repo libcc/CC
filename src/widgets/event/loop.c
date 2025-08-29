@@ -61,11 +61,13 @@ _CC_API_PUBLIC(bool_t) _cc_install_async_event(int32_t cores, void (*func)(_cc_a
     }
 
     srand((uint32_t)time(nullptr));
-    
+    _cc_get_cpu_cores();
     _cc_install_socket();
     
     if (cores <= 0) {
-        cores = _cc_get_cpu_cores();
+        cores = _cc_cpu_cores;
+    } else if (cores > (_cc_cpu_cores * 2)) {
+        cores = _cc_cpu_cores * 2;
     }
 
     async_events = (_cc_async_event_t *)_cc_calloc(cores, sizeof(_cc_async_event_t));
@@ -87,10 +89,10 @@ _CC_API_PUBLIC(bool_t) _cc_install_async_event(int32_t cores, void (*func)(_cc_a
     for (i = 0; i < cores; ++i) {
         _cc_async_event_t *n = (_cc_async_event_t *)(async_events + i);
         if (_cc_init_event_poller(n) == false) {
-            continue;
+            break;
         }
         n->args = nullptr;
-        *(threads + i) = _cc_thread(_running, _T("event lopp"), n);
+        *(threads + i) = _cc_thread(_running, _T("event loop"), n);
         g.count++;
     }
     
