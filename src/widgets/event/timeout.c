@@ -68,14 +68,12 @@ _CC_API_PRIVATE(void) _timeout_execute(_cc_async_event_t *async) {
     }
 }
 
+/**/
 _CC_API_PUBLIC(void) _add_event_timeout(_cc_async_event_t *async, _cc_event_t *e) {
-    uint32_t elapsed;
-    uint32_t expire;
+    uint32_t elapsed = async->timer;
+    uint32_t expire = e->expire;
     uint32_t mask;
     int i;
-
-    expire = e->timer + e->timeout;
-    elapsed = async->timer;
 
     if ((expire | _CC_TIMEOUT_NEAR_MASK_) == (elapsed | _CC_TIMEOUT_NEAR_MASK_)) {
         _cc_list_iterator_swap(&async->nears[expire & _CC_TIMEOUT_NEAR_MASK_], &e->lnk);
@@ -124,7 +122,7 @@ _CC_API_PUBLIC(void) _update_event_timeout(_cc_async_event_t *async, uint32_t ti
 _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
     if (_CC_ISSET_BIT(_CC_EVENT_DISCONNECT_, e->flags) == 0 && 
         _CC_ISSET_BIT(_CC_EVENT_TIMEOUT_, e->flags)) {
-        e->timer = async->timer;
+        e->expire = async->timer + e->timeout;
         _add_event_timeout(async, e);
     } else {
         _cc_free_event(async, e);

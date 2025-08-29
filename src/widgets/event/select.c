@@ -49,7 +49,7 @@ _CC_API_PRIVATE(bool_t) _select_event_attach(_cc_async_event_t *async, _cc_event
     _cc_assert(async != nullptr);
     fset = async->priv;
 
-    if (e->fd && _CC_ISSET_BIT(_CC_EVENT_DESC_SOCKET_,e->descriptor) && fset->nfds >= FD_SETSIZE) {
+    if (e->fd && _CC_EVENT_IS_SOCKET(e->flags) && fset->nfds >= FD_SETSIZE) {
         _cc_logger_error(_T("The maximum number of descriptors supported by the select() is %d"), FD_SETSIZE);
         return false;
     }
@@ -57,8 +57,6 @@ _CC_API_PRIVATE(bool_t) _select_event_attach(_cc_async_event_t *async, _cc_event
     if(!_reset_event(async, e)) {
         return false;
     }
-
-    e->descriptor = _CC_EVENT_DESC_POLL_SELECT_ | (e->descriptor & 0xff);
 
     _event_lock(async);
     fset->list[fset->nfds++] = e;
@@ -123,7 +121,7 @@ _CC_API_PRIVATE(bool_t) _set_fd_event(_cc_event_t *e, struct _fd_list *fds) {
         return false;
     }
 
-    if (_CC_ISSET_BIT(_CC_EVENT_DESC_SOCKET_, e->descriptor) == 0) {
+    if (_CC_EVENT_IS_SOCKET(e->flags) == 0) {
         return false;
     }
 

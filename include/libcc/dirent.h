@@ -29,7 +29,7 @@
         #include <direct.h>
         #include <sys/stat.h>
     #endif
-#elif defined(_CC_GCC_) || defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
+#elif defined(_CC_GNUC_) || defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
     #include <dirent.h>
     #include <sys/stat.h>
     #define _mkdir(file) mkdir(file, 0777)

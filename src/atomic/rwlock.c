@@ -30,7 +30,7 @@
 
 #define _CC_RWLOCK_WLOCK_ (-1)
 
-_CC_API_PUBLIC(void) _cc_cpu_pause() {
+_CC_API_PUBLIC(void) _cc_cpu_pause(void) {
 #if __CC_WINDOWS__
 #if defined(__BORLANDC__) || (__WATCOMC__ < 1230)
 /*
@@ -51,8 +51,8 @@ _CC_API_PUBLIC(void) _cc_cpu_pause() {
 
 /**/
 _CC_API_PUBLIC(void) _cc_lock_init(_cc_atomic_lock_t *lock) {
-    if (_cc_cpu_number_processors <= 0) {
-        _cc_cpu_count();
+    if (_cc_cpu_cores <= 0) {
+        _cc_get_cpu_cores();
     }
     *lock = 0;
 }
@@ -65,7 +65,7 @@ _CC_API_PUBLIC(void) _cc_lock(_cc_atomic_lock_t *lock, uint32_t value, uint32_t 
             return;
         }
 
-        if (_cc_cpu_number_processors > 0) {
+        if (_cc_cpu_cores > 0) {
             for (n = 1; n < spin; n <<= 1) {
                 for (i = 0; i < n; i++) {
                     _cc_cpu_pause();
@@ -95,7 +95,7 @@ _CC_API_PUBLIC(void) _cc_rwlock_rlock(_cc_atomic_lock_t *lock) {
             return;
         }
 
-        if (_cc_cpu_number_processors > 1) {
+        if (_cc_cpu_cores > 1) {
             for (n = 1; n < _CC_LOCK_SPIN_; n <<= 1) {
                 for (i = 0; i < n; i++) {
                     _cc_cpu_pause();

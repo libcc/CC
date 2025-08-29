@@ -24,6 +24,10 @@
 #include "generic.h"
 #include <libcc/time.h>
 
+#if __STDC_VERSION__ >= 201000L
+#include <stdatomic.h>
+#endif
+
 #if defined(__CC_WINDOWS__)
     #include <libcc/core/windows.h>
     /* Need to do this here because intrin.h has C++ code in it */
@@ -43,23 +47,19 @@
 extern "C" {
 #endif
 
-
-#if defined(__CC_WINDOWS__)
+#if __STDC_VERSION__ >= 201000L
+    typedef volatile _Atomic(int32_t) _cc_atomic32_t;
+    typedef volatile _Atomic(int64_t) _cc_atomic64_t;
+#elif defined(__GNUC__)
+    typedef volatile int_least32_t _cc_atomic32_t;
+    typedef volatile int_least64_t _cc_atomic64_t;
+#elif defined(__CC_WINDOWS__)
     typedef volatile long _cc_atomic32_t;
     typedef volatile __int64 _cc_atomic64_t;
-#elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-    //ypedef volatile int32_t  _cc_atomic32_t;
-    //typedef volatile OSAtomic_int64_aligned64_t  _cc_atomic64_t;
-    typedef volatile atomic_int_least32_t _cc_atomic32_t;
-    typedef volatile atomic_int_least64_t _cc_atomic64_t;
-#elif defined(__CC_SOLARIS__)
-    typedef volatile int64_t _cc_atomic64_t;
-    typedef volatile int32_t _cc_atomic32_t;
 #else
-    typedef volatile _cc_align(4) int _cc_atomic32_t;
-    typedef volatile _cc_align(8) long long int _cc_atomic64_t;
-#endif
-
+    typedef volatile _cc_alignas(4) int _cc_atomic32_t;
+    typedef volatile _cc_alignas(8) long long int _cc_atomic64_t;
+#endif/*__STDC_VERSION__ >= 201000L*/
 /*/////////////////////////////////////////////////////////////////////////*/
 #define _cc_atomic32_inc(a) _cc_atomic32_add(a, 1)
 #define _cc_atomic32_dec(a) _cc_atomic32_sub(a, 1)
@@ -67,7 +67,7 @@ extern "C" {
 _CC_API_PUBLIC(int32_t) _cc_atomic32_add(_cc_atomic32_t*,int32_t);
 _CC_API_PUBLIC(int32_t) _cc_atomic32_sub(_cc_atomic32_t*,int32_t);
 _CC_API_PUBLIC(int32_t) _cc_atomic32_set(_cc_atomic32_t*,int32_t);
-_CC_API_PUBLIC(int32_t) _cc_atomic32_get(_cc_atomic32_t *a);
+_CC_API_PUBLIC(int32_t) _cc_atomic32_load(_cc_atomic32_t *a);
 _CC_API_PUBLIC(int32_t) _cc_atomic32_and(_cc_atomic32_t*,int32_t);
 _CC_API_PUBLIC(int32_t) _cc_atomic32_or(_cc_atomic32_t*,int32_t);
 _CC_API_PUBLIC(int32_t) _cc_atomic32_xor(_cc_atomic32_t*,int32_t);
@@ -78,7 +78,7 @@ _CC_API_PUBLIC(bool_t) _cc_atomic32_cas(_cc_atomic32_t*,int32_t,int32_t);
 _CC_API_PUBLIC(int64_t) _cc_atomic64_add(_cc_atomic64_t*,int64_t);
 _CC_API_PUBLIC(int64_t) _cc_atomic64_sub(_cc_atomic64_t*,int64_t);
 _CC_API_PUBLIC(int64_t) _cc_atomic64_set(_cc_atomic64_t*,int64_t);
-_CC_API_PUBLIC(int64_t) _cc_atomic64_get(_cc_atomic64_t *a);
+_CC_API_PUBLIC(int64_t) _cc_atomic64_load(_cc_atomic64_t *a);
 _CC_API_PUBLIC(int64_t) _cc_atomic64_and(_cc_atomic64_t*,int64_t);
 _CC_API_PUBLIC(int64_t) _cc_atomic64_or(_cc_atomic64_t*,int64_t);
 _CC_API_PUBLIC(int64_t) _cc_atomic64_xor(_cc_atomic64_t*,int64_t);

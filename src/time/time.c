@@ -123,8 +123,8 @@ _CC_API_PUBLIC(uint64_t) _cc_timestamp(void) {
 /* Given a calendar date, returns days since Jan 1 1970, and optionally
  * the day of the week [0-6, 0 is Sunday] and day of the year [0-365].
  */
-_CC_API_PUBLIC(int64_t) _cc_civil_to_days(int year, int month, int day, int *day_of_week, int *day_of_year) {
-    year -= month <= 2;
+_CC_API_PUBLIC(int64_t) _cc_civil_to_days(int _year, int month, int day, int *day_of_week, int *day_of_year) {
+    int year = _year - (month <= 2);
     const int era = (year >= 0 ? year : year - 399) / 400;
     const unsigned yoe = (unsigned)(year - era * 400);                                  // [0, 399]
     const unsigned doy = (153 * (month > 2 ? month - 3 : month + 9) + 2) / 5 + day - 1; // [0, 365]

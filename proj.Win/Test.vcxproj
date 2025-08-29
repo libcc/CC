@@ -74,12 +74,12 @@
     <OutDir>..\bin\$(Platform)\$(Configuration)\</OutDir>
     <TargetName>$(ProjectName)</TargetName>
     <IncludePath>D:\240216\third-party\OpenSSL-Win64\include;D:\240216\01\include;D:\240216\third-party;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\240216\01\lib\$(Platform)\debug;D:\240216\third-party\OpenSSL-Win64\lib\VC\$(Platform)\MT;D:\240216\third-party\lib\$(Platform);$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\240216\01\lib\$(Platform)\$(Configuration);D:\240216\third-party\OpenSSL-Win64\lib\VC\$(Platform)\MT;D:\240216\third-party\lib\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>$(ProjectName)</TargetName>
     <IncludePath>D:\240216\third-party\OpenSSL-Win64\include;D:\240216\01\include;D:\240216\third-party;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\240216\01\lib\$(Platform)\debug\;D:\240216\third-party\OpenSSL-Win64\lib\VC\$(Platform)\MT;D:\240216\third-party\lib\$(Platform)\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\240216\01\lib\$(Platform)\$(Configuration)\;D:\240216\third-party\OpenSSL-Win64\lib\VC\$(Platform)\MT;D:\240216\third-party\lib\$(Platform)\;$(LibraryPath)</LibraryPath>
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
@@ -87,13 +87,13 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(ShortProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>D:\240216\third-party\OpenSSL-Win64\include;D:\240216\01\include;D:\240216\third-party;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>D:\240216\01\lib\$(Platform)\release;D:\240216\third-party\lib\$(Platform);$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <IncludePath>D:\240216\third-party\OpenSSL-Win64\include;D:\240216\01\include;D:\240216\third-party;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\240216\01\lib\$(Platform)\$(Configuration);D:\240216\third-party\lib\$(Platform);$(IncludePath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\240216\third-party\OpenSSL-Win64\include;D:\240216\01\include;D:\240216\third-party;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>D:\240216\01\lib\$(Platform)\release;D:\240216\third-party\lib\$(Platform);$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <IncludePath>D:\240216\third-party\OpenSSL-Win64\include;D:\240216\01\include;D:\240216\third-party;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\240216\01\lib\$(Platform)\$(Configuration);D:\240216\third-party\lib\$(Platform);$(IncludePath)</LibraryPath>
     <OutDir>..\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

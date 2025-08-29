@@ -339,10 +339,10 @@ _CC_API_PUBLIC(_cc_ini_t*) _cc_ini_from_file(const tchar_t* file_name) {
     return item;
 }
 
-_CC_API_PUBLIC(_cc_ini_t*) _cc_parse_ini(const tchar_t* src) {
+_CC_API_PUBLIC(_cc_ini_t*) _cc_parse_ini(const tchar_t* src, size_t length) {
     _cc_sbuf_t buffer;
     buffer.content = src;
-    buffer.length = _tcslen(src);
+    buffer.length = length;
     buffer.offset = 0;
     buffer.line = 1;
     buffer.depth = 0;

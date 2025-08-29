@@ -70,6 +70,12 @@ _CC_API_PUBLIC(_iocp_overlapped_t*) _iocp_overlapped_alloc(_cc_async_event_priv_
 }
 
 _CC_API_PUBLIC(void) _iocp_overlapped_free(_cc_async_event_priv_t *priv, _iocp_overlapped_t *iocp_overlapped) {
+
+    if (iocp_overlapped->fd != _CC_INVALID_SOCKET_) {
+        _cc_close_socket(iocp_overlapped->fd);
+        iocp_overlapped->fd = _CC_INVALID_SOCKET_;
+    }
+    
     if (priv->idle_count >= 64) {
         _cc_spin_lock(&priv->lock);
         _cc_list_iterator_remove(&iocp_overlapped->lnk);

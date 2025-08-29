@@ -20,236 +20,214 @@
 */
 #include <libcc/atomic.h>
 
-_CC_API_PUBLIC(int32_t) _cc_atomic32_get(_cc_atomic32_t *a) {
-    _cc_atomic32_t value;
+_CC_API_PUBLIC(int32_t) _cc_atomic32_load(_cc_atomic32_t *a) {
+#if __STDC_VERSION__ >= 201000L
+    return (int32_t)atomic_load(a);
+#elif defined(_CC_GNUC_)
+    return __atomic_load_n(a, __ATOMIC_SEQ_CST);
+#else
+    int32_t value;
     do {
         value = (int32_t)*a;
     } while (!_cc_atomic32_cas(a, value, value));
-
     return value;
+#endif/*__STDC_VERSION__ >= 201000L*/
 }
 
-_CC_API_PUBLIC(int64_t) _cc_atomic64_get(_cc_atomic64_t *a) {
+_CC_API_PUBLIC(int64_t) _cc_atomic64_load(_cc_atomic64_t *a) {
+#if __STDC_VERSION__ >= 201000L
+    return (int64_t)atomic_load(a);
+#elif defined(_CC_GNUC_)
+    return __atomic_load_n(a, __ATOMIC_SEQ_CST);
+#else
     int64_t value;
     do {
         value = (int64_t)*a;
     } while (!_cc_atomic64_cas(a, value, value));
-
     return value;
+#endif/*__STDC_VERSION__ >= 201000L*/
 }
 
 _CC_API_PUBLIC(int32_t) _cc_atomic32_add(_cc_atomic32_t *a, int32_t v) {
-#if defined(__CC_WINDOWS__)
+#if __STDC_VERSION__ >= 201000L
+    return atomic_fetch_add(a, v);
+#elif defined(_CC_MSVC_)
 #if (defined(_M_IA64) || defined(_M_AMD64))
     return (int32_t)InterlockedExchangeAdd(a, v);
 #else
     return (int32_t)InterlockedExchangeAdd((long *)a, v);
 #endif
-#elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-    // return OSAtomicAdd32Barrier(v, a);
-    return atomic_fetch_add(a, v);
-#elif defined(__CC_SOLARIS__)
-    int32_t pv = (int32_t)*a;
-    membar_consumer();
-    atomic_add_32(a, v);
-    return pv;
+#elif defined(_CC_GNUC_)
+    return __atomic_fetch_add(a, v, __ATOMIC_SEQ_CST);
 #else
     return __sync_fetch_and_add(a, v);
-#endif
+#endif/*__STDC_VERSION__ >= 201000L*/
 }
 
 _CC_API_PUBLIC(int32_t) _cc_atomic32_sub(_cc_atomic32_t *a, int32_t v) {
-#if defined(__CC_WINDOWS__)
+#if __STDC_VERSION__ >= 201000L
+    return atomic_fetch_sub(a, v);
+#elif defined(_CC_MSVC_)
 #if (defined(_M_IA64) || defined(_M_AMD64))
     return (int32_t)InterlockedExchangeAdd(a, -v);
 #else
     return (int32_t)InterlockedExchangeAdd((long *)a, -v);
 #endif
-#elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-    // return OSAtomicAdd32Barrier(-v, a);
-    return atomic_fetch_sub(a, v);
-#elif defined(__CC_SOLARIS__)
-    int32_t pv = (int32_t)*a;
-    membar_consumer();
-    atomic_add_32((volatile uint32_t *)a, -v);
-    return pv;
+#elif defined(_CC_GNUC_)
+    return __atomic_fetch_sub(a, v, __ATOMIC_SEQ_CST);
 #else
     return __sync_fetch_and_sub(a, v);
-#endif
+#endif/*__STDC_VERSION__ >= 201000L*/
 }
 
 _CC_API_PUBLIC(int32_t) _cc_atomic32_set(_cc_atomic32_t *a, int32_t v) {
-#if defined(__CC_WINDOWS__)
+#if __STDC_VERSION__ >= 201000L
+    return atomic_exchange(a, v);
+#elif defined(_CC_MSVC_)
 #if (defined(_M_IA64) || defined(_M_AMD64)) && !defined(RC_INVOKED)
     return (int32_t)InterlockedExchange(a, v);
 #else
     return (int32_t)InterlockedExchange((long *)a, v);
 #endif
-#elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-    // return _xxx_atomic32_set(a, v);
-    return atomic_exchange(a, v);
-#elif defined(__CC_SOLARIS__)
-    return atomic_swap_32(a, v);
+#elif defined(_CC_GNUC_)
+    return __atomic_exchange_n(a, v, __ATOMIC_SEQ_CST);
 #else
     return __sync_lock_test_and_set(a, v);
-#endif
+#endif/*__STDC_VERSION__ >= 201000L*/
 }
 
 _CC_API_PUBLIC(int32_t) _cc_atomic32_and(_cc_atomic32_t *a, int32_t v) {
-#if defined(__CC_WINDOWS__)
-    return (int32_t)_InterlockedAnd(a, v);
-#elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-    // return OSAtomicAnd32((uint32_t)v, (volatile uint32_t*)a);
+#if __STDC_VERSION__ >= 201000L
     return atomic_fetch_and(a, v);
-#elif defined(__CC_SOLARIS__)
-#error _cc_atomic32_and Unsupported OS
-    return 0;
+#elif defined(_CC_MSVC_)
+    return (int32_t)_InterlockedAnd(a, v);
+#elif defined(_CC_GNUC_)
+    return __atomic_fetch_and(a, v, __ATOMIC_SEQ_CST);
 #else
     return __sync_and_and_fetch(a, v);
-#endif
+#endif/*__STDC_VERSION__ >= 201000L*/
 }
 
 _CC_API_PUBLIC(int32_t) _cc_atomic32_or(_cc_atomic32_t *a, int32_t v) {
-#if defined(__CC_WINDOWS__)
-    return (int32_t)_InterlockedOr(a, v);
-#elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-    // return OSAtomicOr32((uint32_t)v, (volatile uint32_t*)a);
+#if __STDC_VERSION__ >= 201000L
     return atomic_fetch_or(a, v);
-#elif defined(__CC_SOLARIS__)
-#error _cc_atomic32_or Unsupported OS
-    return 0;
+#elif defined(_CC_MSVC_)
+    return (int32_t)_InterlockedOr(a, v);
+#elif defined(_CC_GNUC_)
+    return __atomic_fetch_or(a, v, __ATOMIC_SEQ_CST);
 #else
     return __sync_fetch_and_or(a, v);
-#endif
+#endif/*__STDC_VERSION__ >= 201000L*/
 }
 
 _CC_API_PUBLIC(int32_t) _cc_atomic32_xor(_cc_atomic32_t *a, int32_t v) {
-#if defined(__CC_WINDOWS__)
-    return (int32_t)_InterlockedXor(a, v);
-#elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-    // return OSAtomicXor32((uint32_t)v, (volatile uint32_t*)a);
+#if __STDC_VERSION__ >= 201000L
     return atomic_fetch_xor(a, v);
-#elif defined(__CC_SOLARIS__)
-#error _cc_atomic32_xor Unsupported OS
-    return 0;
+#elif defined(_CC_MSVC_)
+    return (int32_t)_InterlockedXor(a, v);
+#elif defined(_CC_GNUC_)
+    return __atomic_fetch_xor(a, v, __ATOMIC_SEQ_CST);
 #else
     return __sync_fetch_and_xor(a, v);
-#endif
+#endif/*__STDC_VERSION__ >= 201000L*/
 }
 
 _CC_API_PUBLIC(bool_t) _cc_atomic32_cas(_cc_atomic32_t *a, int32_t v1, int32_t v2) {
-#if defined(__CC_WINDOWS__)
-#if (defined(_M_IA64) || defined(_M_AMD64)) && !defined(RC_INVOKED)
-    return (bool_t)(InterlockedCompareExchange(a, v2, v1) == v1);
-#else
-    return (bool_t)(InterlockedCompareExchange((long *)a, v2, v1) == v1);
-#endif
-#elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-    // return (bool_t)OSAtomicCompareAndSwap32Barrier(v1, v2, a);
+#if __STDC_VERSION__ >= 201000L
     return (bool_t)atomic_compare_exchange_strong(a, &v1, v2);
-#elif defined(__CC_SOLARIS__)
-    return (bool_t)(atomic_cas_ptr(a, v1, v2) == v1);
+#elif defined(_CC_MSVC_)
+#if (defined(_M_IA64) || defined(_M_AMD64)) && !defined(RC_INVOKED)
+    return (bool_t)((int32_t)InterlockedCompareExchange(a, v2, v1) == v1);
+#else
+    return (bool_t)((int32_t)InterlockedCompareExchange((long *)a, v2, v1) == v1);
+#endif
+#elif defined(_CC_GNUC_)
+    return __atomic_compare_exchange_n(a, &v1, v2, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
 #else
     return (bool_t)__sync_bool_compare_and_swap(a, v1, v2);
-#endif
+#endif/*__STDC_VERSION__ >= 201000L*/
 }
 
 _CC_API_PUBLIC(int64_t) _cc_atomic64_add(_cc_atomic64_t *a, int64_t v) {
-#if defined(__CC_WINDOWS__)
-    return (int64_t)InterlockedExchangeAdd64(a, v);
-#elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-    // return OSAtomicAdd64Barrier(v, a);
+#if __STDC_VERSION__ >= 201000L
     return atomic_fetch_add(a, v);
-#elif defined(__CC_SOLARIS__)
-    int64_t pv = (int64_t)*a;
-    membar_consumer();
-    atomic_add_64(a, v);
-    return pv;
+#elif defined(_CC_MSVC_)
+    return (int64_t)InterlockedExchangeAdd64(a, v);
+#elif defined(_CC_GNUC_)
+    return __atomic_fetch_add(a, v, __ATOMIC_SEQ_CST);
 #else
     return __sync_fetch_and_add(a, v);
-#endif
+#endif/*__STDC_VERSION__ >= 201000L*/
 }
 
 _CC_API_PUBLIC(int64_t) _cc_atomic64_sub(_cc_atomic64_t *a, int64_t v) {
-#if defined(__CC_WINDOWS__)
-    return (int64_t)InterlockedExchangeAdd64(a, -v);
-#elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-    // return OSAtomicAdd64Barrier(-v, a);
+#if __STDC_VERSION__ >= 201000L
     return atomic_fetch_sub(a, v);
-#elif defined(__CC_SOLARIS__)
-    int64_t pv = (int64_t)*a;
-    membar_consumer();
-    atomic_add_64((volatile uint64_t *)a, -v);
-    return pv;
+#elif defined(_CC_MSVC_)
+    return (int64_t)InterlockedExchangeAdd64(a, -v);
+#elif defined(_CC_GNUC_)
+    return __atomic_fetch_sub(a, v, __ATOMIC_SEQ_CST);
 #else
     return __sync_fetch_and_sub(a, v);
-#endif
+#endif/*__STDC_VERSION__ >= 201000L*/
 }
 
 _CC_API_PUBLIC(int64_t) _cc_atomic64_set(_cc_atomic64_t *a, int64_t v) {
-#if defined(__CC_WINDOWS__)
-    return (int64_t)InterlockedExchange64(a, v);
-#elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-    // return _xxx_atomic64_set(a, v);
+#if __STDC_VERSION__ >= 201000L
     return atomic_exchange(a, v);
-#elif defined(__CC_SOLARIS__)
-    return atomic_swap_64(a, v);
+#elif defined(_CC_MSVC_)
+    return (int64_t)InterlockedExchange64(a, v);
+#elif defined(_CC_GNUC_)
+    return __atomic_exchange_n(a, v, __ATOMIC_SEQ_CST);
 #else
     return __sync_lock_test_and_set(a, v);
-#endif
+#endif/*__STDC_VERSION__ >= 201000L*/
 }
 
 _CC_API_PUBLIC(int64_t) _cc_atomic64_and(_cc_atomic64_t *a, int64_t v) {
-#if defined(__CC_WINDOWS__)
-    return (int64_t)InterlockedAnd64(a, v);
-#elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-    // return OSAtomicAnd32((uint32_t)v, (volatile uint32_t*)a);
+#if __STDC_VERSION__ >= 201000L
     return atomic_fetch_and(a, v);
-#elif defined(__CC_SOLARIS__)
-#error _cc_atomic64_and Unsupported OS
-    return 0;
+#elif defined(_CC_MSVC_)
+    return (int64_t)InterlockedAnd64(a, v);
+#elif defined(_CC_GNUC_)
+    return __atomic_fetch_and(a, v, __ATOMIC_SEQ_CST);
 #else
     return __sync_and_and_fetch(a, v);
-#endif
+#endif/*__STDC_VERSION__ >= 201000L*/
 }
 
 _CC_API_PUBLIC(int64_t) _cc_atomic64_or(_cc_atomic64_t *a, int64_t v) {
-#if defined(__CC_WINDOWS__)
-    return (int64_t)InterlockedOr64(a, v);
-#elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-    // return OSAtomicOr32((uint32_t)v, (volatile uint32_t*)a);
+#if __STDC_VERSION__ >= 201000L
     return atomic_fetch_or(a, v);
-#elif defined(__CC_SOLARIS__)
-#error _cc_atomic64_or Unsupported OS
-    return 0;
+#elif defined(_CC_MSVC_)
+    return (int64_t)InterlockedOr64(a, v);
+#elif defined(_CC_GNUC_)
+    return __atomic_fetch_or(a, v, __ATOMIC_SEQ_CST);
 #else
     return __sync_fetch_and_or(a, v);
-#endif
+#endif/*__STDC_VERSION__ >= 201000L*/
 }
 
 _CC_API_PUBLIC(int64_t) _cc_atomic64_xor(_cc_atomic64_t *a, int64_t v) {
-#if defined(__CC_WINDOWS__)
-    return (int64_t)InterlockedXor64(a, v);
-#elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-    // return OSAtomicXor32((uint32_t)v, (volatile uint32_t*)a);
+#if __STDC_VERSION__ >= 201000L
     return atomic_fetch_xor(a, v);
-#elif defined(__CC_SOLARIS__)
-#error _cc_atomic64_xor Unsupported OS
-    return 0;
+#elif defined(_CC_MSVC_)
+    return (int64_t)InterlockedXor64(a, v);
+#elif defined(_CC_GNUC_)
+    return __atomic_fetch_xor(a, v, __ATOMIC_SEQ_CST);
 #else
     return __sync_fetch_and_xor(a, v);
-#endif
+#endif/*__STDC_VERSION__ >= 201000L*/
 }
 
 _CC_API_PUBLIC(bool_t) _cc_atomic64_cas(_cc_atomic64_t *a, int64_t v1, int64_t v2) {
-#if defined(__CC_WINDOWS__)
-    return (bool_t)(InterlockedCompareExchange64(a, v2, v1) == v1);
-#elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-    // return (bool_t)OSAtomicCompareAndSwap64Barrier(v1, v2, a);
+#if __STDC_VERSION__ >= 201000L
     return (bool_t)atomic_compare_exchange_strong(a, &v1, v2);
-#elif defined(__CC_SOLARIS__)
-    return (bool_t)(atomic_cas_ptr(a, v1, v2) == v1);
+#elif defined(_CC_MSVC_)
+    return (bool_t)((int64_t)InterlockedCompareExchange64(a, v2, v1) == v1);
+#elif defined(_CC_GNUC_)
+    return __atomic_compare_exchange_n(a, &v1, v2, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
 #else
     return (bool_t)__sync_bool_compare_and_swap(a, v1, v2);
-#endif
+#endif/*__STDC_VERSION__ >= 201000L*/
 }

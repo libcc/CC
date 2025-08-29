@@ -166,8 +166,8 @@ _CC_API_PUBLIC(_cc_event_t*) _cc_event_alloc(_cc_async_event_t *async, const uin
     e->args = nullptr;
     e->callback = nullptr;
     e->buffer = nullptr;
+    e->expire = 0;
     e->descriptor = (flags >> 16);
-    e->timer = async->timer;
 
     if (_CC_EVENT_IS_SOCKET(flags)) {
         e->descriptor |= _CC_EVENT_DESC_SOCKET_;
@@ -414,7 +414,7 @@ _CC_API_PUBLIC(bool_t) _reset_event(_cc_async_event_t *async, _cc_event_t *e) {
 /**/
 _CC_API_PUBLIC(void) _reset_event_timeout(_cc_async_event_t *async, _cc_event_t *e) {
     if (_CC_ISSET_BIT(_CC_EVENT_TIMEOUT_, e->flags)) {
-        e->timer = async->timer;
+        e->expire = async->timer + e->timeout;
         _add_event_timeout(async, e);
     } else {
         _cc_list_iterator_swap(&async->no_timer, &e->lnk);
@@ -454,6 +454,7 @@ _CC_API_PUBLIC(bool_t) _disconnect_event(_cc_async_event_t *async, _cc_event_t *
     if (e->descriptor & (_CC_EVENT_DESC_SOCKET_ | _CC_EVENT_DESC_FILE_)) {
         _cc_shutdown_socket(e->fd, _CC_SHUT_RD_);
     }
+    
     _CC_MODIFY_BIT(_CC_EVENT_DISCONNECT_, _CC_EVENT_READABLE_, e->flags);
 
     return async->reset(async, e);

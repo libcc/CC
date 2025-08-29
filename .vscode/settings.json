@@ -38,7 +38,14 @@
         "optional": "c",
         "ratio": "c",
         "vector": "c",
-        "ios": "c"
+        "ios": "c",
+        "queue.h": "c",
+        "atomic.h": "c",
+        "event.h": "c",
+        "__config": "c",
+        "thread.h": "c",
+        "types.h": "c",
+        "ucred.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     //"C_Cpp.clang_format_style": "{ BasedOnStyle: Microsoft, UseTab: Never, IndentWidth: 4, TabWidth: 4, }",

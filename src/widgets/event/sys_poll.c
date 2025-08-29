@@ -42,7 +42,7 @@ _CC_API_PRIVATE(bool_t) _poll_event_attach(_cc_async_event_t *async, _cc_event_t
     _cc_assert(async != nullptr);
     fset = async->priv;
 
-    if (e->fd && _CC_ISSET_BIT(_CC_EVENT_DESC_SOCKET_,e->descriptor) && fset->nfds >= _CC_POLL_EVENTS_) {
+    if (e->fd && _CC_EVENT_IS_SOCKET(e->flags) && fset->nfds >= _CC_POLL_EVENTS_) {
         _cc_logger_error(_T("The maximum number of descriptors supported by the poll() is %d"), _CC_POLL_EVENTS_);
         return false;
     }
@@ -50,8 +50,6 @@ _CC_API_PRIVATE(bool_t) _poll_event_attach(_cc_async_event_t *async, _cc_event_t
     if(!_reset_event(async, e)) {
         return false;
     }
-
-    e->descriptor = _CC_EVENT_DESC_POLL_POLLFD_ | (e->descriptor & 0xff);
 
     _event_lock(async);
     fset->list[fset->nfds++] = e;
@@ -97,15 +95,7 @@ _CC_API_PRIVATE(bool_t) _set_fd_event(_cc_event_t *e, struct pollfd *p) {
     if (_CC_ISSET_BIT(_CC_EVENT_PENDING_, e->flags)) {
         return false;
     }
-
-    if (_CC_ISSET_BIT(_CC_EVENT_DESC_SOCKET_, e->descriptor) == 0) {
-        return false;
-    }
-
-    p->fd = e->fd;
     p->events = POLLERR;
-    p->revents = 0;
-
     if (_CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, e->flags)) {
         p->events |= POLLIN;
     }
@@ -115,6 +105,8 @@ _CC_API_PRIVATE(bool_t) _set_fd_event(_cc_event_t *e, struct pollfd *p) {
     }
 
     if (p->events != POLLERR) {
+        p->fd = e->fd;
+        p->revents = 0;
         return true;
     }
     return false;

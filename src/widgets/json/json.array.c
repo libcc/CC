@@ -20,7 +20,7 @@
 */
 #include "json.c.h"
 
-#define _JSON_ARRAY_SIZE_ 32
+#define _JSON_ARRAY_SIZE_ 64
 
 void _json_array_alloc(_cc_json_t* ctx, size_t size) {
     ctx->type = _CC_JSON_ARRAY_;
@@ -55,8 +55,8 @@ _CC_API_PUBLIC(bool_t) _json_array_realloc(_cc_json_t *ctx, size_t size) {
 }
 
 _CC_API_PUBLIC(size_t) _json_array_push(_cc_json_t *ctx, _cc_json_t *data) {
-    _cc_assert(ctx != nullptr && data != nullptr);
     size_t index;
+    _cc_assert(ctx != nullptr && data != nullptr);
 
     index = ctx->length;
     /*if not enough space,expand first*/

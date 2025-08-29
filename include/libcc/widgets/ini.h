@@ -57,7 +57,7 @@ typedef struct _cc_ini {
 } _cc_ini_t;
 
 /**/
-_CC_WIDGETS_API(_cc_ini_t*) _cc_parse_ini(const tchar_t* src);
+_CC_WIDGETS_API(_cc_ini_t*) _cc_parse_ini(const tchar_t* src, size_t length);
 /**/
 _CC_WIDGETS_API(_cc_ini_t*) _cc_ini_from_file(const tchar_t* file_name);
 /**/

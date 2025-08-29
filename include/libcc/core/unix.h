@@ -29,10 +29,6 @@
 extern "C" {
 #endif
 
-#if defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
-#define _CC_HAVE_SYSCTLBYNAME_ 1
-#endif
-
 #define _CC_HAVE_SYSCONF_ 1
 /**
  * @brief Get Current Proccess Id
@@ -93,6 +89,8 @@ typedef void (*_cc_dumper_callback_t)(byte_t status, pvoid_t dump_exception_info
 _CC_API_PUBLIC(size_t) _cc_get_resolve_symbol(tchar_t *buf, size_t length);
 /**/
 _CC_API_PUBLIC(const _cc_String_t *) _cc_get_module_file_name(void);
+/**/
+_CC_API_PUBLIC(void) _cc_get_os_version(uint32_t *major, uint32_t *minor, uint32_t *build);
 #ifndef _access
 #define _access access
 #endif

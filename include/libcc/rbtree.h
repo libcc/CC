@@ -50,8 +50,6 @@ extern "C" {
 
 #define _cc_rbtree_for _cc_rbtree_for_next
 
-typedef struct _cc_rbtree_iterator _cc_rbtree_iterator_t;
-
 enum { _CC_RB_RED_ = 0, _CC_RB_BLACK_ };
 
 struct _cc_rbtree_iterator {
@@ -60,14 +58,18 @@ struct _cc_rbtree_iterator {
     // the kernal guarantees 'uintptr_t' same size as 'ptr' at compile time
     // but here we assume it works until it doesn't
     uintptr_t parent_color;
-    _cc_rbtree_iterator_t *right;
-    _cc_rbtree_iterator_t *left;
+    struct _cc_rbtree_iterator _cc_alignas(8) *right;
+    struct _cc_rbtree_iterator _cc_alignas(8) *left;
 };
 
+typedef struct _cc_rbtree_iterator _cc_rbtree_iterator_t;
+
 /* The alignment might seem pointless, but allegedly CRIS needs it */
-typedef struct _cc_rbtree {
-    _cc_rbtree_iterator_t *rb_node;
-} _cc_rbtree_t;
+struct _cc_rbtree {
+    _cc_rbtree_iterator_t _cc_alignas(8) *rb_node;
+};
+
+typedef struct _cc_rbtree _cc_rbtree_t;
 
 #define _cc_rbtree_entry(ptr, type, member) _cc_upcast(ptr, type, member)
 

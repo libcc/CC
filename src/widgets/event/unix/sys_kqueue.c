@@ -90,7 +90,6 @@ _CC_API_PRIVATE(bool_t) _kqueue_event_update(_cc_async_event_priv_t *priv, _cc_e
 /**/
 _CC_API_PRIVATE(bool_t) _kqueue_event_attach(_cc_async_event_t *async, _cc_event_t *e) {
     _cc_assert(async != nullptr && e != nullptr);
-    e->descriptor = _CC_EVENT_DESC_POLL_KQUEUE_ | (e->descriptor & 0xff);
     return _reset_event(async, e);
 }
 
@@ -119,8 +118,9 @@ _CC_API_PRIVATE(_cc_socket_t) _kqueue_event_accept(_cc_async_event_t *async, _cc
 
 /**/
 _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
+    uint16_t m = _CC_EVENT_IS_SOCKET(e->marks), u;
     if (_CC_ISSET_BIT(_CC_EVENT_DISCONNECT_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags) == 0) {
-        if (_CC_EVENT_IS_SOCKET(e->marks)) {
+        if (m) {
             _kqueue_event_update(async->priv, e, true);
         }
         _cc_free_event(async, e);
@@ -128,7 +128,7 @@ _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
     }
 
     if (_CC_ISSET_BIT(_CC_EVENT_PENDING_, e->flags)) {
-        if (_CC_EVENT_IS_SOCKET(e->marks)) {
+        if (m) {
             _kqueue_event_update(async->priv, e, true);
         }
 
@@ -137,8 +137,8 @@ _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
     }
 
     /*update event*/
-    if (_CC_ISSET_BIT(_CC_EVENT_DESC_SOCKET_, e->descriptor) &&
-        _CC_EVENT_IS_SOCKET(e->flags) != _CC_EVENT_IS_SOCKET(e->marks)) {
+    u = _CC_EVENT_IS_SOCKET(e->flags);
+    if (u && u != m) {
         _kqueue_event_update(async->priv, e, false);
     }
 

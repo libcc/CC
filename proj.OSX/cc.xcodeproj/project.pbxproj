@@ -9,10 +9,13 @@
 /* Begin PBXBuildFile section */
 		41E3A69A29FE430A00BEFBD6 /* libcc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 414B4B562990BEB600F4A7CB /* libcc.a */; };
 		41E3A70B29FE47D900BEFBD6 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 41E3A70A29FE47D900BEFBD6 /* libz.tbd */; };
-		41E3A72C29FE494000BEFBD6 /* libcrypto.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 41E3A72A29FE493F00BEFBD6 /* libcrypto.3.dylib */; };
-		41E3A72D29FE494000BEFBD6 /* libcrypto.3.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 41E3A72A29FE493F00BEFBD6 /* libcrypto.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		41E3A72E29FE494000BEFBD6 /* libssl.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 41E3A72B29FE494000BEFBD6 /* libssl.3.dylib */; };
-		41E3A72F29FE494000BEFBD6 /* libssl.3.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 41E3A72B29FE494000BEFBD6 /* libssl.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		426BE25F2E5DD17800CE8D50 /* libsqlite3.0.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE25E2E5DD17800CE8D50 /* libsqlite3.0.tbd */; };
+		426BE2612E5DD18400CE8D50 /* libiodbc.2.1.18.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE2602E5DD18400CE8D50 /* libiodbc.2.1.18.tbd */; };
+		426BE2632E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE2622E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd */; };
+		426BE2652E5DD1BA00CE8D50 /* libmysqlclient.24.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE2642E5DD1BA00CE8D50 /* libmysqlclient.24.dylib */; };
+		426BE26B2E5DD25D00CE8D50 /* sys_unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 426BE26A2E5DD25D00CE8D50 /* sys_unix.c */; };
+		426BE26E2E5DD2EC00CE8D50 /* libssl.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE26C2E5DD2EC00CE8D50 /* libssl.3.dylib */; };
+		426BE26F2E5DD2EC00CE8D50 /* libcrypto.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE26D2E5DD2EC00CE8D50 /* libcrypto.3.dylib */; };
 		42C8179C2E50EEE200359415 /* sys_power.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C817012E50EEE200359415 /* sys_power.c */; };
 		42C8179D2E50EEE200359415 /* alloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C817842E50EEE200359415 /* alloc.c */; };
 		42C8179F2E50EEE200359415 /* sys_time.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C8172A2E50EEE200359415 /* sys_time.c */; };
@@ -121,8 +124,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				41E3A72F29FE494000BEFBD6 /* libssl.3.dylib in Embed Libraries */,
-				41E3A72D29FE494000BEFBD6 /* libcrypto.3.dylib in Embed Libraries */,
 			);
 			name = "Embed Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -132,11 +133,14 @@
 /* Begin PBXFileReference section */
 		414B4B562990BEB600F4A7CB /* libcc.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libcc.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		41E3A5CB29FE40D800BEFBD6 /* libcc.widgets.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libcc.widgets.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		41E3A70329FE47D300BEFBD6 /* libssl.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libssl.1.1.dylib; sourceTree = "<group>"; };
-		41E3A70429FE47D300BEFBD6 /* libcrypto.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libcrypto.1.1.dylib; sourceTree = "<group>"; };
 		41E3A70A29FE47D900BEFBD6 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
-		41E3A72A29FE493F00BEFBD6 /* libcrypto.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libcrypto.3.dylib; sourceTree = "<group>"; };
-		41E3A72B29FE494000BEFBD6 /* libssl.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libssl.3.dylib; sourceTree = "<group>"; };
+		426BE25E2E5DD17800CE8D50 /* libsqlite3.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.0.tbd; path = usr/lib/libsqlite3.0.tbd; sourceTree = SDKROOT; };
+		426BE2602E5DD18400CE8D50 /* libiodbc.2.1.18.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiodbc.2.1.18.tbd; path = usr/lib/libiodbc.2.1.18.tbd; sourceTree = SDKROOT; };
+		426BE2622E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiodbcinst.2.1.18.tbd; path = usr/lib/libiodbcinst.2.1.18.tbd; sourceTree = SDKROOT; };
+		426BE2642E5DD1BA00CE8D50 /* libmysqlclient.24.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmysqlclient.24.dylib; path = "../../../homebrew/Cellar/mysql-client/9.4.0/lib/libmysqlclient.24.dylib"; sourceTree = "<group>"; };
+		426BE26A2E5DD25D00CE8D50 /* sys_unix.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sys_unix.c; sourceTree = "<group>"; };
+		426BE26C2E5DD2EC00CE8D50 /* libssl.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.3.dylib; path = "../../../homebrew/Cellar/openssl@3/3.5.2/lib/libssl.3.dylib"; sourceTree = "<group>"; };
+		426BE26D2E5DD2EC00CE8D50 /* libcrypto.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.3.dylib; path = "../../../homebrew/Cellar/openssl@3/3.5.2/lib/libcrypto.3.dylib"; sourceTree = "<group>"; };
 		42C816C02E50EEE200359415 /* atomic.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = atomic.c; sourceTree = "<group>"; };
 		42C816C12E50EEE200359415 /* rwlock.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = rwlock.c; sourceTree = "<group>"; };
 		42C816CE2E50EEE200359415 /* sys_clipboard.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = sys_clipboard.m; sourceTree = "<group>"; };
@@ -250,8 +254,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				41E3A72E29FE494000BEFBD6 /* libssl.3.dylib in Frameworks */,
-				41E3A72C29FE494000BEFBD6 /* libcrypto.3.dylib in Frameworks */,
+				426BE26E2E5DD2EC00CE8D50 /* libssl.3.dylib in Frameworks */,
+				426BE26F2E5DD2EC00CE8D50 /* libcrypto.3.dylib in Frameworks */,
+				426BE2652E5DD1BA00CE8D50 /* libmysqlclient.24.dylib in Frameworks */,
+				426BE2632E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd in Frameworks */,
+				426BE2612E5DD18400CE8D50 /* libiodbc.2.1.18.tbd in Frameworks */,
+				426BE25F2E5DD17800CE8D50 /* libsqlite3.0.tbd in Frameworks */,
 				41E3A70B29FE47D900BEFBD6 /* libz.tbd in Frameworks */,
 				41E3A69A29FE430A00BEFBD6 /* libcc.a in Frameworks */,
 			);
@@ -281,11 +289,13 @@
 		41E3A69729FE430400BEFBD6 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				41E3A72A29FE493F00BEFBD6 /* libcrypto.3.dylib */,
-				41E3A72B29FE494000BEFBD6 /* libssl.3.dylib */,
+				426BE26D2E5DD2EC00CE8D50 /* libcrypto.3.dylib */,
+				426BE26C2E5DD2EC00CE8D50 /* libssl.3.dylib */,
+				426BE2642E5DD1BA00CE8D50 /* libmysqlclient.24.dylib */,
+				426BE2622E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd */,
+				426BE2602E5DD18400CE8D50 /* libiodbc.2.1.18.tbd */,
+				426BE25E2E5DD17800CE8D50 /* libsqlite3.0.tbd */,
 				41E3A70A29FE47D900BEFBD6 /* libz.tbd */,
-				41E3A70429FE47D300BEFBD6 /* libcrypto.1.1.dylib */,
-				41E3A70329FE47D300BEFBD6 /* libssl.1.1.dylib */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -314,6 +324,7 @@
 		42C816E42E50EEE200359415 /* core */ = {
 			isa = PBXGroup;
 			children = (
+				426BE26A2E5DD25D00CE8D50 /* sys_unix.c */,
 				42C816D32E50EEE200359415 /* OSX */,
 				42C816E12E50EEE200359415 /* cpu_info.c */,
 				42C816E22E50EEE200359415 /* file.c */,
@@ -729,7 +740,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n#Copy Files ... replace to cp -r xxx.dylib\nUNIX_TARGET=$TARGET_BUILD_DIR/lib$PRODUCT_NAME.dylib\n#改变dylib的引用地址，防止library/framewokr not found\ninstall_name_tool -change \"/opt/homebrew/opt/openssl/lib/libcrypto.3.dylib\" \"@executable_path/libcrypto.3.dylib\" \"$UNIX_TARGET\"\ninstall_name_tool -change \"/opt/homebrew/opt/openssl/lib/libssl.3.dylib\" \"@executable_path/libcrypto.3.dylib\" \"$UNIX_TARGET\"\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n#Copy Files ... replace to cp -r xxx.dylib\n#UNIX_TARGET=$TARGET_BUILD_DIR/lib$PRODUCT_NAME.dylib\n#改变dylib的引用地址，防止library/framewokr not found\n#install_name_tool -change \"/opt/homebrew/opt/openssl/lib/libcrypto.3.dylib\" \"@executable_path/libcrypto.3.dylib\" \"$UNIX_TARGET\"\n#install_name_tool -change \"/opt/homebrew/opt/openssl/lib/libssl.3.dylib\" \"@executable_path/libcrypto.3.dylib\" \"$UNIX_TARGET\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -743,6 +754,7 @@
 				42C8179F2E50EEE200359415 /* sys_time.c in Sources */,
 				42C817A02E50EEE200359415 /* UTF.c in Sources */,
 				42C817A22E50EEE200359415 /* queue.c in Sources */,
+				426BE26B2E5DD25D00CE8D50 /* sys_unix.c in Sources */,
 				42C817A42E50EEE200359415 /* sys_locale.m in Sources */,
 				42C817A72E50EEE200359415 /* xxtea.c in Sources */,
 				42C817A82E50EEE200359415 /* md4.c in Sources */,
@@ -975,7 +987,7 @@
 					/usr/local/Cellar/unixodbc/2.3.9_1/include/,
 					"../../third-party",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -995,7 +1007,7 @@
 					/usr/local/Cellar/unixodbc/2.3.9_1/include/,
 					"../../third-party",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -1018,12 +1030,18 @@
 				HEADER_SEARCH_PATHS = (
 					../include,
 					"../../third-party",
+					"/opt/homebrew/opt/mysql-client/include",
+					/opt/homebrew/include,
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
+					/opt/homebrew/lib,
+					"/opt/homebrew/opt/mysql-client/lib",
+					"/opt/homebrew/Cellar/mysql-client/9.4.0/lib",
+					"/opt/homebrew/Cellar/openssl@3/3.5.2/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -1042,12 +1060,18 @@
 				HEADER_SEARCH_PATHS = (
 					../include,
 					"../../third-party",
+					"/opt/homebrew/opt/mysql-client/include",
+					/opt/homebrew/include,
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
+					/opt/homebrew/lib,
+					"/opt/homebrew/opt/mysql-client/lib",
+					"/opt/homebrew/Cellar/mysql-client/9.4.0/lib",
+					"/opt/homebrew/Cellar/openssl@3/3.5.2/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};

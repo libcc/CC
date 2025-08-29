@@ -163,17 +163,31 @@
     #define _cc_unlikely(expr) (expr)
 #endif
 
+#ifndef _cc_alignas
+    #if defined(__cplusplus) && (__cplusplus >= 201103L)
+        // Use C++11 standard alignas keyword if available
+        #define _cc_alignas(n) alignas(n)
+    #elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
+        // Use C11 standard _Alignas keyword if available
+        #define _cc_alignas(n) _Alignas(n)
+    #elif defined(__GNUC__) || defined(__clang__)
+        // Fallback to GCC/Clang attribute for alignment
+        #define _cc_alignas(n) __attribute__((aligned(n)))
+    #elif defined(_MSC_VER)
+        // Fallback to MSVC declspec for alignment
+        #define _cc_alignas(n) __declspec(align(n))
+    #else
+        // Error if no alignment mechanism is available
+        #define _cc_alignas(n)
+    #endif
+#endif /* _cc_alignas not defined */
+
 /**
  * Define compiler
  */
-
-#if defined(__CC_LINUX__) || defined(__GNU__)
-    #define _GNU_SOURCE
-#endif /* defined(__CC_LINUX__) || defined(__GNU__) */
-
 #ifdef __GNUC__
     /* GNU C++ */
-    #define _CC_GCC_ __GNUC__
+    #define _CC_GNUC_ __GNUC__
     /* Macro for defining function name, file name, and line number */
     #define _CC_FUNC_ __func__
     #define _CC_FILE_ __FILE__
@@ -183,12 +197,27 @@
 
     #define _CC_COMPILER_VERSION_ __GNUC__
 
-    #define _cc_align(x) __attribute__((aligned(x)))
+    #ifndef _cc_sync_synchronize
+        #define _cc_sync_synchronize() __sync_synchronize()
+    #endif
+    
     /*A macro to demand a function be inlined.*/
     #ifndef __CC_ANDROID__
         #define _CC_FORCE_INLINE_ __attribute__((always_inline)) static inline
     #else
         #define _CC_FORCE_INLINE_ static inline
+    #endif
+    
+    #ifndef _GNU_SOURCE
+        #define _GNU_SOURCE
+    #endif
+
+    #if defined(__CC_MACOSX__) && !defined(_DARWIN_C_SOURCE)
+        #define _DARWIN_C_SOURCE
+    #endif
+
+    #ifndef _POSIX_C_SOURCE
+        #define _POSIX_C_SOURCE 200112L
     #endif
 
     /* Some compilers use a special export keyword */
@@ -243,9 +272,11 @@
     /*A macro to demand a function be inlined.*/
     #define _CC_INLINE_ __inline
     #define _CC_FORCE_INLINE_ static __forceinline
-
-    #define _cc_align(x) __declspec(align(x))
-
+    
+    #ifndef _cc_sync_synchronize
+        #define _cc_sync_synchronize() _MemoryBarrier()
+    #endif
+    
     #ifndef _CRT_SECURE_NO_DEPRECATE
         #pragma warning(disable: 4996) /*_CRT_SECURE_NO_WARNINGS*/
     #endif
@@ -294,16 +325,6 @@
 #endif
 
 /* end Define compiler */
-
-#ifndef _cc_align
-    #if defined(__cplusplus) && (__cplusplus >= 201103L)
-        #define _cc_align(x) alignas(x)
-    #elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
-        #define _cc_align(x) _Alignas(x)
-    #else
-        #define _cc_align(x) (x)
-    #endif
-#endif /* _cc_align not defined */
 
 /* By default libcc uses the C calling convention */
 #ifndef _CC_CALL_

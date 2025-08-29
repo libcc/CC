@@ -144,7 +144,7 @@ _CC_API_PUBLIC(size_t) _cc_fpath(tchar_t *buf, size_t size, const tchar_t *fmt, 
             break;
         }
         
-        empty_length = _cc_aligned_alloc_opt(fmt_length + 10, 32);
+        empty_length = _cc_aligned_alloc_opt(fmt_length + 10, 64);
         ptr = (tchar_t *)_cc_realloc(tmp_ptr, sizeof(tchar_t) * empty_length);
         tmp_ptr = ptr;
     }

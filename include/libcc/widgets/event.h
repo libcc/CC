@@ -60,12 +60,6 @@ extern "C" {
 #define _CC_EVENT_DESC_IPV6_                  0x0004
 #define _CC_EVENT_DESC_FILE_                  0x0008 /**< descriptor refers to a file */
 
-#define _CC_EVENT_DESC_POLL_EPOLL_            0x0100 /**< Poll uses epoll method */
-#define _CC_EVENT_DESC_POLL_KQUEUE_           0x0200 /**< Poll uses kqueue method */
-#define _CC_EVENT_DESC_POLL_IOCP_             0x0300 /**< Poll uses iocp method */
-#define _CC_EVENT_DESC_POLL_SELECT_           0x0400 /**< Poll uses select method */
-#define _CC_EVENT_DESC_POLL_POLLFD_           0x0700 /**< Poll uses poll method */
-#define _CC_EVENT_DESC_POLL_DEVPOLL_          0x0800 /**< Poll uses devpoll method */
 
 #define _CC_TIMEOUT_MAX_LEVEL_                4
 #define _CC_TIMEOUT_NEAR_SHIFT_               8
@@ -103,35 +97,34 @@ struct _cc_event_buffer {
 };
 
 struct _cc_event {
-    uint16_t descriptor;
     /* One or more _CC_EVENT_* flags */
     uint16_t flags;
-
     uint16_t marks;
-    uint16_t round;
+
+    _cc_socket_t fd;
+
+    _cc_list_iterator_t lnk;
+    /* A callback function for an event. */
+    _cc_event_callback_t callback;
+    /* A user-supplied argument. */
+    pvoid_t args;
+
+    /* The timer wheel */
+    uint32_t timeout;
+    uint32_t expire;
+
+    /* Read-write buffer */
+    _cc_event_buffer_t *buffer;
 
     uint32_t ident;
 
-    _cc_socket_t fd;
+    uint16_t round;
+    uint16_t descriptor;
 
 #ifdef _CC_EVENT_USE_IOCP_
     /* private */
     _cc_socket_t accept_fd;
 #endif
-
-    /* The timer wheel */
-    uint32_t timer;
-    uint32_t timeout;
-
-    _cc_list_iterator_t lnk;
-
-    /* Read-write buffer */
-    _cc_event_buffer_t *buffer;
-
-    /* A callback function for an event. */
-    _cc_event_callback_t callback;
-    /* A user-supplied argument. */
-    pvoid_t args;
 };
 
 struct _cc_async_event {
@@ -140,7 +133,6 @@ struct _cc_async_event {
     byte_t ident;
     /*Number of events processed*/
     int32_t processed;
-    _cc_atomic32_t count;
 
     /*timers wheel*/
     uint32_t timer;

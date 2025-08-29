@@ -234,7 +234,7 @@ _CC_API_PUBLIC(void) _cc_loggerA_vformat(const tchar_t *file, int line, uint8_t 
             _cc_loggerA(file, line, level, ptr, fmt_length);
             break;
         }
-        empty_len = _cc_aligned_alloc_opt(fmt_length + 10, 32);
+        empty_len = _cc_aligned_alloc_opt(fmt_length + 10, 64);
         ptr = (char_t *)_cc_realloc(tmp_ptr, sizeof(char_t) * empty_len);
         tmp_ptr = ptr;
     }
@@ -276,7 +276,7 @@ _CC_API_PUBLIC(void) _cc_loggerW_vformat(const tchar_t *file, int line, uint8_t 
             break;
         }
 
-        empty_len = _cc_aligned_alloc_opt(fmt_length + 10,32);
+        empty_len = _cc_aligned_alloc_opt(fmt_length + 10, 64);
         ptr = (wchar_t *)_cc_realloc(tmp_ptr, sizeof(wchar_t) * empty_len);
         tmp_ptr = ptr;
     }

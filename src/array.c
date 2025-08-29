@@ -63,8 +63,8 @@ _CC_API_PUBLIC(pvoid_t) _cc_array_find(const _cc_array_t *ctx, const size_t inde
 }
 
 _CC_API_PUBLIC(size_t) _cc_array_push(_cc_array_t *ctx, pvoid_t data) {
-    _cc_assert(ctx != nullptr && data != nullptr);
     size_t index;
+    _cc_assert(ctx != nullptr && data != nullptr);
     if (_cc_unlikely(data == nullptr)) {
         return -1;
     }

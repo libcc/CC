@@ -23,6 +23,10 @@
 #include <libcc/atomic.h>
 #include <libcc/time.h>
 
+#ifdef __CC_LINUX__
+#include <unistd.h>
+#endif
+
 static struct {
     bool_t enabled;
     byte_t facility;

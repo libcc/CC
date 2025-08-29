@@ -22,6 +22,7 @@
 #include <libcc/dirent.h>
 #include <libcc/logger.h>
 #include <libcc/rand.h>
+#include <libcc/thread.h>
 #include <libcc/socket/socket.h>
 
 #ifdef _CC_MSVC_
@@ -38,11 +39,13 @@ static HMODULE _kernel32_handle = nullptr;
 #include <shellapi.h>
 #include <objbase.h>
 
+typedef LONG(WINAPI *RTLGETVERSION_PTR)(PRTL_OSVERSIONINFOW lpVersionInformation);
+
 typedef BOOL(WINAPI *MINIDUMPWRITEDUMP)(HANDLE hProcess, DWORD dwPid, HANDLE hFile, MINIDUMP_TYPE DumpType,
                                         CONST PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam,
                                         CONST PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
                                         CONST PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
-
+static RTLGETVERSION_PTR _call_get_version = nullptr;
 static tchar_t _minidump_module_path[_CC_MAX_PATH_] = {0};
 static tchar_t _minidump_app_name[_CC_MAX_PATH_] = {0};
 static HMODULE _dbghelp_handle = nullptr;
@@ -50,9 +53,41 @@ static HANDLE _current_process = nullptr;
 MINIDUMPWRITEDUMP _call_minidump_writedump = nullptr;
 static _cc_dumper_callback_t _dumper_callback = nullptr;
 
+static void init_get_version(void) {
+    HMODULE ntdll_module = GetModuleHandleW(L"ntdll.dll");
+    if (ntdll_module == nullptr) {
+        _cc_logger_error(_T("GetModuleHandle(ntdll.dll) Error Code:%d."), _cc_last_errno());
+    }
+	_call_get_version = (RTLGETVERSION_PTR)GetProcAddress(ntdll_module, "RtlGetVersion");
+}
+
+_CC_API_PUBLIC(void) _cc_get_os_version(uint32_t *major, uint32_t *minor, uint32_t *build) {
+    static _cc_once_t once_get_version = _CC_ONCE_INIT_;
+    OSVERSIONINFOW os_info;
+    _cc_once(&once_get_version,init_get_version);
+
+    if (!_call_get_version) {
+        return;
+    }
+    
+    _call_get_version(&os_info);
+
+    if (major) {
+        *major = os_info.dwMajorVersion;
+    }
+
+    if (minor) {
+        *minor = os_info.dwMajorVersion;
+    }
+
+    if (build) {
+        *build = os_info.dwBuildNumber;
+    }
+}
+
 _CC_API_PUBLIC(HMODULE) _cc_load_windows_kernel32() {
     if (_kernel32_handle == nullptr) {
-        _kernel32_handle = GetModuleHandle(_T("KERNEL32.dll"));
+        _kernel32_handle = GetModuleHandleW(L"KERNEL32.dll");
         if (_kernel32_handle == nullptr) {
             _cc_logger_error(_T("GetModuleHandle(KERNEL32.dll) Error Code:%d."), _cc_last_errno());
             return nullptr;
@@ -256,10 +291,15 @@ _CC_API_PUBLIC(int32_t) _cc_last_errno(void) {
 _CC_API_PUBLIC(tchar_t *) _cc_last_error(int32_t _errno) {
     static tchar_t sys_error_info[4096];
     tchar_t *p = sys_error_info;
-
-    DWORD c = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK, nullptr,
-                  _errno, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), sys_error_info, sizeof(sys_error_info), nullptr);
-    sys_error_info[c] = 0;
+    //MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
+    DWORD res = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK, nullptr,
+                  _errno, MAKELANGID(LANG_NEUTRAL, SUBLANG_ENGLISH_US), (LPSTR)sys_error_info, sizeof(sys_error_info), nullptr);
+    
+    if (!res && (GetLastError() == ERROR_MUI_FILE_NOT_FOUND || GetLastError() == ERROR_RESOURCE_TYPE_NOT_FOUND)) {
+		res = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, _errno, 0, (LPSTR)sys_error_info, sizeof(sys_error_info), nullptr);
+    }
+    sys_error_info[res] = 0;
+    
     // kill CR/LF that FormatMessage() sticks at the end
     while (*p) {
         if (*p == '\r') {

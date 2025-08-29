@@ -21,10 +21,6 @@
 #ifndef _C_CC_SYS_PTHREAD_C_H_INCLUDED_
 #define _C_CC_SYS_PTHREAD_C_H_INCLUDED_
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
 #include <errno.h>
 #include <pthread.h>
 #include <sys/time.h>

@@ -23,11 +23,12 @@
 _CC_API_PRIVATE(bool_t) _dns_response_callback(_cc_async_event_t *async, _cc_event_t *e, const uint16_t which) {
 	if (which & _CC_EVENT_READABLE_) {
         struct sockaddr_in sa;
-        int32_t n = 0, res = 0;
-        int32_t offset = 0;
-        struct QUESTION *q;
-        _cc_dns_header_t *dns_header;
-        _cc_dns_question_t dns_question;
+        int32_t n = 0;
+//        int32_t res = 0;
+//        int32_t offset = 0;
+//        struct QUESTION *q;
+//        _cc_dns_header_t *dns_header;
+//        _cc_dns_question_t dns_question;
         byte_t buffer[_CC_IO_BUFFER_SIZE_];
         socklen_t sa_len = (socklen_t)sizeof(sa);
 
@@ -36,7 +37,7 @@ _CC_API_PRIVATE(bool_t) _dns_response_callback(_cc_async_event_t *async, _cc_eve
         if (n < sizeof(_cc_dns_header_t)) {
             return true;
         }
-        
+        /*
         dns_header = (_cc_dns_header_t*)&buffer;
         offset = sizeof(_cc_dns_header_t);
         dns_question.name = (char_t*)dns_read_name(&buffer[offset], buffer, &res);
@@ -50,7 +51,7 @@ _CC_API_PRIVATE(bool_t) _dns_response_callback(_cc_async_event_t *async, _cc_eve
         printf("DNS:%s\n", dns_question.name);
 
         _cc_free(dns_question.name);
-        
+        */
         return true;
     }
 /*
@@ -67,24 +68,14 @@ _CC_API_PRIVATE(bool_t) _dns_response_callback(_cc_async_event_t *async, _cc_eve
 
 bool_t _cc_dns_listen(void) {
     struct sockaddr_in sa;
-    _cc_socket_t io_fd;
     _cc_async_event_t *async = _cc_get_async_event();
-
-    io_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (io_fd == -1) {
-        _cc_logger_error(_T("socket err:%s"), _cc_last_error(_cc_last_errno()));
-        return false;
+    _cc_event_t *e = _cc_event_alloc(async, _CC_EVENT_ACCEPT_);
+    if (e == nullptr) {
+        return -1;
     }
+    e->callback = _dns_response_callback;
+    e->timeout = 60000;
 
     _cc_inet_ipv4_addr(&sa, nullptr, 53);
-    if (bind(io_fd, (struct sockaddr *)&sa, sizeof(sa)) == -1) {
-        _cc_logger_error(_T("bing port error:%s"), _cc_last_error(_cc_last_errno()));
-        return false;
-    }
-
-    if (async->attach(async, _CC_EVENT_READABLE_, io_fd, 0, _dns_response_callback, nullptr) == nullptr) {
-        _cc_logger_error(_T("thread %d add socket (%d) event fial."), _cc_get_thread_id(nullptr), io_fd);
-        return false;
-    }
-    return true;
+    return _cc_tcp_listen(async, e, (_cc_sockaddr_t *)&sa, sizeof(struct sockaddr_in));
 }

@@ -44,7 +44,7 @@ endif
 # gcc -DSQLITE_ENABLE_COLUMN_METADATA sqlite3.c -shared -o sqlite3.dll -Wl,--out-implib,libsqlite3.a
 
 # Linux Ubuntu/Debian
-# sudo apt install libsqlite3-dev
+# sudo apt-get install libsqlite3-dev
 # MySQL
 # sudo apt-get install libmysqlclient-dev
 

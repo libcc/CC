@@ -149,7 +149,7 @@ _CC_API_PUBLIC(int32_t) _cc_rand_r(uint64_t *state, int32_t n) {
 
 _CC_API_PUBLIC(float32_t) _cc_randf_r(uint64_t *state) {
     // Note: its using 24 bits because float has 23 bits significand + 1 implicit bit
-    return (_cc_rand_bits_r(state) >> (32 - 24)) * 0x1p-24f;
+    return (_cc_rand_bits_r(state) >> (32 - 24)) * 1.0e-24f;
 }
 
 #define _random()                                                          \

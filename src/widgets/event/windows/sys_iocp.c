@@ -182,9 +182,7 @@ _CC_API_PRIVATE(bool_t) _iocp_event_attach(_cc_async_event_t *async, _cc_event_t
         return false;
     }
 
-    e->descriptor = _CC_EVENT_DESC_POLL_IOCP_ | (e->descriptor & 0xff);
-
-    if (_CC_ISSET_BIT(_CC_EVENT_DESC_SOCKET_, e->descriptor)) {
+    if (_CC_EVENT_IS_SOCKET(e->flags)) {
         if (CreateIoCompletionPort((HANDLE)e->fd, IOCPPort, _CC_IOCP_SOCKET_, 0) == nullptr) {
             _cc_logger_error(_T("CreateIoCompletionPort Error Code:%d.\n"), _cc_last_errno());
             return false;
@@ -324,6 +322,7 @@ _CC_API_PRIVATE(void) _iocp_event_dispatch(_cc_async_event_t *async, _iocp_overl
     _CC_UNSET_BIT(iocp_overlapped->flag, e->marks);
     if (iocp_overlapped->flag == _CC_EVENT_ACCEPT_) {
         e->accept_fd = iocp_overlapped->fd;
+        iocp_overlapped->fd = _CC_INVALID_SOCKET_;
     } else if (iocp_overlapped->flag == _CC_EVENT_CONNECT_) {
         if (NT_SUCCESS(iocp_overlapped->overlapped.Internal) &&
             _cc_setsockopt(e->fd, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, nullptr, 0) == 0) {
@@ -340,6 +339,7 @@ _CC_API_PRIVATE(void) _iocp_event_dispatch(_cc_async_event_t *async, _iocp_overl
 
 /**/
 _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
+	uint16_t u;
     if (_CC_ISSET_BIT(_CC_EVENT_DISCONNECT_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags) == 0) {
         /*delete*/
         _event_cleanup(async, e);
@@ -352,8 +352,8 @@ _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
     }
 
     /*update event*/
-    if (_CC_ISSET_BIT(_CC_EVENT_DESC_SOCKET_, e->descriptor) &&
-        _CC_EVENT_IS_SOCKET(e->flags) != _CC_EVENT_IS_SOCKET(e->marks)) {
+    u = _CC_EVENT_IS_SOCKET(e->flags);
+    if (u && u != _CC_EVENT_IS_SOCKET(e->marks)) {
         if (_iocp_event_update(async, e) == false) {
             if(e->callback) {
                 e->callback(async, e, _CC_EVENT_DISCONNECT_);
@@ -501,7 +501,6 @@ _CC_API_PRIVATE(bool_t) _iocp_event_quit(_cc_async_event_t *async) {
         if (async->priv->port) {
             CloseHandle(async->priv->port);
         }
-
         _iocp_overlapped_quit(async->priv);
         _cc_free(async->priv);
     }

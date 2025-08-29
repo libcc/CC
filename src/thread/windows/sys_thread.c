@@ -62,15 +62,14 @@ typedef struct {
 } _os_once_data_t;
 
 static BOOL WINAPI _os_once_inner(INIT_ONCE *once, void* args, void** context) {
-    _os_once_data_t* data = args;
+    _os_once_data_t* data = (_os_once_data_t*)args;
     data->callback();
     return TRUE;
 }
 
 _CC_API_PUBLIC(void) _cc_once(_cc_once_t* guard, _cc_once_callback_t callback) {
-    _os_once_data_t data = { 
-        .callback = callback
-    };
+    _os_once_data_t data;
+	data.callback = callback;
     InitOnceExecuteOnce(&guard->init_once, _os_once_inner, (void*)&data, NULL);
 }
 
@@ -100,8 +99,7 @@ _CC_API_PUBLIC(bool_t) _cc_create_sys_thread(_cc_thread_t* self) {
     DWORD thread_id = 0;
     // self->stacksize == 0 means "system default", same as win32 expects
     if (pfnBeginThread) {
-        self->handle = (_cc_thread_handle_t)((size_t)pfnBeginThread(nullptr, (unsigned int)self->stacksize,
-                                                                   (_beginthreadex_proc_type)RunThreadViaBeginThreadEx, self, flags, (unsigned*)&thread_id));
+        self->handle = (_cc_thread_handle_t)((size_t)pfnBeginThread(nullptr, (unsigned int)self->stacksize,RunThreadViaBeginThreadEx, self, flags, (unsigned*)&thread_id));
     } else {
         self->handle = CreateThread(nullptr, self->stacksize, RunThreadViaCreateThread, self, flags, &thread_id);
         pfnEndThread = nullptr;

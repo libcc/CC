@@ -7,14 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		418AF05929FDF1C400E4C6FB /* libcc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 418AF05829FDF1C400E4C6FB /* libcc.a */; };
 		418E9C1529A4A83E00D4D8B4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 418E9C1429A4A83E00D4D8B4 /* main.m */; };
 		418F425A2A87C04400220DD1 /* test.c in Sources */ = {isa = PBXBuildFile; fileRef = 418F42562A87C04400220DD1 /* test.c */; };
-		41ADBAC42A1474CC009A85F3 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 41ADBAC32A1474CC009A85F3 /* libsqlite3.tbd */; };
 		41D4E22529A77ADE00324E17 /* fishhook.h in Headers */ = {isa = PBXBuildFile; fileRef = 41D4E22329A77ADE00324E17 /* fishhook.h */; };
 		41D4E22629A77ADE00324E17 /* fishhook.c in Sources */ = {isa = PBXBuildFile; fileRef = 41D4E22429A77ADE00324E17 /* fishhook.c */; };
 		41D4E22A29A77B0500324E17 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D4E22929A77B0500324E17 /* main.m */; };
-		41E3A74F29FF816400BEFBD6 /* libcc.widgets.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 41E3A71B29FE480100BEFBD6 /* libcc.widgets.dylib */; };
 		41F05EFD29A3969400168B2F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 41F05EFC29A3969400168B2F /* AppDelegate.m */; };
 		41F05F0029A3969400168B2F /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 41F05EFF29A3969400168B2F /* ViewController.m */; };
 		41F05F0229A3969500168B2F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 41F05F0129A3969500168B2F /* Assets.xcassets */; };
@@ -29,6 +26,8 @@
 		41F05F4129A39B7100168B2F /* PopupViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 41F05F3E29A39B7100168B2F /* PopupViewController.xib */; };
 		41F05F4229A39B7100168B2F /* PopupViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 41F05F4029A39B7100168B2F /* PopupViewController.m */; };
 		41F05F4829A39D5000168B2F /* BasicsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 41F05F4629A39D5000168B2F /* BasicsController.m */; };
+		426BE2702E5DD33F00CE8D50 /* libcc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 41E3A71729FE480100BEFBD6 /* libcc.a */; };
+		426BE2712E5DD34200CE8D50 /* libcc.widgets.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 41E3A71B29FE480100BEFBD6 /* libcc.widgets.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,13 +58,14 @@
 			name = "Embed Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		418E9C1029A4A83E00D4D8B4 /* CopyFiles */ = {
+		418E9C1029A4A83E00D4D8B4 /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 12;
 			dstPath = "";
 			dstSubfolderSpec = 16;
 			files = (
 			);
+			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		41B4AD5329A44D9100406FE1 /* Copy Libraries */ = {
@@ -113,6 +113,10 @@
 		41F05F4029A39B7100168B2F /* PopupViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PopupViewController.m; sourceTree = "<group>"; };
 		41F05F4629A39D5000168B2F /* BasicsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BasicsController.m; sourceTree = "<group>"; };
 		41F05F4729A39D5000168B2F /* BasicsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BasicsController.h; sourceTree = "<group>"; };
+		426BE2562E5DD10200CE8D50 /* libodbc.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libodbc.2.dylib; path = ../../../homebrew/Cellar/unixodbc/2.3.12/lib/libodbc.2.dylib; sourceTree = "<group>"; };
+		426BE2582E5DD12B00CE8D50 /* libodbcinst.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libodbcinst.2.dylib; path = ../../../homebrew/Cellar/unixodbc/2.3.12/lib/libodbcinst.2.dylib; sourceTree = "<group>"; };
+		426BE25A2E5DD14400CE8D50 /* libsqlite3.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.0.tbd; path = usr/lib/libsqlite3.0.tbd; sourceTree = SDKROOT; };
+		426BE25C2E5DD15500CE8D50 /* libiodbc.2.1.18.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiodbc.2.1.18.tbd; path = usr/lib/libiodbc.2.1.18.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,9 +124,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				41ADBAC42A1474CC009A85F3 /* libsqlite3.tbd in Frameworks */,
-				41E3A74F29FF816400BEFBD6 /* libcc.widgets.dylib in Frameworks */,
-				418AF05929FDF1C400E4C6FB /* libcc.a in Frameworks */,
+				426BE2712E5DD34200CE8D50 /* libcc.widgets.dylib in Frameworks */,
+				426BE2702E5DD33F00CE8D50 /* libcc.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -232,6 +235,10 @@
 		41F05F6D29A3A2C700168B2F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				426BE25C2E5DD15500CE8D50 /* libiodbc.2.1.18.tbd */,
+				426BE25A2E5DD14400CE8D50 /* libsqlite3.0.tbd */,
+				426BE2582E5DD12B00CE8D50 /* libodbcinst.2.dylib */,
+				426BE2562E5DD10200CE8D50 /* libodbc.2.dylib */,
 				41ADBAC32A1474CC009A85F3 /* libsqlite3.tbd */,
 				418AF05829FDF1C400E4C6FB /* libcc.a */,
 			);
@@ -258,7 +265,7 @@
 			buildPhases = (
 				418E9C0E29A4A83E00D4D8B4 /* Sources */,
 				418E9C0F29A4A83E00D4D8B4 /* Frameworks */,
-				418E9C1029A4A83E00D4D8B4 /* CopyFiles */,
+				418E9C1029A4A83E00D4D8B4 /* Copy Files */,
 				418C6B3729A833B8007D66B9 /* ShellScript */,
 				418AEFC329FDEC8300E4C6FB /* Embed Libraries */,
 			);
@@ -486,6 +493,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
+					/opt/homebrew/Cellar/unixodbc/2.3.12/lib,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.libcc.test;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -508,6 +516,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
+					/opt/homebrew/Cellar/unixodbc/2.3.12/lib,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.libcc.test;
 				PRODUCT_NAME = "$(TARGET_NAME)";

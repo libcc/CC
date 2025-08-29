@@ -104,7 +104,6 @@ _CC_API_PRIVATE(bool_t) _epoll_event_update(int efd, _cc_event_t *e, bool_t rm) 
 /**/
 _CC_API_PRIVATE(bool_t) _epoll_event_attach(_cc_async_event_t *async, _cc_event_t *e) {
     _cc_assert(async != nullptr && e != nullptr);
-    e->descriptor = _CC_EVENT_DESC_POLL_EPOLL_ | (e->descriptor & 0xff);
     return _reset_event(async, e);
 }
 
@@ -133,8 +132,9 @@ _CC_API_PRIVATE(_cc_socket_t) _epoll_event_accept(_cc_async_event_t *async, _cc_
 
 /**/
 _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
+    uint16_t m = _CC_EVENT_IS_SOCKET(e->marks), u;
     if (_CC_ISSET_BIT(_CC_EVENT_DISCONNECT_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags) == 0) {
-        if (_CC_EVENT_IS_SOCKET(e->marks)) {
+        if (m) {
             _epoll_event_update(async->priv->fd, e, true);
         }
         _cc_free_event(async, e);
@@ -142,7 +142,7 @@ _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
     }
 
     if (_CC_ISSET_BIT(_CC_EVENT_PENDING_, e->flags)) {
-        if (_CC_EVENT_IS_SOCKET(e->marks)) {
+        if (m) {
             _epoll_event_update(async->priv->fd, e, true);
         }
 
@@ -151,8 +151,8 @@ _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
     }
 
     /*update event*/
-    if (_CC_ISSET_BIT(_CC_EVENT_DESC_SOCKET_, e->descriptor) &&
-        _CC_EVENT_IS_SOCKET(e->flags) != _CC_EVENT_IS_SOCKET(e->marks)) {
+    u = _CC_EVENT_IS_SOCKET(e->flags);
+    if (u && u != m) {
         _epoll_event_update(async->priv->fd, e, false);
     }
 

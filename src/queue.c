@@ -23,9 +23,11 @@
 
 /**/
 _CC_API_PUBLIC(void) _cc_queue_sync_push(_cc_queue_iterator_t *head, _cc_queue_iterator_t *lnk) {
+    _cc_queue_iterator_t *next;
     do {
-        lnk->next = head->next;
-    } while (!_cc_atomic64_cas((_cc_atomic64_t *)&head->next, ((uint64_t)(uintptr_t)lnk->next), (uint64_t)(uintptr_t)lnk));
+        next = head->next;
+        lnk->next = next;
+    } while (!_cc_atomic64_cas((_cc_atomic64_t *)&head->next, (uintptr_t)lnk->next, (uintptr_t)lnk));
 }
 
 /**/
@@ -34,7 +36,7 @@ _CC_API_PUBLIC(_cc_queue_iterator_t *) _cc_queue_sync_pop(_cc_queue_iterator_t *
 
     do {
         lnk = head->next;
-    } while (!_cc_atomic64_cas((_cc_atomic64_t *)&head->next, (uint64_t)(uintptr_t)lnk, (uint64_t)(uintptr_t)lnk->next));
+    } while (!_cc_atomic64_cas((_cc_atomic64_t *)&head->next, (uintptr_t)lnk, (uintptr_t)lnk->next));
 
     return lnk;
 }

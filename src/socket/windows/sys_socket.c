@@ -23,7 +23,6 @@
 #include <libcc/logger.h>
 
 #include <libcc/socket/socket.h>
-
 #include <mstcpip.h>
 
 #ifdef _CC_MSVC_
@@ -141,19 +140,73 @@ _CC_API_PUBLIC(int) _cc_set_socket_nonblock(_cc_socket_t fd, int nonblocking) {
     }
     return flags;
 }
+#if defined(TCP_KEEPIDLE) && defined(TCP_KEEPINTVL)
+/*
+ * Check if Windows version is 10.0.16299 (Windows 10, version 1709) or later.
+ */
+_CC_API_PRIVATE(int)  _windows10_version1709(void) {
+    uint32_t major;
+    uint32_t minor;
+    uint32_t build;
 
+    _cc_get_os_version(&major, &minor, &build);
+
+    if (major > 10){
+        return 1;
+    } else if (major < 10) {
+        return 0;
+    }
+
+    if (minor > 0){
+        return 1;
+    }
+
+    return build >= 16299;
+}
+#endif
 /**/
 _CC_API_PUBLIC(int) _cc_set_socket_keepalive(_cc_socket_t fd, int opt, int delay) {
     tcp_keepalive_t klive;
     if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (const char *)&opt, sizeof opt) == -1) {
         return WSAGetLastError();
     }
+#if defined(TCP_KEEPIDLE) && defined(TCP_KEEPINTVL)
+    /* Windows 10, version 1709 (build 10.0.16299) and later require second units
+    * for TCP keepalive options. */
+    if (_windows10_version1709()) {
+        if (setsockopt(fd,
+                       IPPROTO_TCP,
+                       TCP_KEEPIDLE,
+                       (const char*)&delay,
+                       sizeof delay) == -1) {
+            return WSAGetLastError();
+        }
 
+        if (setsockopt(fd,
+                       IPPROTO_TCP,
+                       TCP_KEEPINTVL,
+                       (const char*)&delay,
+                       sizeof delay) == -1) {
+            return WSAGetLastError();
+        }
+
+        if (setsockopt(fd,
+                       IPPROTO_TCP,
+                       TCP_KEEPCNT,
+                       (const char*)&delay,
+                       sizeof delay) == -1) {
+            return WSAGetLastError();
+        }
+    }
+#endif
     klive.onoff = 1;
-    klive.keepalivetime = delay;
-    klive.keepaliveinterval = delay;
+    klive.keepalivetime = delay * 1000;
+    klive.keepaliveinterval = delay * 1000;
 
-    WSAIoctl(fd, SIO_KEEPALIVE_VALS, &klive, sizeof(tcp_keepalive_t), nullptr, 0, (unsigned long *)&opt, 0, nullptr);
+    if (WSAIoctl(fd, SIO_KEEPALIVE_VALS, (LPVOID) &klive, sizeof(tcp_keepalive_t), 
+                nullptr, 0, (unsigned long *)&opt, 0, nullptr) == -1) {
+        return WSAGetLastError();
+    }
 
     return 0;
 }
@@ -258,11 +311,13 @@ int32_t _win_recv(_cc_socket_t fd, byte_t* buf, int32_t length) {
     DWORD count_received;
     DWORD flags = 0;
     WSABUF wsabuf;
+
     wsabuf.buf = (CHAR*)buf;
     wsabuf.len = (ULONG) length;
-    const int res = WSARecv(fd, &wsabuf, 1, &count_received, &flags, NULL, NULL);
-    if (res != 0) {
+
+    if (WSARecv(fd, &wsabuf, 1, &count_received, &flags, NULL, NULL) != 0) {
         return -1;
     }
+
     return (int32_t)count_received;
 }

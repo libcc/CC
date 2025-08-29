@@ -240,7 +240,7 @@ _CC_API_PUBLIC(int32_t) _cc_sendto(_cc_socket_t fd, const byte_t* buf, int32_t l
  */
 _CC_FORCE_INLINE_ bool_t _cc_inet_pton(int af, const tchar_t *src, byte_t *dst) {
 #ifdef __CC_WINDOWS__
-    return InetPton(af, src, dst) == 1;
+    return InetPton(af, (PCSTR)src, dst) == 1;
 #else
     return inet_pton(af, src, dst) == 1;
 #endif
@@ -257,7 +257,7 @@ _CC_FORCE_INLINE_ bool_t _cc_inet_pton(int af, const tchar_t *src, byte_t *dst) 
  */
 _CC_FORCE_INLINE_ bool_t _cc_inet_ntop(int af,  const byte_t *src, tchar_t *dst, int32_t size) {
 #ifdef __CC_WINDOWS__
-    return InetNtop(af, src, dst, size) != nullptr;
+    return InetNtop(af, (PVOID)src, dst, size) != nullptr;
 #else
     return inet_ntop(af, src, dst, size) != nullptr;
 #endif

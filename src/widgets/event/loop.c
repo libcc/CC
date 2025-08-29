@@ -51,7 +51,7 @@ _CC_API_PRIVATE(int32_t) _running(_cc_thread_t *thread, void *args) {
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _cc_install_async_event(int32_t count, void (*func)(_cc_async_event_t*,bool_t)) {
+_CC_API_PUBLIC(bool_t) _cc_install_async_event(int32_t cores, void (*func)(_cc_async_event_t*,bool_t)) {
     int32_t i;
     _cc_thread_t** threads;
     _cc_async_event_t *async_events;
@@ -64,16 +64,16 @@ _CC_API_PUBLIC(bool_t) _cc_install_async_event(int32_t count, void (*func)(_cc_a
     
     _cc_install_socket();
     
-    if (count <= 0) {
-        count = _cc_cpu_count();
+    if (cores <= 0) {
+        cores = _cc_get_cpu_cores();
     }
 
-    async_events = (_cc_async_event_t *)_cc_calloc(count, sizeof(_cc_async_event_t));
+    async_events = (_cc_async_event_t *)_cc_calloc(cores, sizeof(_cc_async_event_t));
     if (async_events == nullptr) {
         return false;
     }
 
-    threads = (_cc_thread_t **)_cc_calloc(count, sizeof(_cc_thread_t *));
+    threads = (_cc_thread_t **)_cc_calloc(cores, sizeof(_cc_thread_t *));
     if (threads == nullptr) {
         _cc_free(async_events);
         return false;
@@ -84,7 +84,7 @@ _CC_API_PUBLIC(bool_t) _cc_install_async_event(int32_t count, void (*func)(_cc_a
     g.threads = threads;
     g.callback = func;
 
-    for (i = 0; i < count; ++i) {
+    for (i = 0; i < cores; ++i) {
         _cc_async_event_t *n = (_cc_async_event_t *)(async_events + i);
         if (_cc_init_event_poller(n) == false) {
             continue;

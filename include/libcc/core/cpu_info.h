@@ -24,60 +24,18 @@
 
 #include "../types.h"
 
-/* Need to do this here because intrin.h has C++ code in it */
-/* Visual Studio 2005 has a bug where intrin.h conflicts with winnt.h */
-#if defined(_CC_MSVC_) && (_CC_MSVC_ >= 1500) && (defined(_M_IX86) || defined(_M_X64))
-    #include <intrin.h>
-
-    #ifndef __CC_CPU64__
-        #define __MMX__
-        #define __3dNOW__
-    #endif
-
-    #define __SSE__
-    #define __SSE2__
-
-#elif defined(__MINGW64_VERSION_MAJOR)
-    #include <intrin.h>
-#else
-    #ifdef __ALTIVEC__
-        #if HAVE_ALTIVEC_H && !defined(__APPLE_ALTIVEC__)
-            #include <altivec.h>
-            #undef pixel
-        #endif
-    #endif
-
-    #ifdef __MMX__
-        #include <mmintrin.h>
-    #endif
-
-    #ifdef __3dNOW__
-        #include <mm3dnow.h>
-    #endif
-
-    #ifdef __SSE__
-        #include <xmmintrin.h>
-    #endif
-
-    #ifdef __SSE2__
-        #include <emmintrin.h>
-    #endif
-#endif
-
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**/
-extern int _cc_cpu_number_processors;
+extern int _cc_cpu_cores;
 
 /**
  *  @brief This function returns the number of CPU cores available.
  */
-_CC_API_PUBLIC(int) _cc_cpu_count(void);
-
-_CC_API_PUBLIC(const tchar_t*) _cc_cpu_sn(void);
+_CC_API_PUBLIC(int) _cc_get_cpu_cores(void);
 
 
 /* Ends C function definitions when using C++ */

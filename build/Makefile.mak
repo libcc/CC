@@ -7,18 +7,16 @@
 #编译器路径(不一定要指定，如果用20060119版本的，需要指定)
 #GCC_PATH	=
 
-CC		?= gcc
-CPP		?= g++
-MAKE	?= make
-AR      ?= ar
-RANLIB  ?= ranlib
+CC		= gcc
+CPP		= g++
+MAKE	= make
+AR      = ar
+RANLIB  = ranlib
 
 #set 1 Debug or 0 Release
 #debug = 1
 VERSION 	:= 1.0.0
 MIN_VERSION := 10.15
-
-INSTALL_DIR	?=	/usr/local
 
 #获取当前操作名称
 ifeq ($(platform),)
@@ -82,7 +80,6 @@ ifeq ($(PLATFORM), ios)
 	LDFLAGS += -mios-version-min=$(MIN_VERSION) -march=armv7-a -Wl, -Bsymbolic-functions -read_only_relocs suppress
 else ifeq ($(PLATFORM), osx)
 	CC		= clang
-	CPP		= clang
 	CFLAGS  += -mmacosx-version-min=$(MIN_VERSION)
 	LDFLAGS += -Wl,-rpath,./ -mmacosx-version-min=$(MIN_VERSION) -Bsymbolic-functions -framework Foundation -framework CoreLocation -framework Cocoa
 	INSTALL_NAME = -install_name @loader_path/lib$(TARGET_NAME).dylib
@@ -97,7 +94,7 @@ else ifeq ($(PLATFORM), windows)
 endif
 
 ifeq ($(CC), gcc)
-	CFLAGS  += -D_GNU_SOURCE=1 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
+	CFLAGS  += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -D_GNU_SOURCE
 endif
 
 ifdef shared
@@ -143,11 +140,9 @@ CFLAGS += -pipe
 CFLAGS += -fPIC
 #gnu工具链编译过程中,输出信息会根据控制台的宽度自动换行
 CFLAGS += -fmessage-length=0
-#指明使用标准 ISO C99 再加上 GNU 的一些扩展作为标准来编译程序。c89, c99,gnu99
-CFLAGS += -std=gnu99
 
 #该选项能发现程序中一系列的常见错误警告
-CFLAGS+=-Wall
+CFLAGS += -Wall
 
 #优化等级
 ifdef debug
@@ -173,7 +168,12 @@ LDFLAGS += $(addprefix -L,$(sort $(LIBRARY_PATH)))
 LDFLAGS += $(addprefix -l,$(sort $(LIBS)))
 endif
 
-CXXFLAGS 	= $(CFLAGS) 
+CXXFLAGS 	:= $(CFLAGS)
+
+#指明使用标准 ISO C99 再加上 GNU 的一些扩展作为标准来编译程序。c89, c99, gnu99 gnu11
+CFLAGS 		+= -std=c11
+CXXFLAGS 	+= -std=c++11
+
 OBJCOPY		= objcopy
 OBJDUMP		= objdump
 SIZE		= size
@@ -236,7 +236,6 @@ help:
 
 OUTPUT_OBJ	= $(EXT_OBJ_PATH)/$(subst /,_,$(subst $(SRCROOT),obj,$@))
 
--include $(wildcard $(EXT_DEPS_PATH)/*.d)
 ##将.cpp文件编译成目标文件(.o)##
 %$(OBJ_SUF) : %$(CPP_SUF)
 	$(CPP) $(CXXFLAGS) -c $< -o $(OUTPUT_OBJ)

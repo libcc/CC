@@ -84,8 +84,8 @@ _CC_API_PRIVATE(int) _hmap_hash(_cc_hmap_t *ctx, uint32_t *slot, const uintptr_t
     }
 
     /* find the best index */
-    curr = hash % ctx->limit;
-    step = 1 + (hash % (ctx->limit - 1));
+    curr = (uint32_t)(hash % (intptr_t)ctx->limit);
+    step = (uint32_t)(1 + (hash %  (intptr_t)(ctx->limit - 1)));
 
     /* Linear probing */
     for (i = 0; i < MAX_CHAIN_LENGTH; i++) {
@@ -112,8 +112,9 @@ _CC_API_PRIVATE(_cc_hmap_element_t*) _hmap_empty_element(_cc_hmap_element_t *slo
     _cc_hmap_element_t *element;
 
     /* find the best index */
-    curr = hash % limit;
-    step = 1 + (hash % (limit - 1));
+    curr = (uint32_t)(hash % (intptr_t)limit);
+    step = (uint32_t)(1 + (hash %  (intptr_t)(limit - 1)));
+
     /* Linear probing */
     for (i = 0; i < MAX_CHAIN_LENGTH; i++) {
         element = &slots[curr];
@@ -135,8 +136,7 @@ _CC_API_PRIVATE(int) _hmap_rehash(_cc_hmap_t *ctx, int times) {
     uint32_t limit = ctx->limit * times;
 
     /* Setup the new elements */
-    _cc_hmap_element_t *elements = (_cc_hmap_element_t *)_cc_malloc(limit * sizeof(_cc_hmap_element_t));
-    bzero(elements,sizeof(_cc_hmap_element_t) * limit);
+    _cc_hmap_element_t *elements = (_cc_hmap_element_t *)_cc_calloc(limit, sizeof(_cc_hmap_element_t));
 
     _cc_list_iterator_cleanup(&list);
 
@@ -200,7 +200,8 @@ _CC_API_PUBLIC(bool_t) _cc_hmap_push(_cc_hmap_t *ctx, const uintptr_t keyword, c
         return false;
     }
 
-    while (flag == MAP_FULL) {
+    while (flag == MAP_FULL && times < 10) {
+
         if (_hmap_rehash(ctx, times++) == MAP_FULL) {
             continue;
         }
@@ -233,9 +234,9 @@ _CC_API_PUBLIC(uintptr_t) _cc_hmap_find(_cc_hmap_t *ctx, const uintptr_t keyword
 
     /* Find data location */
     hash = ctx->hash_func(keyword);
-    curr = hash % ctx->limit;
-    step = 1 + (hash % (ctx->limit - 1));
-
+    curr = (uint32_t)(hash % (intptr_t)ctx->limit);
+    step = (uint32_t)(1 + (hash %  (intptr_t)(ctx->limit - 1)));
+    
     /* Linear probing, if necessary */
     for (i = 0; i < MAX_CHAIN_LENGTH; i++) {
         element = &ctx->slots[curr];
@@ -261,8 +262,8 @@ _CC_API_PUBLIC(uintptr_t) _cc_hmap_pop(_cc_hmap_t *ctx, const uintptr_t keyword)
 
     /* Find keyword */
     hash = ctx->hash_func(keyword);
-    curr = hash % ctx->limit;
-    step = 1 + (hash % (ctx->limit - 1));
+    curr = (uint32_t)(hash % (intptr_t)ctx->limit);
+    step = (uint32_t)(1 + (hash %  (intptr_t)(ctx->limit - 1)));
 
     /* Linear probing, if necessary */
     for (i = 0; i < MAX_CHAIN_LENGTH; i++) {

@@ -55,8 +55,6 @@ time_t get_rfc822_time(const tchar_t* rfc822_date);
 _CC_WIDGETS_API(void) _widget_open_syslog(byte_t facility, const tchar_t *ip, const uint16_t port);
 /**/
 _CC_WIDGETS_API(void) _widget_close_syslog(void);
-
-_CC_WIDGETS_API(void) PrintModuleInfo();
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
 }

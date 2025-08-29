@@ -22,6 +22,7 @@
 #ifndef _C_CC_BUFFER_H_INCLUDED_
 #define _C_CC_BUFFER_H_INCLUDED_
 
+#include <stdio.h>
 #include "types.h"
 
 /* Set up for C function definitions, even when using C++ */

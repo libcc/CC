@@ -18,12 +18,17 @@
  *    misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
 */
-#include <execinfo.h>
-#include <dlfcn.h>
-#include <stdio.h>
 #include <libcc/core/unix.h>
 #include <libcc/dirent.h>
 #include <libcc/logger.h>
+
+#include <execinfo.h>
+#include <dlfcn.h>
+#include <stdio.h>
+/**/
+_CC_API_PUBLIC(void) _cc_get_os_version(uint32_t *major, uint32_t *minor, uint32_t *build) {
+
+}
 
 _CC_API_PUBLIC(bool_t) _cc_isdir(const tchar_t *dir_path) {
     struct stat st;
@@ -43,7 +48,7 @@ _CC_API_PUBLIC(bool_t) _cc_isdir(const tchar_t *dir_path) {
 _CC_API_PUBLIC(size_t) _cc_get_resolve_symbol(tchar_t *buf, size_t length) {
     int n,i;
     size_t r;
-    pvoid_t buffer[64];
+    pvoid_t buffer[128];
     char **symbols;
     const char *func_name;
     Dl_info info;
@@ -95,9 +100,9 @@ _CC_API_PUBLIC(const _cc_String_t *) _cc_get_module_file_name(void) {
         }
         if (i > 0) {
             path.data = dl;
-            path.length = length - i;
-            memmove(dl,dl + i + 1, length - i);
-            dl[length - 1] = 0;
+            path.length = (length - i) & 63;
+            memmove(dl,dl + i + 1, path.length);
+            dl[path.length] = 0;
         }
     }
 

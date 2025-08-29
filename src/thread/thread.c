@@ -122,7 +122,7 @@ _CC_API_PUBLIC(void) _cc_detach_thread(_cc_thread_t *self) {
         _cc_detach_sys_thread(self);
     } else {
         /* all other states are pretty final, see where we landed. */
-        const _cc_atomic32_t thread_state = _cc_atomic32_get(&self->state);
+        const _cc_atomic32_t thread_state = _cc_atomic32_load(&self->state);
         if ((thread_state == _CC_THREAD_STATE_DETACHED_) || (thread_state == _CC_THREAD_STATE_CLEANED_)) {
             return; /* already detached (you shouldn't call this twice!) */
         } else if (thread_state == _CC_THREAD_STATE_ZOMBIE_) {

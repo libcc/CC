@@ -2939,7 +2939,7 @@ _CC_API_PRIVATE(uint16_t) gbk2uni(uint8_t ch, uint8_t cl) {
     return ((ch < 0x7E) && (cl < 0xBF)) ? gs_gbk2uni_table[ch * 0xBF + cl] : 0;
 }
 
-_CC_API_PRIVATE(uint16_t) uni2gbk2(uint16_t uni) {
+_CC_API_PRIVATE(uint16_t) uni2gbk(uint16_t uni) {
 	uni -= 0x4E02;
 
 	if (uni < _cc_countof(gs_uni2gbk_table0)) {
@@ -3019,7 +3019,7 @@ _CC_API_PUBLIC(int32_t) _cc_utf8_to_gbk( const uint8_t *source_start,
 		}
 
 		unicode = ((uint16_t)h << 12) | ((uint16_t)(m & 0x3f) << 6) | (e & 0x3f);
-		gbk = uni2gbk2(unicode);
+		gbk = uni2gbk(unicode);
 
 		if (gbk == 0) {
 			return -1;

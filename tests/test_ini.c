@@ -1,0 +1,129 @@
+/*
+ * Copyright libcc.cn@gmail.com. and other libcc contributors.
+ * All rights reserved.org>
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty.  In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+
+ * 1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ *    misrepresented as being the original software.
+ * 3. This notice may not be removed or altered from any source distribution.
+*/
+#include <libcc/widgets/ini.h>
+#include <stdio.h>
+#include <string.h>
+
+const _cc_String_t ini_content = _cc_String("[section1]\nkey1 = value1\nkey2 = value2\n[section2]\nkey3 = value3");
+
+static void test_ini_parse() {
+    _cc_ini_t* ini = _cc_parse_ini(ini_content.data, ini_content.length);
+    
+    if (ini == NULL) {
+        printf("Failed to parse INI content\n");
+        return;
+    }
+    
+    _cc_ini_t* section1 = _cc_ini_find(ini, _T("section1"));
+    if (section1 == NULL) {
+        printf("Failed to find section1\n");
+        _cc_free_ini(ini);
+        return;
+    }
+    
+    const tchar_t* value1 = _cc_ini_find_string(section1, _T("key1"));
+    if (value1 == NULL || _tcscmp(value1, _T("value1")) != 0) {
+        printf("Failed to find key1 or incorrect value\n");
+        _cc_free_ini(ini);
+        return;
+    }
+    
+    const tchar_t* value2 = _cc_ini_find_string(section1, _T("key2"));
+    if (value2 == NULL || _tcscmp(value2, _T("value2")) != 0) {
+        printf("Failed to find key2 or incorrect value\n");
+        _cc_free_ini(ini);
+        return;
+    }
+    
+    _cc_ini_t* section2 = _cc_ini_find(ini, _T("section2"));
+    if (section2 == NULL) {
+        printf("Failed to find section2\n");
+        _cc_free_ini(ini);
+        return;
+    }
+    
+    const tchar_t* value3 = _cc_ini_find_string(section2, _T("key3"));
+    if (value3 == NULL || _tcscmp(value3, _T("value3")) != 0) {
+        printf("Failed to find key3 or incorrect value\n");
+        _cc_free_ini(ini);
+        return;
+    }
+    
+    printf("INI parsing test passed\n");
+    _cc_free_ini(ini);
+}
+
+static void test_ini_from_file() {
+    FILE *fp = fopen("test.ini", "wb");
+    assert(fp != NULL);
+    fwrite(ini_content.data, 1, ini_content.length, fp);
+    fclose(fp);
+
+    _cc_ini_t* ini = _cc_ini_from_file(file_path);
+    
+    if (ini == NULL) {
+        printf("Failed to parse INI file\n");
+        return;
+    }
+    
+    _cc_ini_t* section = _cc_ini_find(ini, _T("section1"));
+    if (section == NULL) {
+        printf("Failed to find section1 in file\n");
+        _cc_free_ini(ini);
+        return;
+    }
+    
+    const tchar_t* value = _cc_ini_find_string(section, _T("key1"));
+    if (value == NULL || _tcscmp(value, _T("value1")) != 0) {
+        printf("Failed to find key1 or incorrect value in file\n");
+        _cc_free_ini(ini);
+        return;
+    }
+    
+    printf("INI file parsing test passed\n");
+    _cc_free_ini(ini);
+}
+
+static void test_ini_error_handling() {
+    const tchar_t* invalid_ini = _T("[section1\nkey1 = value1");
+    _cc_ini_t* ini = _cc_parse_ini(invalid_ini);
+    
+    if (ini != NULL) {
+        printf("Failed to detect invalid INI content\n");
+        _cc_free_ini(ini);
+        return;
+    }
+    
+    const tchar_t* error = _cc_ini_error();
+    if (error == NULL) {
+        printf("Failed to retrieve error message\n");
+        return;
+    }
+    
+    printf("Error handling test passed: %s\n", error);
+}
+
+int main() {
+    test_ini_parse();
+    test_ini_from_file();
+    test_ini_error_handling();
+    return 0;
+}
