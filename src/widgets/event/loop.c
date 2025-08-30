@@ -96,6 +96,13 @@ _CC_API_PUBLIC(bool_t) _cc_install_async_event(int32_t cores, void (*func)(_cc_a
         g.count++;
     }
     
+    if (g.count == 0) {
+        g.keep_active = false;
+        _cc_free(threads);
+        _cc_free(async_events);
+        return false;
+    }
+
     return true;
 }
 
