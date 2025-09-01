@@ -53,12 +53,10 @@ extern "C" {
 #define _CC_EVENT_CLOEXEC_                    0x2000
 
 /** Used in _cc_event_t to determine what the fd is */
-
-#define _CC_EVENT_NO_DESC_                    0x0000 /**< nothing here */
-#define _CC_EVENT_DESC_SOCKET_                0x0001 /**< descriptor refers to a socket */
-#define _CC_EVENT_DESC_UDP_                   0x0002 /**< descriptor refers to a timer */
-#define _CC_EVENT_DESC_IPV6_                  0x0004
-#define _CC_EVENT_DESC_FILE_                  0x0008 /**< descriptor refers to a file */
+#define _CC_EVENT_DESC_SOCKET_                0x010000 /**< descriptor refers to a socket */
+#define _CC_EVENT_DESC_UDP_                   0x020000 /**< descriptor refers to a udp */
+#define _CC_EVENT_DESC_IPV6_                  0x040000
+#define _CC_EVENT_DESC_FILE_                  0x080000 /**< descriptor refers to a file */
 
 
 #define _CC_TIMEOUT_MAX_LEVEL_                4
@@ -98,9 +96,11 @@ struct _cc_event_buffer {
 
 struct _cc_event {
     /* One or more _CC_EVENT_* flags */
-    uint16_t flags;
-    uint16_t marks;
+    uint32_t flags;
+    uint32_t marks;
 
+    //0xFFF(async index)FFFFF
+    uint32_t ident;
     _cc_socket_t fd;
 
     _cc_list_iterator_t lnk;
@@ -116,11 +116,6 @@ struct _cc_event {
     /* Read-write buffer */
     _cc_event_buffer_t *buffer;
 
-    uint32_t ident;
-
-    uint16_t round;
-    uint16_t descriptor;
-
 #ifdef _CC_EVENT_USE_IOCP_
     /* private */
     _cc_socket_t accept_fd;
@@ -130,7 +125,7 @@ struct _cc_event {
 struct _cc_async_event {
     byte_t running;
     /**/
-    byte_t ident;
+    uint16_t ident;
     /*Number of events processed*/
     int32_t processed;
 
@@ -171,7 +166,7 @@ struct _cc_async_event {
     /**/
     bool_t (*wait)(_cc_async_event_t *async, uint32_t timeout);
     /**/
-    bool_t (*quit)(_cc_async_event_t *async);
+    bool_t (*free)(_cc_async_event_t *async);
 };
 
 /**
@@ -214,7 +209,7 @@ _CC_WIDGETS_API(_cc_event_t *) _cc_get_event_by_id(uint32_t ident);
  *
  * @return _cc_async_event_t structure
  */
-_CC_WIDGETS_API(_cc_async_event_t *) _cc_get_async_event_by_id(uint32_t round);
+_CC_WIDGETS_API(_cc_async_event_t *) _cc_get_async_event_by_id(uint32_t ident);
 
 /**
  * @brief alloc a read/write socket buffer
@@ -335,35 +330,35 @@ _CC_WIDGETS_API(bool_t) _cc_tcp_listen(_cc_async_event_t *async, _cc_event_t *e,
 _CC_WIDGETS_API(bool_t) _cc_tcp_connect(_cc_async_event_t *async, _cc_event_t *e, _cc_sockaddr_t *sockaddr, _cc_socklen_t socklen);
 
 /**/
-_CC_WIDGETS_API(bool_t) _cc_init_event_select(_cc_async_event_t*);
+_CC_WIDGETS_API(bool_t) _cc_register_select(_cc_async_event_t*);
 
 #ifdef __CC_WINDOWS__
     #ifdef _CC_EVENT_USE_IOCP_
-    _CC_WIDGETS_API(bool_t) _cc_init_event_iocp(_cc_async_event_t*);
-        #define _cc_init_event_poller _cc_init_event_iocp
+    _CC_WIDGETS_API(bool_t) _cc_register_iocp(_cc_async_event_t*);
+        #define _cc_register_poller _cc_register_iocp
     #else
-        #define _cc_init_event_poller _cc_init_event_select
+        #define _cc_register_poller _cc_register_select
     #endif
 #elif defined(__CC_LINUX__)
-    _CC_WIDGETS_API(bool_t) _cc_init_event_poll(_cc_async_event_t*);
-    _CC_WIDGETS_API(bool_t) _cc_init_event_epoll(_cc_async_event_t*);
-    #define _cc_init_event_poller _cc_init_event_epoll
+    _CC_WIDGETS_API(bool_t) _cc_register_poll(_cc_async_event_t*);
+    _CC_WIDGETS_API(bool_t) _cc_register_epoll(_cc_async_event_t*);
+    #define _cc_register_poller _cc_register_epoll
 #elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__) || \
     defined(__CC_FREEBSD__) || defined(__CC_OPENBSD__) ||   \
     defined(__CC_NETBSD__)
-    _CC_WIDGETS_API(bool_t) _cc_init_event_poll(_cc_async_event_t*);
-    _CC_WIDGETS_API(bool_t) _cc_init_event_kqueue(_cc_async_event_t*);
-    #define _cc_init_event_poller _cc_init_event_kqueue
+    _CC_WIDGETS_API(bool_t) _cc_register_poll(_cc_async_event_t*);
+    _CC_WIDGETS_API(bool_t) _cc_register_kqueue(_cc_async_event_t*);
+    #define _cc_register_poller _cc_register_kqueue
 #else
-    #define _cc_init_event_poller _cc_init_event_select
+    #define _cc_register_poller _cc_register_select
 #endif
 
 /**/
-_CC_WIDGETS_API(bool_t) _cc_install_async_event(int32_t threads, void (*func)(_cc_async_event_t*,bool_t));
+_CC_WIDGETS_API(bool_t) _cc_alloc_async_event(int32_t cores, void (*cb)(_cc_async_event_t*, bool_t));
 /**/
 _CC_WIDGETS_API(bool_t) _cc_async_event_is_running(void);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_uninstall_async_event(void);
+_CC_WIDGETS_API(bool_t) _cc_free_async_event(void);
 /**/
 _CC_WIDGETS_API(void) _cc_async_event_abort(void);
 

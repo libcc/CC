@@ -13,7 +13,7 @@
     "tasks": [
         {
             "label": "test",
-            "args": [".bin","target=tests","build=event","debug=1"],
+            "args": [".bin","target=tests","build=event2","debug=1"],
         },
         {
             "label": "build-widgets",
@@ -35,7 +35,7 @@
             "label": "build-debug-UpdateBuilder",
             "args": [".bin","debug=1"],
             "options": {
-                "cwd": "${workspaceRoot}/widgets/UpdateBuilder/"
+                "cwd": "${workspaceRoot}/tools/UpdateBuilder/"
             },
         },
         {

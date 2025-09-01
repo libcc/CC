@@ -21,7 +21,6 @@
 #include <libcc/alloc.h>
 #include <libcc/thread.h>
 #include "event.c.h"
-
 static struct {
     bool_t keep_active;
     int32_t count;
@@ -29,9 +28,8 @@ static struct {
     _cc_thread_t **threads;
     void (*callback)(_cc_async_event_t*, bool_t);
 } g = {false, 0, nullptr, nullptr, nullptr};
-
 /**/
-_CC_API_PRIVATE(int32_t) _running(_cc_thread_t *thread, void *args) {
+_CC_API_PRIVATE(int32_t) _running(pvoid_t args) {
     _cc_async_event_t *async = (_cc_async_event_t *)args;
     
     if (g.callback) {
@@ -46,12 +44,12 @@ _CC_API_PRIVATE(int32_t) _running(_cc_thread_t *thread, void *args) {
         g.callback(async, false);
     }
 
-    async->quit(async);
+    async->free(async);
     return 0;
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _cc_install_async_event(int32_t cores, void (*func)(_cc_async_event_t*,bool_t)) {
+_CC_API_PUBLIC(bool_t) _cc_alloc_async_event(int32_t cores, void (*cb)(_cc_async_event_t*,bool_t)) {
     int32_t i;
     _cc_thread_t** threads;
     _cc_async_event_t *async_events;
@@ -61,13 +59,16 @@ _CC_API_PUBLIC(bool_t) _cc_install_async_event(int32_t cores, void (*func)(_cc_a
     }
 
     srand((uint32_t)time(nullptr));
-    _cc_get_cpu_cores();
+    
     _cc_install_socket();
     
     if (cores <= 0) {
-        cores = _cc_cpu_cores;
-    } else if (cores > (_cc_cpu_cores * 2)) {
-        cores = _cc_cpu_cores * 2;
+        cores = _cc_get_cpu_cores();
+    }
+    
+    //0xFFF
+    if (cores > 4095) {
+        cores = 4095;
     }
 
     async_events = (_cc_async_event_t *)_cc_calloc(cores, sizeof(_cc_async_event_t));
@@ -84,30 +85,23 @@ _CC_API_PUBLIC(bool_t) _cc_install_async_event(int32_t cores, void (*func)(_cc_a
     g.keep_active = true;
     g.async_events = async_events;
     g.threads = threads;
-    g.callback = func;
+    g.callback = cb;
 
     for (i = 0; i < cores; ++i) {
         _cc_async_event_t *n = (_cc_async_event_t *)(async_events + i);
-        if (_cc_init_event_poller(n) == false) {
-            break;
+        if (_cc_register_poller(n) == false) {
+            continue;
         }
         n->args = nullptr;
         *(threads + i) = _cc_thread(_running, _T("event loop"), n);
         g.count++;
     }
     
-    if (g.count == 0) {
-        g.keep_active = false;
-        _cc_free(threads);
-        _cc_free(async_events);
-        return false;
-    }
-
     return true;
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _cc_uninstall_async_event(void) {
+_CC_API_PUBLIC(bool_t) _cc_free_async_event(void) {
     int32_t i;
 
     if (!g.keep_active) {

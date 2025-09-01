@@ -225,6 +225,7 @@ parts/
 var/
 sdist/
 develop-eggs/
+__pycache__/
 .installed.cfg
 
 # Installer logs

@@ -44,14 +44,13 @@ struct _cc_async_event_priv {
 };
 
 typedef struct _iocp_overlapped {
-    uint16_t round;
-	uint16_t flag;
+    uint32_t ident;
+	uint32_t flag;
 	_cc_socket_t fd;
     OVERLAPPED overlapped;
     _cc_list_iterator_t lnk;
     _cc_event_t *e;
 } _iocp_overlapped_t;
-
 
 /**
  * @brief IOCP Socket TCP Accept

@@ -185,7 +185,7 @@ _CC_API_PRIVATE(bool_t) _epoll_event_wait(_cc_async_event_t *async, uint32_t tim
     }
 
     for (i = 0; i < rc; ++i) {
-        uint16_t which = _CC_EVENT_UNKNOWN_;
+        uint32_t which = _CC_EVENT_UNKNOWN_;
         int32_t what = (int32_t)actives[i].events;
         _cc_event_t *e = (_cc_event_t *)actives[i].data.ptr;
 
@@ -224,7 +224,7 @@ EPOLL_END:
 }
 
 /**/
-_CC_API_PRIVATE(bool_t) _epoll_event_quit(_cc_async_event_t *async) {
+_CC_API_PRIVATE(bool_t) _epoll_event_free(_cc_async_event_t *async) {
     _cc_assert(async != nullptr);
     if (async == nullptr) {
         return false;
@@ -239,16 +239,16 @@ _CC_API_PRIVATE(bool_t) _epoll_event_quit(_cc_async_event_t *async) {
         async->priv = nullptr;
     }
 
-    return _async_event_quit(async);
+    return _unregister_async_event(async);
 }
 
 /**/
-_CC_API_PRIVATE(bool_t) _epoll_event_init(_cc_async_event_t *async) {
+_CC_API_PRIVATE(bool_t) _epoll_event_alloc(_cc_async_event_t *async) {
     _cc_socket_t fd = -1;
-    if (!_async_event_init(async)) {
+
+    if (!_register_async_event(async)) {
         return false;
     }
-
 #ifdef EPOLL_CLOEXEC
     fd = epoll_create1(EPOLL_CLOEXEC);
 #endif
@@ -271,8 +271,8 @@ _CC_API_PRIVATE(bool_t) _epoll_event_init(_cc_async_event_t *async) {
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _cc_init_event_epoll(_cc_async_event_t *async) {
-    if (!_epoll_event_init(async)) {
+_CC_API_PUBLIC(bool_t) _cc_register_epoll(_cc_async_event_t *async) {
+    if (!_epoll_event_alloc(async)) {
         return false;
     }
     async->reset = _epoll_event_reset;
@@ -281,7 +281,7 @@ _CC_API_PUBLIC(bool_t) _cc_init_event_epoll(_cc_async_event_t *async) {
     async->disconnect = _epoll_event_disconnect;
     async->accept = _epoll_event_accept;
     async->wait = _epoll_event_wait;
-    async->quit = _epoll_event_quit;
+    async->free = _epoll_event_free;
     async->reset = _epoll_event_reset;
     return true;
 }

@@ -79,7 +79,7 @@ _CC_API_PRIVATE(bool_t) network_event_pasv_callback(_cc_async_event_t* async,
 
 _CC_API_PRIVATE(bool_t) network_event_port_callback(_cc_async_event_t* async,
                                                      _cc_event_t* e,
-                                                     const uint16_t which) {
+                                                     const uint32_t which) {
     /*成功连接服务器*/
     if (which & _CC_EVENT_ACCEPT_) {
         _cc_ftp_t* ftp = (_cc_ftp_t*)e->args;
@@ -87,18 +87,28 @@ _CC_API_PRIVATE(bool_t) network_event_port_callback(_cc_async_event_t* async,
         _cc_event_t* new_event;
         struct sockaddr_in remote_addr = {0};
         _cc_socklen_t remote_addr_len = sizeof(struct sockaddr_in);
-        _cc_async_event_t* new_cycle = _cc_get_event_cycle();
+        _cc_async_event_t* async2 = _cc_get_async_event();
+        _cc_event_t* e2;
 
         fd = _cc_event_accept(async, e, &remote_addr, &remote_addr_len);
         if (fd == _CC_INVALID_SOCKET_) {
             _cc_logger_error(_T("thread %d accept fail.\n"), _cc_get_thread_id(nullptr));
             return true;
         }
-
-        new_event = new_cycle->attach(new_cycle, _CC_EVENT_TIMEOUT_ | _CC_EVENT_READABLE_ | _CC_EVENT_BUFFER_, fd, 30000, network_event_port_callback, ftp);
-        if (!new_event) {
-            _cc_logger_error(_T("thread %d attach socket (%d) event fial.\n"), _cc_get_thread_id(nullptr), fd);
+        e2 = _cc_event_alloc(async2, _CC_EVENT_TIMEOUT_ | _CC_EVENT_READABLE_ | _CC_EVENT_BUFFER_);
+        if (!e2) {
+            _cc_logger_error(_T("thread %d alloc event fail.\n"), _cc_get_thread_id(nullptr));
             _cc_close_socket(fd);
+            return true;
+        }
+        e2->args = ftp;
+        e2->buffer = e->buffer;
+        e2->callback = network_event_pasv_callback;
+        e2->timeout = 30000;
+
+        if (!async2->attach(async2, e2)) {
+            _cc_logger_error(_T("thread %d attach socket (%d) event fial.\n"), _cc_get_thread_id(nullptr), fd);
+            _cc_event_free(async2, e2);
             return true;
         }
 
@@ -108,7 +118,7 @@ _CC_API_PRIVATE(bool_t) network_event_port_callback(_cc_async_event_t* async,
             _cc_logger_debug(_T("TCP accept [%d,%d,%d,%d] fd:%d\n"), ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3], fd);
         }
 
-        return _cc_ftp_bind_accept(ftp, new_cycle, new_event);
+        return _cc_ftp_bind_accept(ftp, async2, e2);
     }
 
     /*无法连接*/
@@ -319,9 +329,15 @@ _CC_API_PRIVATE(bool_t) ftp_event_callback(_cc_ftp_t* ftp, uint16_t which) {
                     _cc_ftp_open_port(ftp);
                 }
             } else {
-                ftp->data.async = _cc_get_event_cycle();
-                ftp->data.e = _cc_tcp_connect(ftp->data.async, _CC_EVENT_CONNECT_|_CC_EVENT_TIMEOUT_|_CC_EVENT_BUFFER_,
-                    (_cc_sockaddr_t*)&ftp->sa, 60000, network_event_pasv_callback, ftp);
+                _cc_event_t *e;
+                ftp->data.async = _cc_get_async_event();
+                e = _cc_event_alloc(ftp->data.async, _CC_EVENT_CONNECT_|_CC_EVENT_TIMEOUT_|_CC_EVENT_BUFFER_);
+                if (e) {
+                    e->args = ftp;
+                    e->timeout = 60000;
+                    e->callback = network_event_callback;
+                    _cc_tcp_connect(ftp->data.async, ftp->data.e, (_cc_sockaddr_t*)&ftp->sa, ftp->sa_len);
+                }
             }
             break;
         case _CC_LIBFTP_OPTS_FAILED:
@@ -360,10 +376,18 @@ _CC_API_PRIVATE(bool_t) ftp_event_callback(_cc_ftp_t* ftp, uint16_t which) {
 
 bool_t ftp_client(_cc_ftp_t* ftp, tchar_t *host, uint16_t port) {
     struct sockaddr_in sa;
-    _cc_async_event_t *async = _cc_get_event_cycle();
+    _cc_event_t *e;
+    _cc_async_event_t *async = _cc_get_async_event();
     if (ftp == nullptr) {
         return false;
     }
+    e = _cc_event_alloc(async,_CC_EVENT_CONNECT_|_CC_EVENT_TIMEOUT_|_CC_EVENT_BUFFER_);
+    if (e == nullptr) {
+        return false;
+    }
+    e->args = ftp;
+    e->callback = network_event_callback;
+    e->timeout = 60000;
 
     bzero(ftp, sizeof(_cc_ftp_t));
     ftp->callback = ftp_event_callback;
@@ -372,7 +396,7 @@ bool_t ftp_client(_cc_ftp_t* ftp, tchar_t *host, uint16_t port) {
     ftp->logined = false;
 
     _cc_inet_ipv4_addr(&sa, host, port);
-    if (_cc_tcp_connect(async, _CC_EVENT_CONNECT_|_CC_EVENT_TIMEOUT_|_CC_EVENT_BUFFER_, (_cc_sockaddr_t*)&sa, 60000, network_event_callback, ftp) == nullptr) {
+    if (!_cc_tcp_connect(async, e, (_cc_sockaddr_t*)&sa, sizeof(struct sockaddr_in)) {
         _tprintf(_T("Unable to connect to the network port %s:%d\n"), host, port);
     }
     return true;

@@ -135,7 +135,6 @@ _CC_API_PRIVATE(bool_t) _delegate_timeout_wait(_cc_async_event_t *async, uint32_
     _reset_event_pending(async, _reset);
     _cc_sleep(timeout);
     _update_event_timeout(async, timeout);
-
     return true;
 }
 
@@ -151,21 +150,21 @@ _CC_API_PRIVATE(bool_t) _delegate_timeout_attach(_cc_async_event_t *async, _cc_e
 }
 
 /**/
-_CC_API_PRIVATE(bool_t) _delegate_timeout_quit(_cc_async_event_t *async) {
+_CC_API_PRIVATE(bool_t) _delegate_timeout_free(_cc_async_event_t *async) {
     _cc_assert(async != nullptr);
-    return _async_event_quit(async);
+    return _unregister_async_event(async);
 }
 
-_CC_API_PUBLIC(bool_t) _cc_init_event_timeout(_cc_async_event_t *async) {
+_CC_API_PUBLIC(bool_t) _cc_register_timeout(_cc_async_event_t *async) {
     _cc_assert(async != nullptr);
-    if (!_async_event_init(async)) {
+    if (!_register_async_event(async)) {
         return false;
     }
 
     async->priv = nullptr;
 
     async->reset = _delegate_timeout_reset;
-    async->quit = _delegate_timeout_quit;
+    async->free = _delegate_timeout_free;
     async->attach = _delegate_timeout_attach;
     async->wait = _delegate_timeout_wait;
 
@@ -178,14 +177,16 @@ _CC_API_PUBLIC(bool_t) _cc_init_event_timeout(_cc_async_event_t *async) {
 
 _CC_API_PUBLIC(_cc_event_t*) _cc_add_event_timeout(_cc_async_event_t *async, uint32_t timeout, _cc_event_callback_t callback, pvoid_t args) {
     _cc_event_t *e = _cc_event_alloc(async, _CC_EVENT_TIMEOUT_);
-    e->timeout = timeout;
-    e->callback = callback;
-    e->args = args;
+    if (e) {
+        e->timeout = timeout;
+        e->callback = callback;
+        e->args = args;
 
-    if (async->attach(async, e)) {
-        return e;
+        if (async->attach(async, e)) {
+            return e;
+        }
+        _cc_free_event(async, e);
     }
-    _cc_free_event(async, e);
     return nullptr;
 }
 

@@ -99,7 +99,7 @@ typedef struct _cc_ftp _cc_ftp_t;
 typedef struct _cc_ftp_resp _cc_ftp_resp_t;
 /**/
 typedef bool_t (*_cc_ftp_resp_callback_t)(_cc_ftp_t*, const byte_t *buf, uint32_t len);
-typedef bool_t (*_cc_ftp_callback_t)(_cc_ftp_t*, uint16_t which);
+typedef bool_t (*_cc_ftp_callback_t)(_cc_ftp_t*, uint32_t which);
 
 /**/
 struct _cc_ftp_resp {
@@ -128,9 +128,7 @@ struct _cc_ftp {
             _cc_async_event_t *async;
         }accept;
     } data;
-        
-    struct sockaddr sa;
-        
+    
     _cc_ftp_resp_t resp;
     _cc_ftp_callback_t callback;
         

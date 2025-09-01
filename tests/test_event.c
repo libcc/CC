@@ -189,7 +189,7 @@ void test_event_tcp_connect() {
 }
 int main() {
     int c;
-    _cc_install_async_event(0, nullptr);
+    _cc_alloc_async_event(0, nullptr);
 
     TEST_CASE(test_buffer_allocation);
     TEST_CASE(test_read_buffer_allocation);
@@ -203,6 +203,6 @@ int main() {
     }
 
     printf("All tests passed!\n");
-    _cc_uninstall_async_event();
+    _cc_free_async_event();
     return 0;
 }

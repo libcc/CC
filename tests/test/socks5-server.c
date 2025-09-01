@@ -43,12 +43,12 @@ typedef struct _socks5 {
     byte_t method;
     _cc_event_t *e;
     _cc_union_sockaddr_t addr;
-
+    _cc_socklen_t addr_len;
     uint16_t port;
 
 } _cc_socks5_t;
 
-static bool_t _socks5_event_callback2(_cc_async_event_t *async, _cc_event_t *e, const uint16_t which) {
+static bool_t _socks5_event_callback2(_cc_async_event_t *async, _cc_event_t *e, const uint32_t which) {
     if (which & _CC_EVENT_CONNECTED_) {
         _cc_logger_debug(_T("%d connect to server."), e->fd);
         return true;
@@ -143,6 +143,10 @@ bool_t ProtocolRequest(byte_t *m, _cc_socks5_t *socks, _cc_event_t *e) {
     byte_t buf[128];
     byte_t domain_len;
     uint32_t ip;
+    _cc_event_t *e2;
+    _cc_async_event_t *async;
+    _cc_union_sockaddr_t sa;
+    _cc_socklen_t sa_len;
 
     if (*m != 0x05) {
         return false;
@@ -179,29 +183,33 @@ bool_t ProtocolRequest(byte_t *m, _cc_socks5_t *socks, _cc_event_t *e) {
         socks->port = _cc_swap16(socks->port);
         _cc_logger_debug(_T("IP:%s, Port:%d."), buf, socks->port);
         if (atype == _CC_SOCKS5_ADDRESS_TYPE_IPV6_) {
-            _cc_inet_ipv6_addr(&socks->addr_in6, (const tchar_t *)buf, socks->port);
+            addr_len = sizeof(struct sockaddr_in6);
+            _cc_inet_ipv6_addr(&addr.addr_in6, (const tchar_t *)buf, socks->port);
         } else {
-            _cc_inet_ipv4_addr(&socks->addr_in, (const tchar_t *)buf, socks->port);
+            addr_len = sizeof(struct sockaddr_in);
+            _cc_inet_ipv4_addr(&addr.addr_in, (const tchar_t *)buf, socks->port);
         }
+        
         rep = 0x00;
+
+        buf[0] = 0x05;
+        buf[1] = rep;
+        buf[2] = 0x00;
+        buf[3] = 0x01;
+
+        port = htons(8088);
+        ip = inet_addr("127.0.0.1");
+
+        memcpy(&buf[4], &ip, 4);
+        memcpy(&buf[8], &port, 2);
+        async = _cc_get_async_event();
+        e2 = _cc_event_alloc(async, _CC_EVENT_TIMEOUT_ | _CC_EVENT_WRITABLE_ | _CC_EVENT_BUFFER_);
+
+        socks->e = _cc_tcp_connect(async, e2, (_cc_sockaddr_t *)&addr, addr_len);
+
+        socks->status = 4;
+        _cc_event_send(e, buf, 10);
     }
-
-    buf[0] = 0x05;
-    buf[1] = rep;
-    buf[2] = 0x00;
-    buf[3] = 0x01;
-
-    port = htons(8088);
-    ip = inet_addr("127.0.0.1");
-
-    memcpy(&buf[4], &ip, 4);
-    memcpy(&buf[8], &port, 2);
-
-    socks->e = _cc_tcp_connect(_cc_get_async_event(), _CC_EVENT_CONNECT_ | _CC_EVENT_TIMEOUT_ | _CC_EVENT_BUFFER_,
-                               (_cc_sockaddr_t *)&socks->addr, 60000, _socks5_event_callback2, e);
-
-    socks->status = 4;
-    _cc_event_send(e, buf, 10);
     return true;
 }
 
@@ -323,25 +331,24 @@ void _cc_socks5_starting(uint16_t port) {
     struct sockaddr_in sa;
     _cc_async_event_t *async = _cc_get_async_event();
     _cc_evnet_t *e = _cc_event_alloc(async, _CC_EVENT_ACCEPT_);
-    if (e == nullptr) {
-        return;
-    }
-    e->timeout = 300000;
-    e->callback = _socks5_event_callback;
+    if (e) {
+        e->timeout = 300000;
+        e->callback = _socks5_event_callback;
 
-    _cc_inet_ipv4_addr(&sa, nullptr, port);
-    if (!_cc_tcp_listen(async, e, (_cc_sockaddr_t *)&sa, sizeof(struct sockaddr_in))) {
-        _cc_free_event(async, e);
+        _cc_inet_ipv4_addr(&sa, nullptr, port);
+        if (!_cc_tcp_listen(async, e, (_cc_sockaddr_t *)&sa, sizeof(struct sockaddr_in))) {
+            _cc_free_event(async, e);
+        }
     }
 }
 
 int main(int argc, char *argv[]) {
-    _cc_install_async_event(0, nullptr);
+    _cc_alloc_async_event(0, nullptr);
 
     _cc_socks5_starting(8088);
     while (getchar() != 'q') {
         _cc_sleep(100);
     }
-    _cc_uninstall_async_event();
+    _cc_free_async_event();
     return 0;
 }

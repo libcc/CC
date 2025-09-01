@@ -164,7 +164,7 @@ BND.PORT 代理服务器连接目标服务器成功后的代理服务器端口
 
 //send_socks5_request(async, e, "www.ip138.com", 80);
 
-static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, const uint16_t which) {
+static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, const uint32_t which) {
     /*成功连接服务器*/
     if (which & _CC_EVENT_CONNECTED_) {
         _tprintf(_T("%d connect to server.\n"), e->fd);

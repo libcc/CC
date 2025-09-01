@@ -27,7 +27,7 @@ time_t get_rfc822_time(const tchar_t* rfc822_date) {
     return 0;
 }
 
-_CC_API_PUBLIC(bool_t) _cc_event_writef(_cc_event_t *e, const tchar_t *fmt, ...) {
+_CC_API_PUBLIC(bool_t) _cc_event_writef(_cc_async_event_t *async, _cc_event_t *e, const tchar_t *fmt, ...) {
     _cc_event_wbuf_t *wbuf;
     int32_t fmt_length, empty_length;
     tchar_t *ptr;
@@ -78,7 +78,6 @@ _CC_API_PUBLIC(bool_t) _cc_event_writef(_cc_event_t *e, const tchar_t *fmt, ...)
     _cc_unlock(&wbuf->lock);
 
     if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags)) {
-        _cc_async_event_t *async = _cc_get_async_event_by_id(e->round);
         _CC_SET_BIT(_CC_EVENT_WRITABLE_, e->flags);
         async->reset(async, e);
     }

@@ -40,7 +40,7 @@ _CC_API_PUBLIC(void) _cc_thread_running_function(void *args) {
     _cc_setup_sys_thread(self->name);
 
     /* Run the function */
-    self->status = user_func(self, user_args);
+    self->status = user_func(user_args);
 
     /* Mark us as ready to be joined (or detached) */
     if (!_cc_atomic32_cas(&self->state, _CC_THREAD_STATE_ALIVE_, _CC_THREAD_STATE_ZOMBIE_)) {
@@ -64,7 +64,7 @@ _CC_API_PUBLIC(_cc_thread_t*) _cc_thread_with_stacksize(_cc_thread_callback_t ca
     self = _CC_MALLOC(_cc_thread_t);
     bzero(self, sizeof(_cc_thread_t));
     self->status = -1;
-    self->stacksize = stacksize > 0 ? stacksize : 0;
+    self->stack_size = stacksize > 0 ? stacksize : 0;
     _cc_atomic32_set(&self->state, _CC_THREAD_STATE_ALIVE_);
 
     if (name != nullptr) {

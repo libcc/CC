@@ -3,8 +3,8 @@
 #define _C_UPDATE_BUILDER_H_INCLUDED_
 
 #include <libcc.h>
-#include <libcc/db/sql.h>
-#include <libcc/json/json.h>
+#include <libcc/widgets/sql.h>
+#include <libcc/widgets/json.h>
 
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
@@ -24,7 +24,7 @@ int builder_ReloadList(void);
 int builder_UpdateList(void);
 
 _cc_sql_t* openSQLite3(void);
-void closeSQLit3(_cc_sql_t *sql);
+void closeSQLite3(_cc_sql_t *sql);
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
 }

@@ -59,7 +59,7 @@ extern "C" {
  *
  * @return true if successful or false on error.
  */
-bool_t _async_event_init(_cc_async_event_t *async);
+bool_t _register_async_event(_cc_async_event_t *async);
 
 /*
  * @brief Free an event async class
@@ -68,7 +68,7 @@ bool_t _async_event_init(_cc_async_event_t *async);
  *
  * @return true if successful or false on error.
  */
-bool_t _async_event_quit(_cc_async_event_t *async);
+bool_t _unregister_async_event(_cc_async_event_t *async);
 
 /**
  * @brief Calls back an event function
@@ -97,7 +97,7 @@ bool_t _valid_event_fd(_cc_event_t *);
  *
  * @return Returns an updated event flag
  */
-uint16_t _valid_connected(_cc_event_t *e, uint16_t which);
+uint32_t _valid_connected(_cc_event_t *e, uint32_t which);
 
 /**
  * @brief Socket disconnect event

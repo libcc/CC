@@ -39,7 +39,7 @@ extern "C" {
 
 typedef void (*_cc_once_callback_t)(void);
 /**/
-typedef int32_t (*_cc_thread_callback_t)(_cc_thread_t *, pvoid_t);
+typedef int32_t (*_cc_thread_callback_t)(pvoid_t);
 
 typedef enum {
     _CC_THREAD_STATE_ALIVE_,
@@ -50,10 +50,10 @@ typedef enum {
 
 struct _cc_thread {
     int32_t status;
+    _cc_atomic32_t state;
     size_t thread_id;
     /* 0 for default, >0 for user-specified stack size. */
-    size_t stacksize;
-    _cc_atomic32_t state;
+    size_t stack_size;
     _cc_thread_handle_t handle;
     tchar_t *name;
     _cc_thread_callback_t callback;

@@ -44,8 +44,8 @@ _CC_API_PRIVATE(bool_t) _update_kevent(_cc_async_event_priv_t *priv) {
 
 /**/
 _CC_API_PRIVATE(bool_t) _kqueue_event_update(_cc_async_event_priv_t *priv, _cc_event_t *e, bool_t rm) {
-    uint16_t addevents = e->flags & ~e->marks;
-    uint16_t delevents = ~e->flags & e->marks;
+    uint32_t addevents = e->flags & ~e->marks;
+    uint32_t delevents = ~e->flags & e->marks;
 
     if (rm) {
         if (_CC_ISSET_BIT(_CC_EVENT_READABLE_ | _CC_EVENT_ACCEPT_, e->marks)) {
@@ -178,7 +178,7 @@ _CC_API_PRIVATE(bool_t) _kqueue_event_wait(_cc_async_event_t *async, uint32_t ti
     for (i = 0; i < rc; ++i) {
         _cc_event_t *e = (_cc_event_t *)actives[i].udata;
         int32_t what = (int32_t)actives[i].filter;
-        uint16_t which = _CC_EVENT_UNKNOWN_;
+        uint32_t which = _CC_EVENT_UNKNOWN_;
 
         if (actives[i].flags & EV_ERROR) {
             switch (actives[i].data) {
@@ -266,7 +266,7 @@ KEVENT_END:
 }
 
 /**/
-_CC_API_PRIVATE(bool_t) _kqueue_event_quit(_cc_async_event_t *async) {
+_CC_API_PRIVATE(bool_t) _kqueue_event_free(_cc_async_event_t *async) {
     _cc_assert(async != nullptr);
 
     if (async->priv) {
@@ -278,19 +278,18 @@ _CC_API_PRIVATE(bool_t) _kqueue_event_quit(_cc_async_event_t *async) {
         async->priv = nullptr;
     }
 
-    return _async_event_quit(async);
+    return _unregister_async_event(async);
 }
 
 /**/
-_CC_API_PRIVATE(bool_t) _kqueue_event_init(_cc_async_event_t *async) {
+_CC_API_PRIVATE(bool_t) _kqueue_event_alloc(_cc_async_event_t *async) {
     int r = 0;
     _cc_async_event_priv_t *priv;
 
 #ifdef __CC_MACOSX__
     struct kevent changes[2];
 #endif
-
-    if (!_async_event_init(async)) {
+    if (!_register_async_event(async)) {
         return false;
     }
 
@@ -334,8 +333,8 @@ _CC_API_PRIVATE(bool_t) _kqueue_event_init(_cc_async_event_t *async) {
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _cc_init_event_kqueue(_cc_async_event_t *async) {
-    if (!_kqueue_event_init(async)) {
+_CC_API_PUBLIC(bool_t) _cc_register_kqueue(_cc_async_event_t *async) {
+    if (!_kqueue_event_alloc(async)) {
         return false;
     }
     async->reset = _kqueue_event_reset;
@@ -344,7 +343,7 @@ _CC_API_PUBLIC(bool_t) _cc_init_event_kqueue(_cc_async_event_t *async) {
     async->disconnect = _kqueue_event_disconnect;
     async->accept = _kqueue_event_accept;
     async->wait = _kqueue_event_wait;
-    async->quit = _kqueue_event_quit;
+    async->free = _kqueue_event_free;
     async->reset = _kqueue_event_reset;
     return true;
 }

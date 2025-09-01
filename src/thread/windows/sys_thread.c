@@ -50,7 +50,7 @@ typedef void* _end_thread_func_t;
 #else
 typedef void (__cdecl * _end_thread_func_t) (unsigned retval);
 typedef uintptr_t (__cdecl * _begin_thread_func_t)
-                   (void *security, unsigned stacksize, unsigned (__stdcall *startaddr)(void *),
+                   (void *security, unsigned stack_size, unsigned (__stdcall *startaddr)(void *),
                     void * arglist, unsigned initflag, unsigned *threadaddr);
 #endif
 
@@ -95,13 +95,13 @@ static unsigned __stdcall MINGW32_FORCEALIGN RunThreadViaBeginThreadEx(LPVOID ar
 #endif
 /**/
 _CC_API_PUBLIC(bool_t) _cc_create_sys_thread(_cc_thread_t* self) {
-    int flags = self->stacksize ? STACK_SIZE_PARAM_IS_A_RESERVATION : 0;
+    int flags = self->stack_size ? STACK_SIZE_PARAM_IS_A_RESERVATION : 0;
     DWORD thread_id = 0;
-    // self->stacksize == 0 means "system default", same as win32 expects
+    // self->stack_size == 0 means "system default", same as win32 expects
     if (pfnBeginThread) {
-        self->handle = (_cc_thread_handle_t)((size_t)pfnBeginThread(nullptr, (unsigned int)self->stacksize,RunThreadViaBeginThreadEx, self, flags, (unsigned*)&thread_id));
+        self->handle = (_cc_thread_handle_t)((size_t)pfnBeginThread(nullptr, (unsigned int)self->stack_size,RunThreadViaBeginThreadEx, self, flags, (unsigned*)&thread_id));
     } else {
-        self->handle = CreateThread(nullptr, self->stacksize, RunThreadViaCreateThread, self, flags, &thread_id);
+        self->handle = CreateThread(nullptr, self->stack_size, RunThreadViaCreateThread, self, flags, &thread_id);
         pfnEndThread = nullptr;
     }
     

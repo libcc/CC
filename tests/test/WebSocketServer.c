@@ -124,7 +124,6 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
     _WebSocket_t *ws;
     if (which & _CC_EVENT_ACCEPT_) {
         _cc_event_t *event;
-        _cc_async_event_t *cycle_new;
         _cc_socket_t fd;
         struct sockaddr_in remote_addr = {0};
         _cc_socklen_t remote_addr_len = sizeof(struct sockaddr_in);
@@ -135,8 +134,7 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
             return true;
         }
 
-        cycle_new = _cc_get_async_event();
-        event = _cc_event_alloc(cycle_new, _CC_EVENT_TIMEOUT_ | _CC_EVENT_READABLE_ | _CC_EVENT_BUFFER_);
+        event = _cc_event_alloc(async, _CC_EVENT_TIMEOUT_ | _CC_EVENT_READABLE_ | _CC_EVENT_BUFFER_);
         if (event == nullptr) {
             _cc_close_socket(fd);
             return true;
@@ -154,9 +152,9 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
         event->timeout = e->timeout;
         event->args = ws;
 
-        if (cycle_new->attach(cycle_new, event) == false) {
+        if (async->attach(async, event) == false) {
             _cc_logger_debug(_T("thread %d add socket (%d) event fial."), _cc_get_thread_id(nullptr), fd);
-            _cc_free_event(cycle_new, event);
+            _cc_free_event(async, event);
             _WebSocketFree(ws);
             return true;
         }

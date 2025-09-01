@@ -35,6 +35,8 @@ ifdef shared
 		endif
 	endif
 endif
+# Windows 下载安装OpenSSL
+# https://slproweb.com/products/Win32OpenSSL.html
 
 #SQLite Download Page
 #https://www.sqlite.org/download.html

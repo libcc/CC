@@ -82,6 +82,6 @@ int builder_ReloadList(void) {
         sqldelegate.free_result(sql, result);
     }
     
-    closeSQLit3(sql);
+    closeSQLite3(sql);
     return 0;
 }

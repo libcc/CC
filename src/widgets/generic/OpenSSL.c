@@ -481,7 +481,7 @@ _CC_API_PUBLIC(int32_t) _SSL_event_send(_cc_SSL_t *ssl, _cc_event_t *e, const by
 
     /*queue this up for sending later.*/
     if (_cc_copy_event_wbuf(&e->buffer->w, data, length)) {
-        _cc_async_event_t *async = _cc_get_async_event_by_id(e->round);
+        _cc_async_event_t *async = _cc_get_async_event_by_id(e->ident);
         _CC_SET_BIT(_CC_EVENT_WRITABLE_, e->flags);
         async->reset(async, e);
         return length;

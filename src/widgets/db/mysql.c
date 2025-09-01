@@ -26,13 +26,11 @@
 #include <libcc/widgets/sql.h>
 
 #if defined(__CC_WINDOWS__)
-#include <mysql/include/errmsg.h>
-#include <mysql/include/mysql.h>
 #include <mysql/include/mysqld_error.h>
+#include <mysql/include/mysql.h>
 #else
-#include <mysql/errmsg.h>
-#include <mysql/mysql.h>
 #include <mysql/mysqld_error.h>
+#include <mysql/mysql.h>
 #endif
 
 struct _cc_sql {

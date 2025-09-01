@@ -2,9 +2,14 @@
 #include <assert.h>
 #include <stdio.h>
 
-static int thread_callback(_cc_thread_t *self, void *args) {
+static _cc_thread_local_t int thread_local_value = 0;
+static int global_value = 0;
+static int thread_callback(void *args) {
     int *value = (int *)args;
     (*value)++;
+    thread_local_value++;
+    global_value++;
+    printf("Global value:%d!\nThread local value:%d!\n", global_value,thread_local_value);
     return 0;
 }
 

@@ -95,8 +95,8 @@ _CC_API_PUBLIC(bool_t) _cc_create_sys_thread(_cc_thread_t *self) {
     }
     pthread_attr_setdetachstate(&type, PTHREAD_CREATE_JOINABLE);
     /* Set caller-requested stack size. Otherwise: use the system default. */
-    if (self->stacksize) {
-        pthread_attr_setstacksize(&type, self->stacksize);
+    if (self->stack_size) {
+        pthread_attr_setstacksize(&type, self->stack_size);
     }
     /* Create the thread and go! */
     if (pthread_create(&(self->handle), &type, RunThread, self) != 0) {

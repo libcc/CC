@@ -78,11 +78,12 @@ _CC_API_PUBLIC(bool_t) _cc_url_request_header(_cc_url_request_t *request, _cc_ev
 #ifdef _CC_UNICODE_
     _cc_buf_utf16_to_utf8(&request->buffer, 0);
 #endif
-
     if (_cc_copy_event_wbuf(&e->buffer->w, request->buffer.bytes, (uint16_t)request->buffer.length)) {
-        _cc_async_event_t *async = _cc_get_async_event_by_id(e->round);
-        _CC_SET_BIT(_CC_EVENT_WRITABLE_, e->flags);
-        return async->reset(async, e);
+        _cc_async_event_t *async = _cc_get_async_event_by_id(e->ident);
+        if (async) {
+            _CC_SET_BIT(_CC_EVENT_WRITABLE_, e->flags);
+            return async->reset(async, e);
+        }
     }
     return false;
 }

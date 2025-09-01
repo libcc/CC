@@ -171,7 +171,7 @@ endif
 CXXFLAGS 	:= $(CFLAGS)
 
 #指明使用标准 ISO C99 再加上 GNU 的一些扩展作为标准来编译程序。c89, c99, gnu99 gnu11
-CFLAGS 		+= -std=c11
+CFLAGS 		+= -std=gnu99
 CXXFLAGS 	+= -std=c++11
 
 OBJCOPY		= objcopy

@@ -46,6 +46,15 @@ extern "C" {
     #endif
 #endif /* NULL */
 
+#if _CC_STDC_VERSION_ >= 9
+    #define _cc_thread_local_t _Thread_local
+#elif defined(_CC_GNUC_)
+    #define _cc_thread_local_t __thread
+#elif defined(_CC_MSVC_)
+    #define _cc_thread_local_t __declspec(thread)
+#else
+    #define _cc_thread_local_t "Unsupported thread-local storage"
+#endif
 /**
  *  name Basic data types
  */
@@ -125,23 +134,6 @@ uint64_t - [0 : 18446744073709551615]
 
 #ifndef nullptr
     #define nullptr NULL
-#endif
-    
-#if 0
-    #ifndef _W64
-        #define _W64
-    #endif
-
-    #ifdef __CC_CPU64__
-        typedef int64_t intptr_t;
-        typedef uint64_t uintptr_t;
-    #elif defined(__CC_CPU32__)
-        typedef _W64 int32_t intptr_t;
-        typedef _W64 uint32_t uintptr_t;
-    #else
-        typedef _W64 int32_t intptr_t;
-        typedef _W64 uint32_t uintptr_t;
-    #endif
 #endif
 
 /**/

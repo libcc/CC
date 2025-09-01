@@ -110,8 +110,8 @@ _CC_API_PRIVATE(bool_t) _iocp_event_receive_event(_iocp_overlapped_t *iocp_overl
 /**/
 _CC_API_PRIVATE(bool_t) _iocp_event_update(_cc_async_event_t *async, _cc_event_t *e) {
     _iocp_overlapped_t *iocp_overlapped = nullptr;
-    uint16_t addevents = e->flags & ~e->marks;
-    uint16_t delevents = ~e->flags & e->marks;
+    uint32_t addevents = e->flags & ~e->marks;
+    uint32_t delevents = ~e->flags & e->marks;
 
     _CC_MODIFY_BIT(addevents, delevents, e->marks);
 
@@ -339,7 +339,7 @@ _CC_API_PRIVATE(void) _iocp_event_dispatch(_cc_async_event_t *async, _iocp_overl
 
 /**/
 _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
-	uint16_t u;
+	uint32_t u;
     if (_CC_ISSET_BIT(_CC_EVENT_DISCONNECT_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags) == 0) {
         /*delete*/
         _event_cleanup(async, e);
@@ -490,12 +490,11 @@ _CC_API_PRIVATE(bool_t) _iocp_event_wait(_cc_async_event_t *async, uint32_t time
 }
 
 /**/
-_CC_API_PRIVATE(bool_t) _iocp_event_quit(_cc_async_event_t *async) {
+_CC_API_PRIVATE(bool_t) _iocp_event_free(_cc_async_event_t *async) {
     _cc_assert(async != nullptr);
     if (async == nullptr) {
         return false;
     }
-
     /**/
     if (async->priv) {
         if (async->priv->port) {
@@ -504,17 +503,17 @@ _CC_API_PRIVATE(bool_t) _iocp_event_quit(_cc_async_event_t *async) {
         _iocp_overlapped_quit(async->priv);
         _cc_free(async->priv);
     }
-    return _async_event_quit(async);
+    return _unregister_async_event(async);
 }
 
 /**/
-_CC_API_PRIVATE(bool_t) _iocp_event_init(_cc_async_event_t *async) {
+_CC_API_PRIVATE(bool_t) _iocp_event_alloc(_cc_async_event_t *async) {
     _cc_async_event_priv_t *priv;
 
-    if (!_async_event_init(async)) {
+    if (!_register_async_event(async)) {
         return false;
     }
-
+    
     priv = (_cc_async_event_priv_t *)_cc_malloc(sizeof(_cc_async_event_priv_t));
     priv->port = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 0);
     if (priv->port == nullptr) {
@@ -525,12 +524,11 @@ _CC_API_PRIVATE(bool_t) _iocp_event_init(_cc_async_event_t *async) {
     _iocp_overlapped_init(priv);
 
     async->priv = priv;
-
     return true;
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _cc_init_event_iocp(_cc_async_event_t *async) {
+_CC_API_PUBLIC(bool_t) _cc_register_iocp(_cc_async_event_t *async) {
     if (!_iocp_event_init(async)) {
         return false;
     }
@@ -539,7 +537,7 @@ _CC_API_PUBLIC(bool_t) _cc_init_event_iocp(_cc_async_event_t *async) {
     async->disconnect = _iocp_event_disconnect;
     async->accept = _iocp_event_accept;
     async->wait = _iocp_event_wait;
-    async->quit = _iocp_event_quit;
+    async->free = _iocp_event_free;
     async->reset = _iocp_event_reset;
 
     return true;

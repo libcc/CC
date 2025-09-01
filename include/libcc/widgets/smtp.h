@@ -74,7 +74,7 @@ typedef struct _cc_smtp _cc_smtp_t;
 typedef struct _cc_smtp_resp _cc_smtp_resp_t;
 /**/
 typedef bool_t (*_cc_smtp_resp_callback_t)(_cc_smtp_t*, const byte_t *buf, uint32_t len);
-typedef bool_t (*_cc_smtp_callback_t)(_cc_smtp_t*, uint16_t which);
+typedef bool_t (*_cc_smtp_callback_t)(_cc_smtp_t*, uint32_t which);
 
 /**/
 struct _cc_smtp_resp {

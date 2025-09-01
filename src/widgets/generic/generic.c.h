@@ -16,7 +16,8 @@
  *    appreciated but is not required.
  * 2. Altered source versions must be plainly marked as such, and must not be
  *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
+ * 3. This notice may not 
+ be removed or altered from any source distribution.
 */
 #ifndef _C_CC_GENERIC_C_H_INCLUDED_
 #define _C_CC_GENERIC_C_H_INCLUDED_
@@ -42,9 +43,13 @@ _CC_FORCE_INLINE_ bool_t _buf_char_put(_cc_buf_t *ctx, const tchar_t data) {
     return _cc_buf_append(ctx, (pvoid_t)&data, sizeof(tchar_t));
 }
 
-_CC_API_PUBLIC(tchar_t *) _convert_text(tchar_t *alloc_bytes, size_t alloc_length, const tchar_t *src, const tchar_t *endpos);
-_CC_API_PUBLIC(void) _cc_syntax_error(_cc_syntax_error_t *error);
-_CC_API_PUBLIC(const tchar_t*) _cc_get_syntax_error(void);
+/**/
+tchar_t* _convert_text(tchar_t *alloc_bytes, size_t alloc_length, const tchar_t *src, const tchar_t *endpos);
+/**/
+void _cc_syntax_error(_cc_syntax_error_t *error);
+/**/
+const tchar_t* _cc_get_syntax_error(void);
+
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
 }

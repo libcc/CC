@@ -70,12 +70,12 @@ bool_t _cc_dns_listen(void) {
     struct sockaddr_in sa;
     _cc_async_event_t *async = _cc_get_async_event();
     _cc_event_t *e = _cc_event_alloc(async, _CC_EVENT_ACCEPT_);
-    if (e == nullptr) {
-        return -1;
-    }
-    e->callback = _dns_response_callback;
-    e->timeout = 60000;
+    if (e) {
+        e->callback = _dns_response_callback;
+        e->timeout = 60000;
 
-    _cc_inet_ipv4_addr(&sa, nullptr, 53);
-    return _cc_tcp_listen(async, e, (_cc_sockaddr_t *)&sa, sizeof(struct sockaddr_in));
+        _cc_inet_ipv4_addr(&sa, nullptr, 53);
+        return _cc_tcp_listen(async, e, (_cc_sockaddr_t *)&sa, sizeof(struct sockaddr_in));
+    }
+    return false;
 }

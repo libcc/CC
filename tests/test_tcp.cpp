@@ -194,7 +194,7 @@ public:
 
 int main() {
     int c;
-    _cc_install_async_event(0, nullptr);
+    _cc_alloc_async_event(0, nullptr);
 
     TCPServer* tcp = new TCPServer(nullptr, 3000);
 
@@ -204,6 +204,6 @@ int main() {
 
     delete tcp;
     printf("All tests passed!\n");
-    _cc_uninstall_async_event();
+    _cc_free_async_event();
     return 0;
 }

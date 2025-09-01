@@ -39,7 +39,7 @@ _cc_sql_t* openSQLite3(void) {
     return sql;
 }
 
-void closeSQLit3(_cc_sql_t *sql) {
+void closeSQLite3(_cc_sql_t *sql) {
     if (sql) {
         sqldelegate.disconnect(sql);
         sql_default = nullptr;

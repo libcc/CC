@@ -34,7 +34,7 @@ extern tchar_t currentPath[_CC_MAX_PATH_];
 extern _cc_sql_delegate_t delegate;
 
 void openSQLite3(void);
-void closeSQLit3(void);
+void closeSQLite3(void);
 
 void sqlite3_syslog(_syslog_t *syslog);
 void sqlite3_exception_syslog(const tchar_t *msg, size_t length);

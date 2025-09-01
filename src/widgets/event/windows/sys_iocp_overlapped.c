@@ -60,7 +60,7 @@ _CC_API_PUBLIC(_iocp_overlapped_t*) _iocp_overlapped_alloc(_cc_async_event_priv_
 
     iocp_overlapped->fd = _CC_INVALID_SOCKET_;
     iocp_overlapped->e = e;
-    iocp_overlapped->round = e->round;
+    iocp_overlapped->ident = e->ident;
     
     _cc_spin_lock(&priv->lock);
     _cc_list_iterator_push(&priv->overlapped_active, &(iocp_overlapped->lnk));

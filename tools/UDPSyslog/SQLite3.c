@@ -50,7 +50,7 @@ void openSQLite3(void) {
     }
 }
 
-void closeSQLit3(void) {
+void closeSQLite3(void) {
     delegator.disconnect(defaultSQL);
     defaultSQL = nullptr;
 }

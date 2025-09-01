@@ -72,17 +72,17 @@
     #endif
 
     #if CXX_STD > 202002L
-        #define _CC_STD_VERSION_ 23
+        #define _CC_STDC_VERSION_ 23
     #elif CXX_STD > 201703L
-        #define _CC_STD_VERSION_ 20
+        #define _CC_STDC_VERSION_ 20
     #elif CXX_STD >= 201703L
-        #define _CC_STD_VERSION_ 17
+        #define _CC_STDC_VERSION_ 17
     #elif CXX_STD >= 201402L
-        #define _CC_STD_VERSION_ 14
+        #define _CC_STDC_VERSION_ 14
     #elif CXX_STD >= 201103L
-        #define _CC_STD_VERSION_ 11
+        #define _CC_STDC_VERSION_ 11
     #else
-        #define _CC_STD_VERSION_ 98
+        #define _CC_STDC_VERSION_ 98
     #endif
 
     #undef CXX_STD
@@ -91,20 +91,20 @@
  */
 #elif !defined(__STDC__) && !defined(__clang__)
     #if defined(_CC_MSVC_) || defined(__ibmxl__) || defined(__IBMC__)
-        # define _CC_STD_VERSION_ 89
+        # define _CC_STDC_VERSION_ 89
     #else
-        #define _CC_STD_VERSION_ 0
+        #define _CC_STDC_VERSION_ 0
     #endif
 #elif __STDC_VERSION__ > 201710L
-    #define _CC_STD_VERSION_ 23
+    #define _CC_STDC_VERSION_ 23
 #elif __STDC_VERSION__ >= 201710L
-    #define _CC_STD_VERSION_ 17
+    #define _CC_STDC_VERSION_ 17
 #elif __STDC_VERSION__ >= 201000L
-    #define _CC_STD_VERSION_ 11
+    #define _CC_STDC_VERSION_ 11
 #elif __STDC_VERSION__ >= 199901L
-    #define _CC_STD_VERSION_ 99
+    #define _CC_STDC_VERSION_ 9
 #else
-    #define _CC_STD_VERSION_ 89
+    #define _CC_STDC_VERSION_ 8
 #endif
 
 /** 

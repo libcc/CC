@@ -10,7 +10,7 @@ _CC_API_PRIVATE(bool_t) network_event_close(_cc_async_event_t* async, _cc_event_
     return true;
 }
 
-_CC_API_PRIVATE(bool_t) network_event_callback(_cc_async_event_t* async, _cc_event_t* e, const uint16_t which) {
+_CC_API_PRIVATE(bool_t) network_event_callback(_cc_async_event_t* async, _cc_event_t* e, const uint32_t which) {
     _cc_smtp_t* smtp = (_cc_smtp_t*)e->args;
     /*成功连接服务器*/
     if (which & _CC_EVENT_CONNECTED_) {

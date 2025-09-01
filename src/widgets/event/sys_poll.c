@@ -134,9 +134,8 @@ _CC_API_PRIVATE(bool_t) _poll_event_wait(_cc_async_event_t *async, uint32_t time
     int32_t i;
     int32_t nfds;
     int32_t ready;
-    uint16_t which = _CC_EVENT_UNKNOWN_, what;
+    uint32_t which = _CC_EVENT_UNKNOWN_, what;
     struct pollfd fds[_CC_POLL_EVENTS_];
-
     _cc_async_event_priv_t *priv = async->priv;
 
     /**/
@@ -204,20 +203,22 @@ _CC_API_PRIVATE(bool_t) _poll_event_wait(_cc_async_event_t *async, uint32_t time
 }
 
 /**/
-_CC_API_PRIVATE(bool_t) _poll_event_quit(_cc_async_event_t *async) {
+_CC_API_PRIVATE(bool_t) _poll_event_free(_cc_async_event_t *async) {
     _cc_assert(async != nullptr);
 
     _cc_safe_free(async->priv);
 
-    return _async_event_quit(async);
+    return _unregister_async_event(async);
 }
 
 /**/
-_CC_API_PRIVATE(bool_t) _poll_event_init(_cc_async_event_t *async) {
+_CC_API_PRIVATE(bool_t) _poll_event_alloc(_cc_async_event_t *async) {
     _cc_async_event_priv_t *priv;
-    if (!_async_event_init(async)) {
+
+    if (!_register_async_event(async)) {
         return false;
     }
+    
     priv = (_cc_async_event_priv_t *)_cc_calloc(1, sizeof(_cc_async_event_priv_t));
     priv->nfds = 0;
 
@@ -226,8 +227,8 @@ _CC_API_PRIVATE(bool_t) _poll_event_init(_cc_async_event_t *async) {
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _cc_init_event_poll(_cc_async_event_t *async) {
-    if (!_poll_event_init(async)) {
+_CC_API_PUBLIC(bool_t) _cc_register_poll(_cc_async_event_t *async) {
+    if (!_poll_event_alloc(async)) {
         return false;
     }
     async->reset = _poll_event_reset;
@@ -236,7 +237,7 @@ _CC_API_PUBLIC(bool_t) _cc_init_event_poll(_cc_async_event_t *async) {
     async->disconnect = _poll_event_disconnect;
     async->accept = _poll_event_accept;
     async->wait = _poll_event_wait;
-    async->quit = _poll_event_quit;
+    async->free = _poll_event_free;
     async->reset = _poll_event_reset;
     return true;
 }

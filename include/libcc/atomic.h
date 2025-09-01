@@ -24,7 +24,7 @@
 #include "generic.h"
 #include <libcc/time.h>
 
-#if __STDC_VERSION__ >= 201000L
+#if _CC_STDC_VERSION_ >= 11
 #include <stdatomic.h>
 #endif
 
@@ -47,7 +47,7 @@
 extern "C" {
 #endif
 
-#if __STDC_VERSION__ >= 201000L
+#if _CC_STDC_VERSION_ >= 11
     typedef volatile _Atomic(int32_t) _cc_atomic32_t;
     typedef volatile _Atomic(int64_t) _cc_atomic64_t;
 #elif defined(__GNUC__)
@@ -59,7 +59,7 @@ extern "C" {
 #else
     typedef volatile _cc_alignas(4) int _cc_atomic32_t;
     typedef volatile _cc_alignas(8) long long int _cc_atomic64_t;
-#endif/*__STDC_VERSION__ >= 201000L*/
+#endif/*_CC_STDC_VERSION_ >= 11*/
 /*/////////////////////////////////////////////////////////////////////////*/
 #define _cc_atomic32_inc(a) _cc_atomic32_add(a, 1)
 #define _cc_atomic32_dec(a) _cc_atomic32_sub(a, 1)

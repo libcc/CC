@@ -149,12 +149,7 @@ _CC_API_PRIVATE(bool_t) _select_event_wait(_cc_async_event_t *async, uint32_t ti
     int32_t i;
     int32_t ready;
     struct _fd_list fds;
-
-    uint16_t which, what;
-
-    _cc_event_t *e;
     _cc_async_event_priv_t *priv = async->priv;
-
     /**/
     _reset_event_pending(async, _reset);
 
@@ -188,9 +183,9 @@ _CC_API_PRIVATE(bool_t) _select_event_wait(_cc_async_event_t *async, uint32_t ti
 #endif
     if (_cc_likely(ready)) {
         for (i = 0; i < priv->nfds && ready; i++) {
-            e = priv->list[i];
-            which = 0;
-            what = _CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, e->flags);
+            _cc_event_t* e = priv->list[i];
+            uint32_t which = 0;
+            uint32_t what = _CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, e->flags);
             if (what && FD_ISSET(e->fd, &fds.rfds)) {
                 which |= what;
             }
@@ -223,7 +218,7 @@ WHEEL_TIMER:
 }
 
 /**/
-_CC_API_PRIVATE(bool_t) _select_event_quit(_cc_async_event_t *async) {
+_CC_API_PRIVATE(bool_t) _select_event_free(_cc_async_event_t *async) {
     _cc_assert(async != nullptr);
     if (async == nullptr) {
         return false;
@@ -231,15 +226,17 @@ _CC_API_PRIVATE(bool_t) _select_event_quit(_cc_async_event_t *async) {
 
     _cc_safe_free(async->priv);
 
-    return _async_event_quit(async);
+    return _unregister_async_event(async);
 }
 
 /**/
-_CC_API_PRIVATE(bool_t) _select_event_init(_cc_async_event_t *async) {
+_CC_API_PRIVATE(bool_t) _select_event_alloc(_cc_async_event_t *async) {
     _cc_async_event_priv_t *priv;
-    if (!_async_event_init(async)) {
+    
+    if (!_register_async_event(async)) {
         return false;
     }
+    
     priv = (_cc_async_event_priv_t *)_cc_malloc(sizeof(_cc_async_event_priv_t));
     bzero(priv, sizeof(_cc_async_event_priv_t));
 
@@ -248,8 +245,8 @@ _CC_API_PRIVATE(bool_t) _select_event_init(_cc_async_event_t *async) {
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _cc_init_event_select(_cc_async_event_t *async) {
-    if (!_select_event_init(async)) {
+_CC_API_PUBLIC(bool_t) _cc_register_select(_cc_async_event_t *async) {
+    if (!_select_event_alloc(async)) {
         return false;
     }
     async->reset = _select_event_reset;
@@ -258,7 +255,7 @@ _CC_API_PUBLIC(bool_t) _cc_init_event_select(_cc_async_event_t *async) {
     async->disconnect = _select_event_disconnect;
     async->accept = _select_event_accept;
     async->wait = _select_event_wait;
-    async->quit = _select_event_quit;
+    async->free = _select_event_free;
     async->reset = _select_event_reset;
     return true;
 }

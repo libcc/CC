@@ -27,40 +27,36 @@
 #include <sys/resource.h>
 #endif
 
-#define _CC_MAX_CYCLES_         64
-#define _CC_MAX_EVENT_          64   //(1 << 16)
-#define _CC_EVENT_INVALID_ID_   0xffffffff
+#define _CC_MAX_STEP_           64
 
 static struct {
-    int32_t size;
     _cc_atomic32_t round;
-    _cc_atomic32_t alloc;
-    _cc_atomic32_t ref;
-    _cc_atomic32_t slot_alloc;
-    _cc_event_t **slots;
-    size_t slot_length;
-
+    _cc_atomic32_t async_limit;
+    _cc_atomic32_t refcount;
+    _cc_atomic32_t slot_refcount;
+    int32_t slot_length;
+    int32_t slot_limit;
     _cc_queue_iterator_t idles;
-    _cc_array_t cycles;
+
+    _cc_async_event_t **async;
+    _cc_event_t **slots;
 } g = {0};
 
-_CC_API_PRIVATE(size_t) _event_get_max_limit() {
+_CC_API_PRIVATE(int32_t) _get_max_limit() {
 #if defined(__CC_LINUX__) || defined(__CC_APPLE__)
     struct rlimit limit;
+    //1048576
     if (getrlimit(RLIMIT_NOFILE, &limit) == 0) {
         //printf("rlim_cur =%lld,rlim_max =%lld\n",limit.rlim_cur,limit.rlim_max);
-        return limit.rlim_cur > _CC_MAX_EVENT_ ? _CC_MAX_EVENT_ : limit.rlim_cur;
+        return (int32_t)(limit.rlim_cur > 0x0FFFFF ? 0x0FFFFF : limit.rlim_cur);
     }
 #endif
-    return 1<<16;
+    return 0x0FFFFF;
 }
 
-_CC_API_PRIVATE(_cc_event_t*) _cc_reserve_event(byte_t baseid) {
-    uint16_t round;
+_CC_API_PRIVATE(_cc_event_t*) _cc_reserve_event(uint16_t baseid) {
     _cc_queue_iterator_t *lnk;
     _cc_event_t *e;
-    size_t max_limit = _event_get_max_limit();
-
     do {
         lnk = _cc_queue_sync_pop(&g.idles);
 
@@ -69,61 +65,65 @@ _CC_API_PRIVATE(_cc_event_t*) _cc_reserve_event(byte_t baseid) {
             break;
         }
 
-        if (_cc_atomic32_cas(&g.slot_alloc, 0, 1)) {
-            size_t i,j;
-            size_t slot_size = g.slot_length + _CC_MAX_EVENT_;
-            _cc_event_t **slots;
+        if (_cc_atomic32_cas(&g.slot_refcount, 0, 1)) {
+            int32_t i,j;
+            int32_t expand_length = g.slot_length + _CC_MAX_STEP_;
             _cc_event_t *data;
 
-            if (max_limit <= g.slot_length) {
-                _cc_logger_error(_T("The maximum number of event supported by the RLIMIT_NOFILE is %d"), max_limit);
+            if (g.slot_limit <= g.slot_length) {
+                _cc_logger_error(_T("The maximum number of event supported by the RLIMIT_NOFILE is %d"), g.slot_limit);
                 return nullptr;
             }
+            /*If the allocation fails, it directly aborts, so there is no need to check whether the application is successful, which is meaningless.*/
+            g.slots = (_cc_event_t **)_cc_realloc(g.slots, sizeof(_cc_event_t*) * expand_length);
+            data = (_cc_event_t *)_cc_calloc(sizeof(_cc_event_t), _CC_MAX_STEP_);
 
-            slots = (_cc_event_t **)_cc_realloc(g.slots, sizeof(_cc_event_t*) * slot_size);
-            bzero(&slots[g.slot_length], _CC_MAX_EVENT_ * sizeof(_cc_event_t*));
-            g.slots = slots;
-
-            data = (_cc_event_t *)_cc_calloc(sizeof(_cc_event_t), _CC_MAX_EVENT_);
-            i = g.slot_length;
-            j = 0;
-            do {
-                _cc_event_t *e = data + j++;
+            for (i = g.slot_length, j = 0; j < _CC_MAX_STEP_; ++i,++j) {
+                _cc_event_t *e = data + j;
                 g.slots[i] = e;
-                e->ident = (int32_t)i++;
+                e->ident = i;
                 _cc_queue_sync_push(&g.idles, (_cc_queue_iterator_t*)(&e->lnk));
-            } while(j < _CC_MAX_EVENT_);
-            g.slot_length = slot_size;
-            g.slot_alloc = 0;
+            }
+
+            g.slot_length = expand_length;
+            g.slot_refcount = 0;
         } else {
             _cc_sleep(0);
         }
     } while(1);
 
-    round = (uint16_t)(_cc_atomic32_inc(&(g.round)) & 0xff);
-    e->round = _CC_BUILD_INT16(round, baseid);
-
+    e->ident = (uint32_t)(baseid << 20) | (e->ident & 0x0FFFFF);
     return e;
 
 }
 
 /**/
 _CC_API_PUBLIC(_cc_async_event_t*) _cc_get_async_event(void) {
-    _cc_async_event_t *async;
+    _cc_async_event_t *async = nullptr;
+    static uint16_t index = 0;
+    int32_t i;
+    for (i = 0; i < (int32_t)g.async_limit; i++,index++) {
+        async = g.async[index % g.async_limit];
+        if (async && async->running != 0) {
+            break;
+        }
+    }
+
+#if 0
     _cc_async_event_t *n;
     int32_t i, count;
 
     async = nullptr;
-    if (g.alloc > 1) {
-        i = rand() % g.alloc;
-        count = g.alloc + i;
+    if (g.async_limit > 1) {
+        i = (int32_t)(rand() % g.async_limit);
+        count = (int32_t)(g.async_limit + i);
     } else {
         i = 0;
-        count = g.alloc;
+        count = (int32_t)g.async_limit;
     }
 
     for (; i < count; i++) {
-        n = (_cc_async_event_t *)g.cycles.data[i % g.alloc];
+        n = (_cc_async_event_t *)g.async[i % g.async_limit];
         if (n == nullptr || n->running == 0) {
             continue;
         }
@@ -132,7 +132,7 @@ _CC_API_PUBLIC(_cc_async_event_t*) _cc_get_async_event(void) {
             async = n;
         }
     }
-
+#endif
     _cc_assert(async != nullptr);
     return async;
 }
@@ -142,35 +142,50 @@ _CC_API_PUBLIC(_cc_event_t*) _cc_get_event_by_id(uint32_t ident) {
     if (g.slot_length <= ident) {
         return nullptr;
     }
-    //_cc_logger_error(_T("event id:%d is deleted"), ident);
-    return g.slots[ident];
+#ifdef _CC_DEBUG_
+    {
+        _cc_event_t *e = g.slots[ident & 0x0FFFFF];
+        _cc_assert(e != nullptr);
+        if (e->ident != ident) {
+            _cc_logger_error(_T("event id:%d is deleted"), ident);
+            return nullptr;
+        }
+        return e;
+    }
+#else
+    return g.slots[ident & 0x0FFFFF];
+#endif
+    
 }
 
 /**/
-_CC_API_PUBLIC(_cc_async_event_t*) _cc_get_async_event_by_id(uint32_t round) {
-    return (_cc_async_event_t *)g.cycles.data[_CC_HI_UINT8(round)];
+_CC_API_PUBLIC(_cc_async_event_t*) _cc_get_async_event_by_id(uint32_t ident) {
+    int16_t i = (ident >> 20) & 0x0FFF;
+    if (g.async_limit <= i) {
+        _cc_logger_error(_T("async_event id:%d is unregistered!"), ident);
+        return nullptr;
+    }
+    return (_cc_async_event_t *)g.async[i];
 }
 
 /**/
 _CC_API_PUBLIC(_cc_event_t*) _cc_event_alloc(_cc_async_event_t *async, const uint32_t flags) {
-    _cc_event_t *e;
-
-    e = _cc_reserve_event(async->ident);
+    _cc_event_t *e = _cc_reserve_event(async->ident);
     if (_cc_unlikely(e == nullptr)) {
         return nullptr;
     }
 
     e->marks = _CC_EVENT_UNKNOWN_;
-    e->flags = (flags & 0xffff);
+    e->flags = flags;
     e->fd = _CC_INVALID_SOCKET_;
     e->args = nullptr;
     e->callback = nullptr;
     e->buffer = nullptr;
     e->expire = 0;
-    e->descriptor = (flags >> 16);
+    e->timeout = 0;
 
     if (_CC_EVENT_IS_SOCKET(flags)) {
-        e->descriptor |= _CC_EVENT_DESC_SOCKET_;
+        e->flags |= _CC_EVENT_DESC_SOCKET_;
     }
 
     if (_CC_ISSET_BIT(_CC_EVENT_BUFFER_, flags)) {
@@ -200,15 +215,14 @@ _CC_API_PUBLIC(void) _cc_free_event(_cc_async_event_t *async, _cc_event_t *e) {
 
     fd = e->fd;
 
+    e->ident = (e->ident & 0xFFFFF);
     e->fd = _CC_INVALID_SOCKET_;
-    e->round = 0;
     e->flags = _CC_EVENT_UNKNOWN_;
     e->marks = _CC_EVENT_UNKNOWN_;
 
     if (fd != _CC_INVALID_SOCKET_ && fd != 0) {
         _cc_close_socket(fd);
     }
-
     _cc_queue_sync_push(&g.idles, (_cc_queue_iterator_t*)(&e->lnk));
 }
 
@@ -216,7 +230,7 @@ _CC_API_PUBLIC(void) _cc_free_event(_cc_async_event_t *async, _cc_event_t *e) {
 _CC_API_PUBLIC(void) _cc_print_cycle_processed(void) {
     uint32_t i;
     for (i = 0; i < g.cycles.length; i++) {
-        _cc_async_event_t *async = (_cc_async_event_t*)g.cycles.data[i];
+        _cc_async_event_t *async = (_cc_async_event_t*)g.async[i];
         if (async) {
             printf("%d: %d, ", i, async->processed);
         }
@@ -224,57 +238,73 @@ _CC_API_PUBLIC(void) _cc_print_cycle_processed(void) {
     putchar('\n');
 }
 */
-
 /**/
-_CC_API_PUBLIC(bool_t) _async_event_init(_cc_async_event_t *async) {
-    int i, j;
+_CC_API_PUBLIC(bool_t) _register_async_event(_cc_async_event_t *async) {
+    int32_t i, j;
+    int32_t async_limit;
     _cc_assert(async != nullptr);
 
-    if (_cc_atomic32_inc_ref(&g.ref)) {
+    if (_cc_atomic32_inc_ref(&g.refcount)) {
         _cc_event_t *data;
         _cc_queue_iterator_cleanup(&g.idles);
-        g.round = 1;
-        g.slots = (_cc_event_t **)_cc_calloc(sizeof(_cc_event_t*), _CC_MAX_EVENT_);
-        data = (_cc_event_t *)_cc_calloc(sizeof(_cc_event_t), _CC_MAX_EVENT_);
-        i = 0;
-        do {
+        /*If the allocation fails, it directly aborts, so there is no need to check whether the application is successful, which is meaningless.*/
+        g.slots = (_cc_event_t **)_cc_calloc(sizeof(_cc_event_t*), _CC_MAX_STEP_);
+        data = (_cc_event_t *)_cc_calloc(sizeof(_cc_event_t), _CC_MAX_STEP_);
+
+        for (i = 0; i < _CC_MAX_STEP_; i++) {
             _cc_event_t *e = (data + i);
             g.slots[i] = e;
-            e->ident = i++;
+            e->ident = i;
             _cc_queue_iterator_push(&g.idles, (_cc_queue_iterator_t*)(&e->lnk));
-        } while(i < _CC_MAX_EVENT_);
+        }
         
-        g.slot_length = _CC_MAX_EVENT_;
-        g.slot_alloc = 0;
-        g.alloc = 0;
-
-        _cc_alloc_array(&g.cycles, _CC_MAX_CYCLES_);
+        g.slot_limit = _get_max_limit();
+        g.slot_length = _CC_MAX_STEP_;
+        g.slot_refcount = 0;
+        g.async_limit = 0;
+        g.async = _cc_calloc(0xFFF, sizeof(_cc_async_event_t*));
     }
-
-#ifdef _CC_EVENT_USE_MUTEX_
-    async->lock = _cc_alloc_mutex();
-#else
-    _cc_lock_init(&async->lock);
-#endif
-    async->running = 1;
-    async->timer = 0;
-    async->diff = 0;
-    async->tick = _cc_get_ticks();
-    async->processed = 0;
-    async->priv = nullptr;
-    async->ident = _cc_atomic32_inc(&(g.alloc)) & 0xff;
-    async->attach = nullptr;
-    async->connect = nullptr;
-    async->disconnect = nullptr;
-    async->accept = nullptr;
-    async->wait = nullptr;
-    async->quit = nullptr;
-    async->reset = nullptr;
 
     if (!_cc_alloc_array(&async->changes, _CC_MAX_CHANGE_EVENTS_)) {
         _cc_assert(false);
         return false;
     }
+
+    async->processed = 0;
+    async->running = 0;
+    async->timer = 0;
+    async->diff = 0;
+    async->tick = _cc_get_ticks();
+
+    while (g.async == nullptr) {
+        _cc_sleep(10);
+    }
+
+    if (g.async_limit >= 0xFFF) {
+        async_limit = 0xFFFF;
+        for (i = 0; i < g.async_limit; i++) {
+            if (_cc_atomic32_cas((_cc_atomic32_t*)&g.async[i], 0, (intptr_t)async)) {
+                async_limit = i;
+                break;
+            }
+        }
+        if (async_limit == 0xFFFF) {
+            _cc_free_array(&async->changes);
+            _cc_logger_error(_T("The maximum number of events supported by asynchronous events is %d"), g.async_limit);
+            return false;
+        }
+        g.async[async_limit] = async;
+    } else {
+        async_limit = _cc_atomic32_inc(&g.async_limit);
+        g.async[async_limit] = async;
+    }
+
+    async->ident = (uint16_t)async_limit & 0xFFF;
+#ifdef _CC_EVENT_USE_MUTEX_
+    async->lock = _cc_alloc_mutex();
+#else
+    _cc_lock_init(&async->lock);
+#endif
 
     for (i = 0; i < _CC_TIMEOUT_NEAR_; i++) {
         _cc_list_iterator_cleanup(&async->nears[i]);
@@ -289,7 +319,7 @@ _CC_API_PUBLIC(bool_t) _async_event_init(_cc_async_event_t *async) {
     _cc_list_iterator_cleanup(&async->pending);
     _cc_list_iterator_cleanup(&async->no_timer);
 
-    _cc_array_insert(&g.cycles, async->ident, async);
+    async->running = 1;
     return true;
 }
 
@@ -314,7 +344,7 @@ _CC_API_PRIVATE(void) _event_link_free(_cc_async_event_t *async, _cc_list_iterat
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _async_event_quit(_cc_async_event_t *async) {
+_CC_API_PUBLIC(bool_t) _unregister_async_event(_cc_async_event_t *async) {
     size_t i, j;
     _cc_assert(async != nullptr);
 
@@ -338,9 +368,9 @@ _CC_API_PUBLIC(bool_t) _async_event_quit(_cc_async_event_t *async) {
     _event_link_free(async, &async->no_timer);
     _event_link_free(async, &async->pending);
 
-    if (_cc_atomic32_dec_ref(&g.ref)) {;
+    if (_cc_atomic32_dec_ref(&g.refcount)) {;
         //
-        for (i = 0; i < g.slot_length; i += _CC_MAX_EVENT_) {
+        for (i = 0; i < g.slot_length; i += _CC_MAX_STEP_) {
             _cc_free(&g.slots[i]);
         }
 
@@ -348,18 +378,19 @@ _CC_API_PUBLIC(bool_t) _async_event_quit(_cc_async_event_t *async) {
         g.slot_length = 0;
 
         _cc_queue_iterator_cleanup(&g.idles);
-        _cc_free_array(&g.cycles);
+    } else {
+        g.async[async->ident] = 0;
     }
     return true;
 }
 
 /**/
 _CC_API_PUBLIC(bool_t) _valid_event(_cc_async_event_t *async, _cc_event_t *e) {
-    return (_CC_HI_UINT8(e->round) == async->ident);
+    return (((e->ident >> 20) & 0xFFF) == async->ident);
 }
 
 /**/
-_CC_API_PUBLIC(uint16_t) _valid_connected(_cc_event_t *e, uint16_t which) {
+_CC_API_PUBLIC(uint32_t) _valid_connected(_cc_event_t *e, uint32_t which) {
     if (_valid_event_fd(e)) {
         _CC_MODIFY_BIT(_CC_EVENT_READABLE_, _CC_EVENT_CONNECT_, e->flags);
         return which;
@@ -451,7 +482,7 @@ _CC_API_PUBLIC(void) _reset_event_pending(_cc_async_event_t *async, void (*_rese
 /**/
 _CC_API_PUBLIC(bool_t) _disconnect_event(_cc_async_event_t *async, _cc_event_t *e) {
     /**/
-    if (e->descriptor & (_CC_EVENT_DESC_SOCKET_ | _CC_EVENT_DESC_FILE_)) {
+    if (e->flags & (_CC_EVENT_DESC_SOCKET_ | _CC_EVENT_DESC_FILE_)) {
         _cc_shutdown_socket(e->fd, _CC_SHUT_RD_);
     }
     
