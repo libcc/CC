@@ -273,7 +273,7 @@ int main(int argc, char *const argv[]) {
 
     _cc_install_socket();
 
-    if (_cc_init_event_poller(&async) == false) {
+    if (_cc_register_poller(&async) == false) {
         return 1;
     }
     e = _cc_event_alloc(&async, _CC_EVENT_ACCEPT_);
@@ -292,6 +292,6 @@ int main(int argc, char *const argv[]) {
         _cc_event_wait(&async, 100);
     }
 
-    // async.quit(&async);
+    async.free(&async);
     return 0;
 }

@@ -143,7 +143,7 @@ void test_event_timeout() {
     event = _cc_add_event_timeout(async, 6000, test_event_timeout_callback, nullptr);
     ASSERT(event != NULL);
 }
-
+// 测试监听服务
 void test_event_tcp_listen() {
     struct sockaddr_in sa;
     _cc_event_t *event;
@@ -165,7 +165,7 @@ void test_event_tcp_listen() {
         return ;
     }
 }
-
+// 测试连接服务器
 void test_event_tcp_connect() {
     struct sockaddr_in sa;
     _cc_event_t *event;
