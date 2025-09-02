@@ -3,8 +3,9 @@
 #include <assert.h>
 #include <libcc/widgets/event.h>
 #include <libcc/widgets/timeout.h>
-
+static int c = 0;
 static uint16_t port = 3000;
+
 // 自定义测试宏
 #define TEST_CASE(name) printf("Running test: %s\n", #name); name();
 #define ASSERT(cond) assert(cond)
@@ -16,7 +17,7 @@ void test_accept(_cc_async_event_t *async, _cc_event_t *e) {
     _cc_socklen_t remote_addr_len = sizeof(struct sockaddr_in);
     _cc_async_event_t *async2 = _cc_get_async_event();
 
-    fd = _cc_event_accept(async, e, &remote_addr, &remote_addr_len);
+    fd = _cc_event_accept(async, e, (_cc_sockaddr_t *)&remote_addr, &remote_addr_len);
     if (fd == _CC_INVALID_SOCKET_) {
         _cc_logger_debug(_T("thread %d accept fail %s."), _cc_get_thread_id(nullptr),
                          _cc_last_error(_cc_last_errno()));
@@ -187,10 +188,11 @@ void test_event_tcp_connect() {
         return;
     }
 }
+
 int main() {
-    int c;
     _cc_alloc_async_event(0, nullptr);
 
+    printf("sizeof(_cc_event_t) == %zu\nRunning tests...\n",sizeof(_cc_event_t));
     TEST_CASE(test_buffer_allocation);
     TEST_CASE(test_read_buffer_allocation);
     TEST_CASE(test_write_buffer_allocation);

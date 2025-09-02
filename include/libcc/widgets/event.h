@@ -97,12 +97,13 @@ struct _cc_event_buffer {
 struct _cc_event {
     /* One or more _CC_EVENT_* flags */
     uint32_t flags;
+    /* The system has delivered the event flag */
     uint32_t marks;
 
-    //0xFFF(async index)FFFFF
+    //0xFFF(async index)FFFFF(self index)
     uint32_t ident;
     _cc_socket_t fd;
-
+    /* Linked list node */
     _cc_list_iterator_t lnk;
     /* A callback function for an event. */
     _cc_event_callback_t callback;
