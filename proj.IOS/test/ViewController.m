@@ -129,7 +129,7 @@
         //可返回的页面列表, 存储已打开过的网页
         //WKBackForwardList * backForwardList = [_webView backForwardList];
         
-        NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://www.pinterest.com/search/pins/?rs=typed&q=%E6%AF%9B%E6%B3%BD%E4%B8%9C"]];
+        NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://lkvod.org/play/360-2-172.html"]];
         [_webView loadRequest:request];
         
 //        NSString *path = [[NSBundle mainBundle] pathForResource:@"JStoOC.html" ofType:nil];
@@ -150,7 +150,7 @@
 }
 
 // 页面加载失败时调用
-- (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(nullptr_unspecified WKNavigation *)navigation withError:(NSError *)error {
+- (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(null_unspecified WKNavigation *)navigation withError:(NSError *)error {
     //[self.progressView setProgress:0.0f animated:NO];
 }
 
@@ -160,7 +160,7 @@
 }
 
 // 页面加载完成之后调用
-- (void)webView:(WKWebView *)webView didFinishNavigation:(nullptr_unspecified WKNavigation *)navigation {
+- (void)webView:(WKWebView *)webView didFinishNavigation:(null_unspecified WKNavigation *)navigation {
     //[self getCookie];
     //__block typeof(self) weakSelf = self;
     NSLog(@"页面加载完成之后调用");
@@ -193,8 +193,9 @@
             
         }])];
         [alertController addAction:([UIAlertAction actionWithTitle:@"打开" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            NSURL * url = [NSURL URLWithString:[urlStr stringByReplacingOccurrencesOfString:@"github://callName_?" withString:@""]];
-            [[UIApplication sharedApplication] openURL:url];
+            //NSURL * url = [NSURL URLWithString:[urlStr stringByReplacingOccurrencesOfString:@"github://callName_?" withString:@""]];
+            //[[UIApplication sharedApplication] openURL:url];
+            _cc_open_url([urlStr stringByReplacingOccurrencesOfString:@"github://callName_?" withString:@""].UTF8String);
             
         }])];
         [self presentViewController:alertController animated:YES completion:nil];
@@ -217,7 +218,7 @@
 }
 
 //需要响应身份验证时调用 同样在block中需要传入用户身份凭证
-- (void)webView:(WKWebView *)webView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _nullable credential))completionHandler{
+- (void)webView:(WKWebView *)webView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential))completionHandler{
     
     //用户身份信息
     NSURLCredential * newCred = [[NSURLCredential alloc] initWithUser:@"user123" password:@"123" persistence:NSURLCredentialPersistenceNone];

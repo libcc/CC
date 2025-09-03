@@ -213,6 +213,7 @@
    
     [tabViewItem.view addSubview:scrollView];
     
+    [self loadMimeTableView];
     
     NSTableColumn * column1 = [[NSTableColumn alloc]initWithIdentifier:@"ext"];
     NSTableColumn * column2 = [[NSTableColumn alloc]initWithIdentifier:@"desc"];
@@ -234,10 +235,11 @@
     
     self.tableView.delegate = self;
     self.tableView.dataSource = self;
-    
-    //[self loadMimeTableView];
 }
 
+- (void)loadMimeTableView {
+    self.tableDataArray = [[NSMutableArray alloc] init];
+}
 //设置行数 通用
 -(NSInteger)numberOfRowsInTableView:(NSTableView *)tableView {
     return self.tableDataArray.count;
@@ -257,7 +259,7 @@
 }
 
 //用户编辑列表
-- (void)tableView:(NSTableView *)tableView setObjectValue:(nullptrable id)object forTableColumn:(nullptrable NSTableColumn *)tableColumn row:(NSInteger)row {
+- (void)tableView:(NSTableView *)tableView setObjectValue:(nullable id)object forTableColumn:(nullable NSTableColumn *)tableColumn row:(NSInteger)row {
     if (tableColumn == [self.tableView.tableColumns objectAtIndex:0]) {
         self.tableDataArray[row][0] = object;
     }
@@ -267,13 +269,13 @@
 }
 
 //cell-base的cell展示前调用 可以进行自定制
-- (void)tableView:(NSTableView *)tableView willDisplayCell:(id)cell forTableColumn:(nullptrable NSTableColumn *)tableColumn row:(NSInteger)row {
+- (void)tableView:(NSTableView *)tableView willDisplayCell:(id)cell forTableColumn:(nullable NSTableColumn *)tableColumn row:(NSInteger)row {
     //NSTextFieldCell * _cell = cell;
    //_cell.textColor = [NSColor redColor];
 }
 
 //设置是否可以进行编辑
-- (BOOL)tableView:(NSTableView *)tableView shouldEditTableColumn:(nullptrable NSTableColumn *)tableColumn row:(NSInteger)row {
+- (BOOL)tableView:(NSTableView *)tableView shouldEditTableColumn:(nullable NSTableColumn *)tableColumn row:(NSInteger)row {
     return YES;
 }
 

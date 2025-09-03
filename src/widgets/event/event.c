@@ -41,7 +41,7 @@ static struct {
     _cc_event_t **slots;
 } g = {0};
 
-_CC_API_PRIVATE(int32_t) _get_max_limit() {
+_CC_API_PRIVATE(int32_t) _get_max_limit(void) {
 #if defined(__CC_LINUX__) || defined(__CC_APPLE__)
     struct rlimit limit;
     //1048576

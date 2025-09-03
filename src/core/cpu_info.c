@@ -25,7 +25,7 @@
 #include <unistd.h>
 #endif
 
-#ifdef __CC_MACOSX__
+#if defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__)
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <mach/task_info.h>

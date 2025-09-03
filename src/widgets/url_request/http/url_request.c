@@ -141,16 +141,10 @@ _CC_API_PUBLIC(bool_t) _cc_url_request_response_header(_cc_url_request_t *reques
 
     request->status = _cc_http_header_parser((_cc_http_header_fn_t)_cc_http_alloc_response_header, (pvoid_t *)&request->response, r);
     /**/
-    switch (request->status) {
-    case _CC_HTTP_STATUS_HEADER_:
-        return true;
-    case _CC_HTTP_STATUS_PAYLOAD_:
-        _cc_buf_cleanup(&request->buffer);
-        break;
-    default:
-        return false;
+    if (request->status != _CC_HTTP_STATUS_PAYLOAD_) {
+        return request->status == _CC_HTTP_STATUS_HEADER_;
     }
-
+    _cc_buf_cleanup(&request->buffer);
     response = request->response;
     response->length = get_content_length(&response->headers);
     response->content_encoding = get_content_encoding(&response->headers);

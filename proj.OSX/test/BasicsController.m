@@ -58,7 +58,7 @@ static bool _isRunning = NO;
         return YES;
     }
     
-    if ([string isKindOfClass:[NSnullptr class]]) {
+    if ([string isKindOfClass:[NSNull class]]) {
         return YES;
     }
     

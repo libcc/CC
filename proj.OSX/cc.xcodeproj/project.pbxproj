@@ -13,9 +13,10 @@
 		426BE2612E5DD18400CE8D50 /* libiodbc.2.1.18.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE2602E5DD18400CE8D50 /* libiodbc.2.1.18.tbd */; };
 		426BE2632E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE2622E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd */; };
 		426BE2652E5DD1BA00CE8D50 /* libmysqlclient.24.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE2642E5DD1BA00CE8D50 /* libmysqlclient.24.dylib */; };
-		426BE26B2E5DD25D00CE8D50 /* sys_unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 426BE26A2E5DD25D00CE8D50 /* sys_unix.c */; };
 		426BE26E2E5DD2EC00CE8D50 /* libssl.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE26C2E5DD2EC00CE8D50 /* libssl.3.dylib */; };
 		426BE26F2E5DD2EC00CE8D50 /* libcrypto.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE26D2E5DD2EC00CE8D50 /* libcrypto.3.dylib */; };
+		427234322E684B53005FD969 /* sds.c in Sources */ = {isa = PBXBuildFile; fileRef = 427234312E684B53005FD969 /* sds.c */; };
+		427234382E684EB2005FD969 /* sys_unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 427234372E684EB2005FD969 /* sys_unix.c */; };
 		42C8179C2E50EEE200359415 /* sys_power.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C817012E50EEE200359415 /* sys_power.c */; };
 		42C8179D2E50EEE200359415 /* alloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C817842E50EEE200359415 /* alloc.c */; };
 		42C8179F2E50EEE200359415 /* sys_time.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C8172A2E50EEE200359415 /* sys_time.c */; };
@@ -100,7 +101,6 @@
 		42DA6DF02E515EC8005A3D8B /* dnss.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6D7C2E515EC8005A3D8B /* dnss.c */; };
 		42DA6DF12E515EC8005A3D8B /* url_response.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DBD2E515EC8005A3D8B /* url_response.c */; };
 		42DA6DF32E515EC8005A3D8B /* json.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DB02E515EC8005A3D8B /* json.c */; };
-		42DA6DF42E515EC8005A3D8B /* map.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DA42E515EC8005A3D8B /* map.c */; };
 		42DA6DF52E515EC8005A3D8B /* json.object.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DB32E515EC8005A3D8B /* json.object.c */; };
 		42DA6DF82E515EC8005A3D8B /* mysql.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6D752E515EC8005A3D8B /* mysql.c */; };
 		42DA6DF92E515EC8005A3D8B /* http.request.parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DA22E515EC8005A3D8B /* http.request.parser.c */; };
@@ -138,9 +138,10 @@
 		426BE2602E5DD18400CE8D50 /* libiodbc.2.1.18.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiodbc.2.1.18.tbd; path = usr/lib/libiodbc.2.1.18.tbd; sourceTree = SDKROOT; };
 		426BE2622E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiodbcinst.2.1.18.tbd; path = usr/lib/libiodbcinst.2.1.18.tbd; sourceTree = SDKROOT; };
 		426BE2642E5DD1BA00CE8D50 /* libmysqlclient.24.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmysqlclient.24.dylib; path = "../../../homebrew/Cellar/mysql-client/9.4.0/lib/libmysqlclient.24.dylib"; sourceTree = "<group>"; };
-		426BE26A2E5DD25D00CE8D50 /* sys_unix.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sys_unix.c; sourceTree = "<group>"; };
 		426BE26C2E5DD2EC00CE8D50 /* libssl.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.3.dylib; path = "../../../homebrew/Cellar/openssl@3/3.5.2/lib/libssl.3.dylib"; sourceTree = "<group>"; };
 		426BE26D2E5DD2EC00CE8D50 /* libcrypto.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.3.dylib; path = "../../../homebrew/Cellar/openssl@3/3.5.2/lib/libcrypto.3.dylib"; sourceTree = "<group>"; };
+		427234312E684B53005FD969 /* sds.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sds.c; sourceTree = "<group>"; };
+		427234372E684EB2005FD969 /* sys_unix.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = sys_unix.c; path = unix/sys_unix.c; sourceTree = "<group>"; };
 		42C816C02E50EEE200359415 /* atomic.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = atomic.c; sourceTree = "<group>"; };
 		42C816C12E50EEE200359415 /* rwlock.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = rwlock.c; sourceTree = "<group>"; };
 		42C816CE2E50EEE200359415 /* sys_clipboard.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = sys_clipboard.m; sourceTree = "<group>"; };
@@ -222,7 +223,6 @@
 		42DA6DA12E515EC8005A3D8B /* http.header.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = http.header.c; sourceTree = "<group>"; };
 		42DA6DA22E515EC8005A3D8B /* http.request.parser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = http.request.parser.c; sourceTree = "<group>"; };
 		42DA6DA32E515EC8005A3D8B /* http.response.parser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = http.response.parser.c; sourceTree = "<group>"; };
-		42DA6DA42E515EC8005A3D8B /* map.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = map.c; sourceTree = "<group>"; };
 		42DA6DA52E515EC8005A3D8B /* OpenSSL.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = OpenSSL.c; sourceTree = "<group>"; };
 		42DA6DA62E515EC8005A3D8B /* WS.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = WS.c; sourceTree = "<group>"; };
 		42DA6DA82E515EC8005A3D8B /* ini.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ini.c; sourceTree = "<group>"; };
@@ -324,7 +324,7 @@
 		42C816E42E50EEE200359415 /* core */ = {
 			isa = PBXGroup;
 			children = (
-				426BE26A2E5DD25D00CE8D50 /* sys_unix.c */,
+				427234372E684EB2005FD969 /* sys_unix.c */,
 				42C816D32E50EEE200359415 /* OSX */,
 				42C816E12E50EEE200359415 /* cpu_info.c */,
 				42C816E22E50EEE200359415 /* file.c */,
@@ -479,6 +479,7 @@
 				42C8178D2E50EEE200359415 /* rand.c */,
 				42C8178E2E50EEE200359415 /* rbtree.c */,
 				42C8178F2E50EEE200359415 /* ring.c */,
+				427234312E684B53005FD969 /* sds.c */,
 				42C817902E50EEE200359415 /* string.c */,
 				42C817912E50EEE200359415 /* syslog.c */,
 				42C817922E50EEE200359415 /* url.c */,
@@ -543,7 +544,6 @@
 				42DA6DA12E515EC8005A3D8B /* http.header.c */,
 				42DA6DA22E515EC8005A3D8B /* http.request.parser.c */,
 				42DA6DA32E515EC8005A3D8B /* http.response.parser.c */,
-				42DA6DA42E515EC8005A3D8B /* map.c */,
 				42DA6DA52E515EC8005A3D8B /* OpenSSL.c */,
 				42DA6DA62E515EC8005A3D8B /* WS.c */,
 			);
@@ -676,7 +676,6 @@
 				41E3A5C729FE40D800BEFBD6 /* Headers */,
 				41E3A5C829FE40D800BEFBD6 /* Sources */,
 				41E3A5C929FE40D800BEFBD6 /* Frameworks */,
-				41E3A5D229FE410100BEFBD6 /* ShellScript */,
 				41E3A73029FE494000BEFBD6 /* Embed Libraries */,
 			);
 			buildRules = (
@@ -724,26 +723,6 @@
 		};
 /* End PBXProject section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		41E3A5D229FE410100BEFBD6 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n#Copy Files ... replace to cp -r xxx.dylib\n#UNIX_TARGET=$TARGET_BUILD_DIR/lib$PRODUCT_NAME.dylib\n#改变dylib的引用地址，防止library/framewokr not found\n#install_name_tool -change \"/opt/homebrew/opt/openssl/lib/libcrypto.3.dylib\" \"@executable_path/libcrypto.3.dylib\" \"$UNIX_TARGET\"\n#install_name_tool -change \"/opt/homebrew/opt/openssl/lib/libssl.3.dylib\" \"@executable_path/libcrypto.3.dylib\" \"$UNIX_TARGET\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		414B4B532990BEB600F4A7CB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -754,8 +733,8 @@
 				42C8179F2E50EEE200359415 /* sys_time.c in Sources */,
 				42C817A02E50EEE200359415 /* UTF.c in Sources */,
 				42C817A22E50EEE200359415 /* queue.c in Sources */,
-				426BE26B2E5DD25D00CE8D50 /* sys_unix.c in Sources */,
 				42C817A42E50EEE200359415 /* sys_locale.m in Sources */,
+				427234382E684EB2005FD969 /* sys_unix.c in Sources */,
 				42C817A72E50EEE200359415 /* xxtea.c in Sources */,
 				42C817A82E50EEE200359415 /* md4.c in Sources */,
 				42C817AA2E50EEE200359415 /* file.c in Sources */,
@@ -780,6 +759,7 @@
 				42C817F42E50EEE200359415 /* base64.c in Sources */,
 				42C817F52E50EEE200359415 /* url.c in Sources */,
 				42C817F72E50EEE200359415 /* des.c in Sources */,
+				427234322E684B53005FD969 /* sds.c in Sources */,
 				42C817F82E50EEE200359415 /* buf.c in Sources */,
 				42C817F92E50EEE200359415 /* sys_loadso.c in Sources */,
 				42C817FB2E50EEE200359415 /* power.c in Sources */,
@@ -839,7 +819,6 @@
 				42DA6DF02E515EC8005A3D8B /* dnss.c in Sources */,
 				42DA6DF12E515EC8005A3D8B /* url_response.c in Sources */,
 				42DA6DF32E515EC8005A3D8B /* json.c in Sources */,
-				42DA6DF42E515EC8005A3D8B /* map.c in Sources */,
 				42DA6DF52E515EC8005A3D8B /* json.object.c in Sources */,
 				42DA6DF82E515EC8005A3D8B /* mysql.c in Sources */,
 				42DA6DF92E515EC8005A3D8B /* http.request.parser.c in Sources */,
@@ -987,7 +966,7 @@
 					/usr/local/Cellar/unixodbc/2.3.9_1/include/,
 					"../../third-party",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -1007,7 +986,7 @@
 					/usr/local/Cellar/unixodbc/2.3.9_1/include/,
 					"../../third-party",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -1026,6 +1005,8 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
+					"_CC_ENABLE_OPENSSL_=1",
+					"_CC_WIDGETS_EXPORT_SHARED_LIBRARY_=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					../include,
@@ -1041,7 +1022,7 @@
 					"/opt/homebrew/Cellar/mysql-client/9.4.0/lib",
 					"/opt/homebrew/Cellar/openssl@3/3.5.2/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -1057,6 +1038,11 @@
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = lib;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_CC_ENABLE_UNIXODBC_=1",
+					"_CC_ENABLE_OPENSSL_=1",
+					"_CC_WIDGETS_EXPORT_SHARED_LIBRARY_=1",
+				);
 				HEADER_SEARCH_PATHS = (
 					../include,
 					"../../third-party",
@@ -1071,7 +1057,7 @@
 					"/opt/homebrew/Cellar/mysql-client/9.4.0/lib",
 					"/opt/homebrew/Cellar/openssl@3/3.5.2/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};

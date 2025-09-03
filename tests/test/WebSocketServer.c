@@ -6,7 +6,7 @@ typedef struct _WebSocket {
     byte_t status;
     _cc_http_request_header_t *request;
     _cc_buf_t buffer;
-    int64_t content_length;
+    int64_t payload;
     char_t websocket_key[256];
 } _WebSocket_t;
 
@@ -142,10 +142,11 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
         _cc_set_socket_nonblock(fd, 1);
 
         ws = (_WebSocket_t*)_cc_malloc(sizeof(_WebSocket_t));
-        ws->content_length = 0;
-        ws->status = _CC_HTTP_STATUS_HEADER_;
+        ws->buffer.length = 0;
+        ws->buffer.limit = 0;
+        ws->buffer.bytes = nullptr;
         ws->request = nullptr;
-        _cc_alloc_buf(&ws->buffer, _CC_16K_BUFFER_SIZE_);
+        ws->payload = 0;
 
         event->fd = fd;
         event->callback = e->callback;
@@ -177,60 +178,52 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
     if (which & _CC_EVENT_READABLE_) {
         _cc_event_buffer_t *rw = e->buffer;
         if (e->buffer == nullptr) {
-            _WebSocketFree((_WebSocket_t*)e->args);
             return false;
         }
 
         if (!_cc_event_recv(e)) {
-            _WebSocketFree((_WebSocket_t*)e->args);
             return false;
         }
 
         ws = (_WebSocket_t*)e->args;
-
         if (ws->status == _CC_HTTP_STATUS_ESTABLISHED_) {
             if(_WebSocketData(e)) {
                 return true;
             }
-            _WebSocketFree(ws);
             return false;
         }
 
         if (ws->status == _CC_HTTP_STATUS_HEADER_) {
+            const _cc_http_header_t *connection, *upgrade, *sec_websocket_key;
             ws->status = _cc_http_header_parser((_cc_http_header_fn_t)_cc_http_alloc_request_header, (pvoid_t *)&ws->request, &rw->r);
             /**/
-            switch (ws->status) {
-            case _CC_HTTP_STATUS_HEADER_:
-                return true;
-            case _CC_HTTP_STATUS_PAYLOAD_:
-                _cc_buf_cleanup(&ws->buffer);
-                break;
-            default:
-                _WebSocketFree((_WebSocket_t*)e->args);
-                return false;
+            if (ws->status != _CC_HTTP_STATUS_PAYLOAD_) {
+                return ws->status == _CC_HTTP_STATUS_HEADER_;
             }
-            const _cc_http_header_t* connection = _cc_http_header_find(&ws->request->headers,_T("Connection"));
-            const _cc_http_header_t* upgrade = _cc_http_header_find(&ws->request->headers, _T("Upgrade"));
-            const _cc_http_header_t* sec_websocket_key = _cc_http_header_find(&ws->request->headers, _T("Sec-WebSocket-Key"));
-            if (connection == nullptr || upgrade == nullptr || sec_websocket_key == nullptr) {
-                _WebSocketFree((_WebSocket_t*)e->args);
-                return false;
-            }
-            
-            if (_tcsicmp("Upgrade",connection->value) != 0 || _tcsicmp("websocket",upgrade->value) != 0) {
-                _WebSocketFree((_WebSocket_t*)e->args);
-                return false;
-            }
-            ws->content_length = _WebSocketGetContentLength(&ws->request->headers);
-            if (ws->content_length == 0) {
+
+            ws->payload = _WebSocketGetContentLength(&ws->request->headers);
+            if (ws->payload == 0) {
                 ws->status = _CC_HTTP_STATUS_ESTABLISHED_;
+            }
+
+            if (ws->buffer.bytes == nullptr && ws->payload > 0) {
+                _cc_buf_alloc(&ws->buffer, (size_t)ws->payload);
+            }
+            connection = _cc_http_header_find(&ws->request->headers,_T("Connection"));
+            upgrade = _cc_http_header_find(&ws->request->headers, _T("Upgrade"));
+            sec_websocket_key = _cc_http_header_find(&ws->request->headers, _T("Sec-WebSocket-Key"));
+            if (connection == nullptr || upgrade == nullptr || sec_websocket_key == nullptr) {
+                return false;
+            }
+            if (_tcsicmp("Upgrade",connection->value) != 0 || _tcsicmp("websocket",upgrade->value) != 0) {
+                return false;
             }
             _WebSocketSecKey(sec_websocket_key->value, ws);
         } 
 
         if (ws->status == _CC_HTTP_STATUS_PAYLOAD_) {
             _cc_buf_append(&ws->buffer, rw->r.bytes, rw->r.length);
-            if (ws->buffer.length >= ws->content_length) {
+            if (ws->buffer.length >= ws->payload) {
                 ws->status = _CC_HTTP_STATUS_ESTABLISHED_;
             }
             rw->r.length = 0;

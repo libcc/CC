@@ -3,12 +3,11 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		418E9C1529A4A83E00D4D8B4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 418E9C1429A4A83E00D4D8B4 /* main.m */; };
-		418F425A2A87C04400220DD1 /* test.c in Sources */ = {isa = PBXBuildFile; fileRef = 418F42562A87C04400220DD1 /* test.c */; };
 		41D4E22529A77ADE00324E17 /* fishhook.h in Headers */ = {isa = PBXBuildFile; fileRef = 41D4E22329A77ADE00324E17 /* fishhook.h */; };
 		41D4E22629A77ADE00324E17 /* fishhook.c in Sources */ = {isa = PBXBuildFile; fileRef = 41D4E22429A77ADE00324E17 /* fishhook.c */; };
 		41D4E22A29A77B0500324E17 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D4E22929A77B0500324E17 /* main.m */; };
@@ -28,6 +27,7 @@
 		41F05F4829A39D5000168B2F /* BasicsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 41F05F4629A39D5000168B2F /* BasicsController.m */; };
 		426BE2702E5DD33F00CE8D50 /* libcc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 41E3A71729FE480100BEFBD6 /* libcc.a */; };
 		426BE2712E5DD34200CE8D50 /* libcc.widgets.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 41E3A71B29FE480100BEFBD6 /* libcc.widgets.dylib */; };
+		427234362E684B9E005FD969 /* test_url_request.c in Sources */ = {isa = PBXBuildFile; fileRef = 427234352E684B9E005FD969 /* test_url_request.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -84,7 +84,6 @@
 		418AF05829FDF1C400E4C6FB /* libcc.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libcc.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		418E9C1229A4A83E00D4D8B4 /* console */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = console; sourceTree = BUILT_PRODUCTS_DIR; };
 		418E9C1429A4A83E00D4D8B4 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		418F42562A87C04400220DD1 /* test.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = test.c; path = ../../examples/test.c; sourceTree = "<group>"; };
 		41ADBAC32A1474CC009A85F3 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		41D4E21B29A77A9C00324E17 /* libhook.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libhook.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		41D4E22329A77ADE00324E17 /* fishhook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fishhook.h; sourceTree = "<group>"; };
@@ -117,6 +116,7 @@
 		426BE2582E5DD12B00CE8D50 /* libodbcinst.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libodbcinst.2.dylib; path = ../../../homebrew/Cellar/unixodbc/2.3.12/lib/libodbcinst.2.dylib; sourceTree = "<group>"; };
 		426BE25A2E5DD14400CE8D50 /* libsqlite3.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.0.tbd; path = usr/lib/libsqlite3.0.tbd; sourceTree = SDKROOT; };
 		426BE25C2E5DD15500CE8D50 /* libiodbc.2.1.18.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiodbc.2.1.18.tbd; path = usr/lib/libiodbc.2.1.18.tbd; sourceTree = SDKROOT; };
+		427234352E684B9E005FD969 /* test_url_request.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = test_url_request.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -149,7 +149,7 @@
 		418E9C1329A4A83E00D4D8B4 /* console */ = {
 			isa = PBXGroup;
 			children = (
-				418F42562A87C04400220DD1 /* test.c */,
+				427234352E684B9E005FD969 /* test_url_request.c */,
 				41E3A58A29FDF4C900BEFBD6 /* console.entitlements */,
 				418E9C1429A4A83E00D4D8B4 /* main.m */,
 			);
@@ -266,7 +266,6 @@
 				418E9C0E29A4A83E00D4D8B4 /* Sources */,
 				418E9C0F29A4A83E00D4D8B4 /* Frameworks */,
 				418E9C1029A4A83E00D4D8B4 /* Copy Files */,
-				418C6B3729A833B8007D66B9 /* ShellScript */,
 				418AEFC329FDEC8300E4C6FB /* Embed Libraries */,
 			);
 			buildRules = (
@@ -303,7 +302,6 @@
 				41F05EF529A3969400168B2F /* Frameworks */,
 				41F05EF629A3969400168B2F /* Resources */,
 				41B4AD5329A44D9100406FE1 /* Copy Libraries */,
-				41B4AD6429A45BD000406FE1 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -320,7 +318,8 @@
 		41F05EF029A3969400168B2F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1200;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1630;
 				TargetAttributes = {
 					418E9C1129A4A83E00D4D8B4 = {
 						CreatedOnToolsVersion = 12.0.1;
@@ -395,50 +394,13 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		418C6B3729A833B8007D66B9 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n#Copy Files ... replace to cp -r xxx.dylib\nUNIX_TARGET=$TARGET_BUILD_DIR/$PRODUCT_NAME\n#改变dylib的引用地址，防止library/framewokr not found\ninstall_name_tool -change \"/usr/local/lib/libcc.widgets.dylib\" \"@executable_path/libcc.widgets.dylib\" \"$UNIX_TARGET\"\necho \"finish install_name_tool target $UNIX_TARGET\"\n";
-		};
-		41B4AD6429A45BD000406FE1 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n# Type a script or drag a script file from your workspace to insert its path.\n#Copy Files ... replace to cp -r xxx.dylib\nUNIX_TARGET=$TARGET_BUILD_DIR/$PRODUCT_NAME.app/Contents/MacOS/$PRODUCT_NAME\ninstall_name_tool -change \"/usr/local/lib/libwidgets.dylib\" \"@rpath/libwidgets.dylib\" \"$UNIX_TARGET\"\necho \"finish install_name_tool target $UNIX_TARGET\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		418E9C0E29A4A83E00D4D8B4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				418E9C1529A4A83E00D4D8B4 /* main.m in Sources */,
-				418F425A2A87C04400220DD1 /* test.c in Sources */,
+				427234362E684B9E005FD969 /* test_url_request.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -484,6 +446,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 8X9J3P3289;
 				ENABLE_HARDENED_RUNTIME = YES;
 				HEADER_SEARCH_PATHS = (
@@ -495,6 +458,7 @@
 					"$(PROJECT_DIR)",
 					/opt/homebrew/Cellar/unixodbc/2.3.12/lib,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = org.libcc.test;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -507,6 +471,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 8X9J3P3289;
 				ENABLE_HARDENED_RUNTIME = YES;
 				HEADER_SEARCH_PATHS = (
@@ -518,6 +483,7 @@
 					"$(PROJECT_DIR)",
 					/opt/homebrew/Cellar/unixodbc/2.3.12/lib,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = org.libcc.test;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -527,10 +493,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 7JGVR86J5Y;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -540,10 +508,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 7JGVR86J5Y;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -583,9 +553,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				FRAMEWORK_SEARCH_PATHS = ../lib;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -644,9 +616,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				FRAMEWORK_SEARCH_PATHS = ../lib;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -673,6 +647,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 8X9J3P3289;
 				ENABLE_HARDENED_RUNTIME = YES;
 				HEADER_SEARCH_PATHS = ../include;
@@ -686,6 +661,7 @@
 					"$(PROJECT_DIR)",
 					../bin,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = org.libcc.test;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -700,6 +676,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 8X9J3P3289;
 				ENABLE_HARDENED_RUNTIME = YES;
 				HEADER_SEARCH_PATHS = ../include;
@@ -713,6 +690,7 @@
 					"$(PROJECT_DIR)",
 					../bin,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = org.libcc.test;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

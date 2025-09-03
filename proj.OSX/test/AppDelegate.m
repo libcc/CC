@@ -22,7 +22,7 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     // Insert code here to initialize your application
-    NSStatusBar *statusBar = [NSStatusBar systemStatusBar];
+    /*NSStatusBar *statusBar = [NSStatusBar systemStatusBar];
     self.statusItem = [statusBar statusItemWithLength: NSSquareStatusItemLength];
     
     [self.statusItem.button setImage:[NSImage imageNamed:@"StatusBar"]];
@@ -43,7 +43,7 @@
             // 关闭popover；
             [weakSelf.popover close];
         }
-    }];
+    }];*/
 }
 
 

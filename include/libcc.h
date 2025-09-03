@@ -29,6 +29,7 @@
 #include "libcc/atomic.h"
 #include "libcc/crc.h"
 #include "libcc/ring.h"
+#include "libcc/socket/socket.h"
 #include "libcc/crypto/crypto.h"
 #include "libcc/crypto/xxtea.h"
 #include "libcc/math.h"

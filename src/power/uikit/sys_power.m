@@ -22,12 +22,11 @@
 #include <libcc/power.h>
 #include <libcc/generic.h>
 #include <libcc/time.h>
-
-#ifndef __CC_APPLE_TVOS__
+#ifndef __CC_APPLE_TVOS1__
+static uint64_t UIKitLastPowerInfoQuery = 0;
+#if 0
 /* turn off the battery monitor if it's been more than X ms since last check. */
 static const int BATTERY_MONITORING_TIMEOUT = 3000;
-static uint64_t UIKitLastPowerInfoQuery = 0;
-
 _CC_API_PRIVATE(void) UIKit_UpdateBatteryMonitoring(void) {
     if (UIKitLastPowerInfoQuery) {
         if (_CC_TICKS_PASSED(_cc_get_ticks(), UIKitLastPowerInfoQuery + BATTERY_MONITORING_TIMEOUT)) {
@@ -38,6 +37,7 @@ _CC_API_PRIVATE(void) UIKit_UpdateBatteryMonitoring(void) {
         }
     }
 }
+#endif
 #endif /* !__CC_APPLE_TVOS__ */
 
 _CC_API_PUBLIC(bool_t) _cc_get_sys_power_info(_CC_POWER_STATE_ENUM_ *state, int32_t *seconds, byte_t *percent) {

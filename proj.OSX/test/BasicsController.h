@@ -8,8 +8,6 @@
 #import <Cocoa/Cocoa.h>
 #include <libcc.h>
 
-NS_ASSUME_NONnullptr_BEGIN
-
 @interface BasicsController : NSViewController
 + (bool) isRunning;
 + (void) setRunning:(bool)status;
@@ -21,5 +19,3 @@ NS_ASSUME_NONnullptr_BEGIN
 
 - (void) alert:(NSString*)message Title:(NSString*)title;
 @end
-
-NS_ASSUME_NONnullptr_END

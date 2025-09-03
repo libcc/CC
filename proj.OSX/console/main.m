@@ -7,7 +7,7 @@
 #include <libcc.h>
 #include <libcc/widgets/widgets.h>
 #import <Foundation/Foundation.h>
-
+/*
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
         // insert code here...
@@ -19,3 +19,4 @@ int main(int argc, const char * argv[]) {
     }
     return 0;
 }
+*/
