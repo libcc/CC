@@ -40,6 +40,7 @@ LOCAL_SRC_FILES = \
 	src/rbtree.o \
 	src/array.o \
 	src/string.o \
+	src/sds.o \
 	src/buf.o \
 	src/uuid.o \
 	src/url.o \

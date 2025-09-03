@@ -50,10 +50,7 @@ _CC_API_PUBLIC(bool_t) _cc_http_alloc_response_header(_cc_http_response_header_t
         if (first == last) {
             return false;
         }
-        response->protocol = _cc_tcsndup(&line[first], last - first);
-        if (response->protocol == nullptr) {
-            return false;
-        }
+        response->protocol = _cc_sds_alloc(&line[first], last - first);
 
         first = last;
         /*LOG: HTTP Status*/
@@ -70,10 +67,8 @@ _CC_API_PUBLIC(bool_t) _cc_http_alloc_response_header(_cc_http_response_header_t
         first = last;
         _cc_first_index_of(first, length, _cc_isspace(line[first]));
         _cc_last_index_of(first, length, _cc_isspace(line[length]));
-        response->description = _cc_tcsndup(&line[first], length - first);
-        if (response->description == nullptr) {
-            return false;
-        }
+        response->description = _cc_sds_alloc(&line[first], length - first);
+
         return true;
     }
     return _cc_http_header_line(&response->headers, line, length);
@@ -89,18 +84,18 @@ _CC_API_PUBLIC(void) _cc_http_free_response_header(_cc_http_response_header_t **
     (*response_header) = nullptr;
 
     if (res->protocol) {
-        _cc_free(res->protocol);
+        _cc_sds_free(res->protocol);
     }
 
     if (res->description) {
-        _cc_free(res->description);
+        _cc_sds_free(res->description);
     }
 
     if (res->location) {
-        _cc_free(res->location);
+        _cc_sds_free(res->location);
     }
 
-    _cc_map_free(&res->headers);
+    _cc_http_header_destroy(&res->headers);
 
     _cc_free(res);
 }

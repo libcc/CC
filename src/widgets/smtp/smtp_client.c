@@ -73,7 +73,7 @@ _CC_API_PRIVATE(bool_t) network_event_callback(_cc_async_event_t* async, _cc_eve
     return true;
 }
 
-_CC_API_PRIVATE(bool_t) smtp_event_callback(_cc_smtp_t* smtp, uint16_t which) {
+_CC_API_PRIVATE(bool_t) smtp_event_callback(_cc_smtp_t* smtp, uint32_t which) {
     switch (which) {
         case _CC_LIBSMTP_CONNECTED:
             printf("CC_LIBSMTP_CONNECTED\n");

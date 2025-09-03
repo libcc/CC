@@ -43,9 +43,9 @@ _CC_API_PRIVATE(bool_t) _WebSocketResponseHeader(_cc_event_t *e, _WebSocket_t *w
     return true;
 }
 
-_CC_API_PRIVATE(int64_t) _WebSocketGetContentLength(_cc_map_t *headers) {
-    const _cc_map_element_t *data = _cc_map_find(headers, _T("Content-Length"));
-    return data ? _ttoi(data->element.uni_string) : 0;
+_CC_API_PRIVATE(int64_t) _WebSocketGetContentLength(_cc_rbtree_t *headers) {
+    const _cc_http_header_t *data = _cc_http_header_find(headers, _T("Content-Length"));
+    return data ? _ttoi(data->value) : 0;
 }
 /**/
 _CC_API_PRIVATE(bool_t) _Heartbeat(_cc_event_t *e, byte_t oc) {
@@ -120,7 +120,7 @@ _CC_API_PRIVATE(bool_t) _WebSocketData(_cc_event_t *e) {
     return true;
 }
 
-static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, const uint16_t which) {
+static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, const uint32_t which) {
     _WebSocket_t *ws;
     if (which & _CC_EVENT_ACCEPT_) {
         _cc_event_t *event;
@@ -188,7 +188,7 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
 
         ws = (_WebSocket_t*)e->args;
 
-        if (ws->status == _CC_HTTP_STATUS_FINISHED_) {
+        if (ws->status == _CC_HTTP_STATUS_ESTABLISHED_) {
             if(_WebSocketData(e)) {
                 return true;
             }
@@ -209,34 +209,34 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
                 _WebSocketFree((_WebSocket_t*)e->args);
                 return false;
             }
-            const _cc_map_element_t* connection = _cc_map_find(&ws->request->headers,_T("Connection"));
-            const _cc_map_element_t* upgrade = _cc_map_find(&ws->request->headers, _T("Upgrade"));
-            const _cc_map_element_t* sec_websocket_key = _cc_map_find(&ws->request->headers, _T("Sec-WebSocket-Key"));
+            const _cc_http_header_t* connection = _cc_http_header_find(&ws->request->headers,_T("Connection"));
+            const _cc_http_header_t* upgrade = _cc_http_header_find(&ws->request->headers, _T("Upgrade"));
+            const _cc_http_header_t* sec_websocket_key = _cc_http_header_find(&ws->request->headers, _T("Sec-WebSocket-Key"));
             if (connection == nullptr || upgrade == nullptr || sec_websocket_key == nullptr) {
                 _WebSocketFree((_WebSocket_t*)e->args);
                 return false;
             }
             
-            if (_tcsicmp("Upgrade",connection->element.uni_string) != 0 || _tcsicmp("websocket",upgrade->element.uni_string) != 0) {
+            if (_tcsicmp("Upgrade",connection->value) != 0 || _tcsicmp("websocket",upgrade->value) != 0) {
                 _WebSocketFree((_WebSocket_t*)e->args);
                 return false;
             }
             ws->content_length = _WebSocketGetContentLength(&ws->request->headers);
             if (ws->content_length == 0) {
-                ws->status = _CC_HTTP_STATUS_FINISHED_;
+                ws->status = _CC_HTTP_STATUS_ESTABLISHED_;
             }
-            _WebSocketSecKey(sec_websocket_key->element.uni_string, ws);
+            _WebSocketSecKey(sec_websocket_key->value, ws);
         } 
 
         if (ws->status == _CC_HTTP_STATUS_PAYLOAD_) {
             _cc_buf_append(&ws->buffer, rw->r.bytes, rw->r.length);
             if (ws->buffer.length >= ws->content_length) {
-                ws->status = _CC_HTTP_STATUS_FINISHED_;
+                ws->status = _CC_HTTP_STATUS_ESTABLISHED_;
             }
             rw->r.length = 0;
         }
 
-        if (ws->status == _CC_HTTP_STATUS_FINISHED_) {
+        if (ws->status == _CC_HTTP_STATUS_ESTABLISHED_) {
             return _WebSocketResponseHeader(e,ws);
         }
 

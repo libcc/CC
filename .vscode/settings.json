@@ -49,7 +49,14 @@
         "memory": "c",
         "unordered_map": "c",
         "stdatomic.h": "c",
-        "wctype.h": "c"
+        "wctype.h": "c",
+        "stdarg.h": "c",
+        "__hash_table": "c",
+        "__split_buffer": "c",
+        "queue": "c",
+        "stack": "c",
+        "sds.h": "c",
+        "variant": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     //"C_Cpp.clang_format_style": "{ BasedOnStyle: Microsoft, UseTab: Never, IndentWidth: 4, TabWidth: 4, }",

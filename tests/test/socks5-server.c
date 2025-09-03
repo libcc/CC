@@ -213,7 +213,7 @@ bool_t ProtocolRequest(byte_t *m, _cc_socks5_t *socks, _cc_event_t *e) {
     return true;
 }
 
-static bool_t _socks5_event_callback(_cc_async_event_t *async, _cc_event_t *e, const uint16_t which) {
+static bool_t _socks5_event_callback(_cc_async_event_t *async, _cc_event_t *e, const uint32_t which) {
     if (which & _CC_EVENT_ACCEPT_) {
         _cc_socket_t fd;
         _cc_event_t *event;

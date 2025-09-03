@@ -8,7 +8,7 @@ Headers = [
 ]
 
 if __name__ == "__main__":
-	vcxproj = VCXProj("libcc.test","Application","../../Proj.Win/")
+	vcxproj = VCXProj("libcc.test","Application","../../proj.Win/")
 	vcxproj.OutDir = "..\\bin"
 	vcxproj.Subsystem = "Console"
 

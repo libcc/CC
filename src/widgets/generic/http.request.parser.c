@@ -50,10 +50,7 @@ _CC_API_PUBLIC(bool_t) _cc_http_alloc_request_header(_cc_http_request_header_t *
         if (first == last) {
             return false;
         }
-        request->method = _cc_tcsndup(&line[first], last - first);
-        if (request->method == nullptr) {
-            return false;
-        }
+        request->method = _cc_sds_alloc(&line[first], last - first);
 
         first = last;
         /*LOG: HTTP Script(Host:Port)*/
@@ -63,19 +60,13 @@ _CC_API_PUBLIC(bool_t) _cc_http_alloc_request_header(_cc_http_request_header_t *
         if (first == last) {
             return false;
         }
-        request->script = _cc_tcsndup(&line[first], last - first);
-        if (request->script == nullptr) {
-            return false;
-        }
+        request->script = _cc_sds_alloc(&line[first], last - first);
 
         /*LOG: HTTP Protocol*/
         first = last;
         _cc_first_index_of(first, length, _cc_isspace(line[first]));
         _cc_last_index_of(first, length, _cc_isspace(line[length]));
-        request->protocol = _cc_tcsndup(&line[first], length - first);
-        if (request->protocol == nullptr) {
-            return false;
-        }
+        request->protocol = _cc_sds_alloc(&line[first], length - first);
         return true;
     }
 
@@ -93,18 +84,18 @@ _CC_API_PUBLIC(void) _cc_http_free_request_header(_cc_http_request_header_t **ht
     (*http_header) = nullptr;
     
     if (res->method) {
-        _cc_free(res->method);
+        _cc_sds_free(res->method);
     }
 
     if (res->script) {
-        _cc_free(res->script);
+        _cc_sds_free(res->script);
     }
 
     if (res->protocol) {
-        _cc_free(res->protocol);
+        _cc_sds_free(res->protocol);
     }
 
-    _cc_map_free(&res->headers);
+    _cc_http_header_destroy(&res->headers);
 
     _cc_free(res);
 }

@@ -23,7 +23,7 @@
 
 #include <math.h>
 #include <wchar.h>
-#include "map.h"
+#include "../sds.h"
 #include "OpenSSL.h"
 
 /* Set up for C function definitions, even when using C++ */
@@ -47,7 +47,7 @@ enum {
 enum {
     _CC_HTTP_STATUS_HEADER_ = 0,
     _CC_HTTP_STATUS_PAYLOAD_ = 1,
-    _CC_HTTP_STATUS_FINISHED_ = 2,
+    _CC_HTTP_STATUS_ESTABLISHED_ = 2,
     _CC_HTTP_ERROR_UNIMPLEMENTED_,
     _CC_HTTP_ERROR_NOFOUND_,
     _CC_HTTP_ERROR_BADREQUEST_,
@@ -61,11 +61,17 @@ enum {
  */
 #define _CC_HTTP_MAX_HEADERS_   256
 
+typedef struct _cc_http_header {
+    _cc_sds_t keyword;
+    _cc_sds_t value;
+    _cc_rbtree_iterator_t lnk;
+} _cc_http_header_t;
+
 typedef struct _cc_http_request_header {
-    tchar_t *method;
-    tchar_t *script;
-    tchar_t *protocol;
-    _cc_map_t headers;
+    _cc_sds_t method;
+    _cc_sds_t script;
+    _cc_sds_t protocol;
+    _cc_rbtree_t headers;
     
     uint16_t count;
 } _cc_http_request_header_t;
@@ -80,16 +86,26 @@ typedef struct _cc_http_response_header {
     uint64_t download_length;
     uint64_t length;
 
-    tchar_t *protocol;
-    tchar_t *description;
-    tchar_t *location;
+    _cc_sds_t protocol;
+    _cc_sds_t description;
+    _cc_sds_t location;
 
-    _cc_map_t headers;
+    _cc_rbtree_t headers;
 } _cc_http_response_header_t;
 
 typedef bool_t (*_cc_http_header_fn_t)(pvoid_t *arg, tchar_t *line, int length);
 
-_CC_WIDGETS_API(bool_t) _cc_http_header_line(_cc_map_t *headers, tchar_t *line, int length);
+_CC_WIDGETS_API(_cc_http_header_t*) _cc_http_header_alloc(void);
+/**/
+_CC_WIDGETS_API(void) _cc_http_header_free(_cc_http_header_t *m);
+/**/
+_CC_WIDGETS_API(bool_t) _cc_http_header_push(_cc_rbtree_t *ctx, _cc_http_header_t *data);
+/**/
+_CC_WIDGETS_API(const _cc_http_header_t*) _cc_http_header_find(_cc_rbtree_t *ctx, const tchar_t *keyword);
+/**/
+_CC_WIDGETS_API(void) _cc_http_header_destroy(_cc_rbtree_t *ctx);
+/**/
+_CC_WIDGETS_API(bool_t) _cc_http_header_line(_cc_rbtree_t *headers, tchar_t *line, int length);
 /**/
 _CC_WIDGETS_API(int) _cc_http_header_parser(_cc_http_header_fn_t fn, pvoid_t *arg, _cc_event_rbuf_t* r);
 /**/

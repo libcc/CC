@@ -313,7 +313,7 @@ _CC_API_PRIVATE(_cc_socket_t) _iocp_event_accept(_cc_async_event_t *async, _cc_e
 /**/
 _CC_API_PRIVATE(void) _iocp_event_dispatch(_cc_async_event_t *async, _iocp_overlapped_t *iocp_overlapped) {
     _cc_event_t *e = iocp_overlapped->e;
-    uint16_t which = _CC_EVENT_IS_SOCKET(iocp_overlapped->flag);
+    uint32_t which = _CC_EVENT_IS_SOCKET(iocp_overlapped->flag);
 
     if (_CC_ISSET_BIT(_CC_EVENT_DISCONNECT_, e->flags)) {
         return ;
@@ -376,7 +376,7 @@ _iocp_overlapped_t* _iocp_upcast(_cc_async_event_t *async, LPOVERLAPPED overlapp
     iocp_overlapped = _cc_upcast(overlapped, _iocp_overlapped_t, overlapped);
 
     /**/
-    if (iocp_overlapped->e != nullptr && iocp_overlapped->e->round == iocp_overlapped->round) {
+    if (iocp_overlapped->e != nullptr && iocp_overlapped->e->ident == iocp_overlapped->ident) {
         return iocp_overlapped;
     }
 
@@ -529,7 +529,7 @@ _CC_API_PRIVATE(bool_t) _iocp_event_alloc(_cc_async_event_t *async) {
 
 /**/
 _CC_API_PUBLIC(bool_t) _cc_register_iocp(_cc_async_event_t *async) {
-    if (!_iocp_event_init(async)) {
+    if (!_iocp_event_alloc(async)) {
         return false;
     }
     async->attach = _iocp_event_attach;

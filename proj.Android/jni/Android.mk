@@ -48,6 +48,7 @@ LOCAL_SRC_FILES := \
         ../../src/rbtree.c \
         ../../src/hmap.c \
         ../../src/array.c \
+        ../../src/sds.c \
         ../../src/string.c \
         ../../src/UTF.c \
         ../../src/buf.c \

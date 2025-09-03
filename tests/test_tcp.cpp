@@ -23,7 +23,7 @@ public:
     virtual bool_t onWrite(_cc_async_event_t *async, _cc_event_t *e) = 0;
     virtual bool_t onTimeout(_cc_async_event_t *async, _cc_event_t *e) = 0;
     
-    static bool_t callback(_cc_async_event_t *async, _cc_event_t *e, const uint16_t which) {
+    static bool_t callback(_cc_async_event_t *async, _cc_event_t *e, const uint32_t which) {
         TCP *tcp = (TCP *)e->args;
         if (which & _CC_EVENT_ACCEPT_) {
             tcp->onAccept(async,e);

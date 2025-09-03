@@ -44,7 +44,7 @@ void test_accept(_cc_async_event_t *async, _cc_event_t *e) {
     _cc_logger_debug(_T("%d accept."), event->ident);
 }
 static int times = 0;
-static bool_t test_event_callback(_cc_async_event_t *async, _cc_event_t *e, const uint16_t which) {
+static bool_t test_event_callback(_cc_async_event_t *async, _cc_event_t *e, const uint32_t which) {
     if (which & _CC_EVENT_ACCEPT_) {
         test_accept(async,e);
 
@@ -100,7 +100,7 @@ static bool_t test_event_callback(_cc_async_event_t *async, _cc_event_t *e, cons
     }
     return true;
 }
-static bool_t test_event_timeout_callback(_cc_async_event_t *async, _cc_event_t *e, const uint16_t which) {
+static bool_t test_event_timeout_callback(_cc_async_event_t *async, _cc_event_t *e, const uint32_t which) {
     if (which & _CC_EVENT_TIMEOUT_) {
         _cc_logger_debug(_T("%d timer timeout."), e->ident);
         return false;

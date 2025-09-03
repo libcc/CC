@@ -49,15 +49,16 @@ _CC_API_PUBLIC(const tchar_t*) _cc_get_syntax_error(void) {
     return _cc_global_syntax_error.content;
 }
 
-_CC_API_PUBLIC(tchar_t *) _convert_text(tchar_t *alloc_bytes, size_t alloc_length, const tchar_t *input_pointer, const tchar_t *endpos) {
-    tchar_t *output_pointer = alloc_bytes;
+_CC_API_PUBLIC(tchar_t *) _convert_text(tchar_t *alloc_bytes, size_t alloc_length, const tchar_t *input_ptr, const tchar_t *endpos) {
+    tchar_t *output_ptr = alloc_bytes;
+    tchar_t *output_endpos = alloc_bytes + alloc_length - 1; /* -1 for zero terminator */
     /* loop through the string literal */
-    while (input_pointer < endpos) {
-        if (*input_pointer != '\\') {
-            *output_pointer++ = *input_pointer++;
-        } else if (*input_pointer == _T('&')) {
+    while (input_ptr < endpos && output_ptr < output_endpos) {
+        if (*input_ptr != '\\') {
+            *output_ptr++ = *input_ptr++;
+        } else if (*input_ptr == _T('&')) {
             size_t i = 0;
-            const tchar_t *p = (input_pointer + 1);
+            const tchar_t *p = (input_ptr + 1);
             const _XML_entity_t *entity = nullptr;
             for (i = 0; i < _XML_NUM_ENTITIES_; i++) {
                 const _XML_entity_t *tmp = &XML_entities[i];
@@ -68,44 +69,44 @@ _CC_API_PUBLIC(tchar_t *) _convert_text(tchar_t *alloc_bytes, size_t alloc_lengt
             }
 
             if (entity) {
-                *output_pointer++ = entity->value;
+                *output_ptr++ = entity->value;
                 /* +1 skip & */
-                input_pointer += entity->length + 1;
+                input_ptr += entity->length + 1;
             } else {
-                *output_pointer++ = *input_pointer++;
+                *output_ptr++ = *input_ptr++;
             }
         } else {
             /* escape sequence */
             unsigned char sequence_length = 2;
-            if ((endpos - input_pointer) < 1) {
+            if ((endpos - input_ptr) < 1) {
                 return nullptr;
             }
 
-            switch (input_pointer[1]) {
+            switch (input_ptr[1]) {
                 case 'b':
-                    *output_pointer++ = '\b';
+                    *output_ptr++ = '\b';
                     break;
                 case 'f':
-                    *output_pointer++ = '\f';
+                    *output_ptr++ = '\f';
                     break;
                 case 'n':
-                    *output_pointer++ = '\n';
+                    *output_ptr++ = '\n';
                     break;
                 case 'r':
-                    *output_pointer++ = '\r';
+                    *output_ptr++ = '\r';
                     break;
                 case 't':
-                    *output_pointer++ = '\t';
+                    *output_ptr++ = '\t';
                     break;
                 case '\"':
                 case '\\':
                 case '/':
-                    *output_pointer++ = input_pointer[1];
+                    *output_ptr++ = input_ptr[1];
                     break;
                 /* UTF-16 literal */
                 case 'u':{ 
-                    sequence_length = _cc_convert_utf16_literal_to_utf8(&input_pointer, endpos, output_pointer, 
-                        alloc_length - (output_pointer - alloc_bytes));
+                    sequence_length = _cc_convert_utf16_literal_to_utf8(&input_ptr, endpos, output_ptr, 
+                        alloc_length - (output_ptr - alloc_bytes));
                     if (sequence_length == 0) {
                         /* failed to convert UTF16-literal to UTF-8 */
                         return nullptr;
@@ -115,12 +116,12 @@ _CC_API_PUBLIC(tchar_t *) _convert_text(tchar_t *alloc_bytes, size_t alloc_lengt
                 default:
                     return nullptr;
             }
-            input_pointer += sequence_length;
+            input_ptr += sequence_length;
         }
     }
 
     /* zero terminate the output */
-    *output_pointer = '\0';
+    *output_ptr = '\0';
 
-    return output_pointer;
+    return output_ptr;
 }

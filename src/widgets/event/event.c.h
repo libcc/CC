@@ -79,7 +79,7 @@ bool_t _unregister_async_event(_cc_async_event_t *async);
  *
  * @return true if successful or false on error.
  */
-bool_t _event_callback(_cc_async_event_t *async, _cc_event_t *e, uint16_t which);
+bool_t _event_callback(_cc_async_event_t *async, _cc_event_t *e, uint32_t which);
 /**
  * @brief Check the Socket is valid
  *

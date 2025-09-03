@@ -129,7 +129,6 @@ ifdef url_request
 MACROS			+= _CC_ENABLE_OPENSSL_=1
 LOCAL_SRC_FILES += \
 					$(WIDGET_FILES)/generic/gzip.o \
-					$(WIDGET_FILES)/generic/map.o \
 					$(WIDGET_FILES)/generic/http.header.o \
 					$(WIDGET_FILES)/generic/http.request.parser.o \
 					$(WIDGET_FILES)/generic/http.response.parser.o \

@@ -231,7 +231,7 @@ _CC_API_PRIVATE(bool_t) parse(char_t *buf, size_t length) {
     return true;
 }
 
-_CC_API_PRIVATE(bool_t) udp(_cc_async_event_t *async, _cc_event_t *e, uint16_t which) {
+_CC_API_PRIVATE(bool_t) udp(_cc_async_event_t *async, _cc_event_t *e, uint32_t which) {
     if (which & _CC_EVENT_READABLE_) {
         struct sockaddr_in remote_addr;
         socklen_t addr_len = sizeof(struct sockaddr_in);

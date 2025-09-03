@@ -10,7 +10,7 @@
 #define SETSOCKOPT_OPTVAL_TYPE (void*)
 #endif
 
-_CC_API_PRIVATE(bool_t) ftp_event_callback(_cc_ftp_t* ftp, uint16_t which);
+_CC_API_PRIVATE(bool_t) ftp_event_callback(_cc_ftp_t* ftp, uint32_t which);
 
 _CC_API_PRIVATE(bool_t) network_event_close(_cc_async_event_t* async,
                                              _cc_event_t* e) {
@@ -22,7 +22,7 @@ _CC_API_PRIVATE(bool_t) network_event_close(_cc_async_event_t* async,
 
 _CC_API_PRIVATE(bool_t) network_event_pasv_callback(_cc_async_event_t* async,
                                                      _cc_event_t* e,
-                                                     const uint16_t which) {
+                                                     const uint32_t which) {
     /*成功连接服务器*/
     if (which & _CC_EVENT_CONNECTED_) {
         _tprintf(_T("%d connect to server.\n"), e->fd);
@@ -176,7 +176,7 @@ _CC_API_PRIVATE(bool_t) network_event_port_callback(_cc_async_event_t* async,
 
 _CC_API_PRIVATE(bool_t) network_event_callback(_cc_async_event_t* async,
                                                 _cc_event_t* e,
-                                                const uint16_t which) {
+                                                const uint32_t which) {
     /*成功连接服务器*/
     if (which & _CC_EVENT_CONNECTED_) {
         _cc_ftp_t* ftp = (_cc_ftp_t*)e->args;
@@ -288,7 +288,7 @@ bool_t _cc_ftp_tcp_listen(_cc_ftp_t* ftp) {
     return false;
 }
 
-_CC_API_PRIVATE(bool_t) ftp_event_callback(_cc_ftp_t* ftp, uint16_t which) {
+_CC_API_PRIVATE(bool_t) ftp_event_callback(_cc_ftp_t* ftp, uint32_t which) {
     switch (which) {
         case _CC_LIBFTP_CONNECTED:
             printf("CC_LIBFTP_CONNECTED OK\n");

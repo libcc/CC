@@ -112,24 +112,24 @@ _CC_API_PUBLIC(bool_t) _cc_url_request_ssl_handshake(_cc_url_request_t *request,
     return true;
 }
 
-_CC_API_PRIVATE(int64_t) get_content_length(_cc_map_t *headers) {
-    const _cc_map_element_t *data = _cc_map_find(headers, _T("Content-Length"));
-    return data ? _ttoi(data->element.uni_string) : 0;
+_CC_API_PRIVATE(int64_t) get_content_length(_cc_rbtree_t *headers) {
+    const _cc_http_header_t *data = _cc_http_header_find(headers, _T("Content-Length"));
+    return data ? _ttoi(data->value) : 0;
 }
 
-_CC_API_PRIVATE(int) is_chunked_transfer(_cc_map_t *headers) {
-    const _cc_map_element_t *data = _cc_map_find(headers, _T("Transfer-Encoding"));
-    return (data && !_tcsicmp(data->element.uni_string, _T("chunked"))) ? _CC_URL_TRANSFER_ENCODING_CHUNKED_ : _CC_URL_TRANSFER_ENCODING_UNKNOWN_;
+_CC_API_PRIVATE(int) is_chunked_transfer(_cc_rbtree_t *headers) {
+    const _cc_http_header_t *data = _cc_http_header_find(headers, _T("Transfer-Encoding"));
+    return (data && !_tcsicmp(data->value, _T("chunked"))) ? _CC_URL_TRANSFER_ENCODING_CHUNKED_ : _CC_URL_TRANSFER_ENCODING_UNKNOWN_;
 }
 
-_CC_API_PRIVATE(int) get_content_encoding(_cc_map_t *headers) {
-    const _cc_map_element_t *data = _cc_map_find(headers, _T("Content-Encoding"));
-    return (data && !_tcsicmp(data->element.uni_string, _T("gzip"))) ? _CC_URL_CONTENT_ENCODING_GZIP_ : _CC_URL_CONTENT_ENCODING_PLAINTEXT_;
+_CC_API_PRIVATE(int) get_content_encoding(_cc_rbtree_t *headers) {
+    const _cc_http_header_t *data = _cc_http_header_find(headers, _T("Content-Encoding"));
+    return (data && !_tcsicmp(data->value, _T("gzip"))) ? _CC_URL_CONTENT_ENCODING_GZIP_ : _CC_URL_CONTENT_ENCODING_PLAINTEXT_;
 }
 
-_CC_API_PRIVATE(bool_t) is_keep_alive(_cc_map_t *headers) {
-    const _cc_map_element_t *data = _cc_map_find(headers, _T("Connection"));
-    return data ? !_tcsicmp(data->element.uni_string, _T("keep-alive")) : false;
+_CC_API_PRIVATE(bool_t) is_keep_alive(_cc_rbtree_t *headers) {
+    const _cc_http_header_t *data = _cc_http_header_find(headers, _T("Connection"));
+    return data ? !_tcsicmp(data->value, _T("keep-alive")) : false;
 }
 
 /**/
@@ -189,11 +189,11 @@ _CC_API_PUBLIC(bool_t) _cc_url_request_response_body(_cc_url_request_t *request,
             response->download_length += r->length;
             r->length = 0;
             if (response->length > 0 && response->download_length >= response->length) {
-                request->status = _CC_HTTP_STATUS_FINISHED_;
+                request->status = _CC_HTTP_STATUS_ESTABLISHED_;
             }
         }
     } else if (response->length == 0 && response->transfer_encoding != _CC_URL_TRANSFER_ENCODING_CHUNKED_) {
-        request->status = _CC_HTTP_STATUS_FINISHED_;
+        request->status = _CC_HTTP_STATUS_ESTABLISHED_;
     }
 
     return true;

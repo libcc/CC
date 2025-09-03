@@ -64,25 +64,31 @@ static bool_t url_request_header(_cc_url_request_t *request, _cc_event_t *e) {
 
 static bool_t url_request_success(_cc_url_request_t *request) {
     _cc_http_response_header_t *response = request->response;
+    _cc_rbtree_iterator_t *node;
+
+    _cc_rbtree_for_next(node, &response->headers) {
+        _cc_http_header_t *header = _cc_upcast(node, _cc_http_header_t, lnk);
+        _cc_logger_debug(_T("header:%s=%s"), header->keyword, header->value);
+    }
     switch (response->status) {
     case HTTP_STATUS_OK:
     case HTTP_STATUS_PARTIAL_CONTENTS:
         _cc_buf_cleanup(&request->buffer);
-        _cc_logger_debug(_T("url_request success,%s"), request->url.host);
+        _cc_logger_debug(_T("url_request success,%s\n\n"), request->url.host);
         return true;
     case HTTP_STATUS_MOVED_TEMPORARILY: // 目标跳转
     case HTTP_STATUS_MOVED_PERMANENTLY: // 目标跳转
     case HTTP_STATUS_SEE_OTHER:         // 目标跳转
     {
-        const _cc_map_element_t *location = _cc_map_find(&response->headers, _T("Location"));
+        const _cc_http_header_t *location = _cc_http_header_find(&response->headers, _T("Location"));
         if (location) {
-            return url_request(location->element.uni_string, nullptr);
+            return url_request(location->value, nullptr);
         }
         break;
     }
     }
 
-    _cc_logger_warin(_T("url_request fail,%s"), request->url.host);
+    _cc_logger_warin(_T("url_request fail,%s\n\n"), request->url.host);
     return true;
 }
 
@@ -91,7 +97,7 @@ static bool_t url_request_read(_cc_url_request_t *request) {
     return true;
 }
 
-static bool_t _url_timeout_callback(_cc_async_event_t *timer, _cc_event_t *e, const uint16_t which) {
+static bool_t _url_timeout_callback(_cc_async_event_t *timer, _cc_event_t *e, const uint32_t which) {
     _cc_url_request_t *request = (_cc_url_request_t *)e->args;
     if (request == nullptr || !_cc_async_event_is_running()) {
         return false;
@@ -104,7 +110,7 @@ static bool_t _url_timeout_callback(_cc_async_event_t *timer, _cc_event_t *e, co
 }
 
 
-static bool_t _url_request_callback(_cc_async_event_t *async, _cc_event_t *e, const uint16_t which) {
+static bool_t _url_request_callback(_cc_async_event_t *async, _cc_event_t *e, const uint32_t which) {
     _cc_url_request_t *request = (_cc_url_request_t *)e->args;
 
     if (_CC_ISSET_BIT(_CC_EVENT_DISCONNECT_, which)) {
@@ -118,7 +124,7 @@ static bool_t _url_request_callback(_cc_async_event_t *async, _cc_event_t *e, co
         return false;
     } else if (_CC_ISSET_BIT(_CC_EVENT_TIMEOUT_, which)) {
         //printf("timeout\n");
-        return url_request_header(request, e);
+        return false;//url_request_header(request, e);
     }else if (_CC_ISSET_BIT(_CC_EVENT_CONNECTED_, which)) {
         if (request->url.scheme.ident != _CC_SCHEME_HTTPS_) {
             return url_request_header(request, e);
@@ -176,7 +182,7 @@ static bool_t _url_request_callback(_cc_async_event_t *async, _cc_event_t *e, co
 
             url_request_read(request);
 
-            if (request->status == _CC_HTTP_STATUS_FINISHED_) {
+            if (request->status == _CC_HTTP_STATUS_ESTABLISHED_) {
                 //printf("response successful\n");
                 url_request_success(request);
                 return request->response->keep_alive;
@@ -258,12 +264,12 @@ int main(int argc, char *const argv[]) {
     _cc_alloc_async_event(0, nullptr);
 
     url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);
-    url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);
-    url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);
-    url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);
-    url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);
-    url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);
-    url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);
+    //url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);
+    //url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);
+    //url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);
+    //url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);
+    //url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);
+    //url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);
 
     while (getchar() != 'q') {
         _cc_sleep(100);

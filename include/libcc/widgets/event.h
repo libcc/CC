@@ -74,7 +74,7 @@ typedef struct _cc_event_wbuf _cc_event_wbuf_t;
 typedef struct _cc_async_event_priv _cc_async_event_priv_t;
 typedef struct _cc_async_event _cc_async_event_t;
 
-typedef bool_t (*_cc_event_callback_t)(_cc_async_event_t *, _cc_event_t *, const uint16_t);
+typedef bool_t (*_cc_event_callback_t)(_cc_async_event_t *, _cc_event_t *, const uint32_t);
 
 struct _cc_event_rbuf {
     int32_t length;

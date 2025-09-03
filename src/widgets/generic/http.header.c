@@ -20,9 +20,78 @@
 */
 #include <libcc/widgets/http.h>
 
-_CC_API_PUBLIC(bool_t) _cc_http_header_line(_cc_map_t *headers, tchar_t *line, int length) {
+_CC_API_PUBLIC(_cc_http_header_t*) _cc_http_header_alloc(void) {
+    _cc_http_header_t *m = (_cc_http_header_t *)_cc_malloc(sizeof(_cc_http_header_t));
+    m->keyword = nullptr;
+    m->value = nullptr;
+    return m;
+}
+
+_CC_API_PUBLIC(void) _cc_http_header_free(_cc_http_header_t *m) {
+    if (m->keyword) {
+        _cc_sds_free(m->keyword);
+    }
+    if (m->value) {
+        _cc_sds_free(m->value);
+    }
+    _cc_free(m);
+}
+
+_CC_API_PUBLIC(bool_t) _cc_http_header_push(_cc_rbtree_t *ctx, _cc_http_header_t *data) {
+    int32_t result = 0;
+    _cc_http_header_t *m = nullptr;
+
+    _cc_rbtree_iterator_t **node = &(ctx->rb_node), *parent = nullptr;
+    while (*node) {
+        m = _cc_upcast(*node, _cc_http_header_t, lnk);
+        result = _tcsicmp(data->keyword, m->keyword);
+
+        parent = *node;
+
+        if (result < 0) {
+            node = &((*node)->left);
+        } else if (result > 0) {
+            node = &((*node)->right);
+        } else {
+            _cc_http_header_free(data);
+            return false;
+        }
+    }
+    _cc_rbtree_insert(ctx, &data->lnk, parent, node);
+    return true;
+}
+
+_CC_API_PUBLIC(const _cc_http_header_t*) _cc_http_header_find(_cc_rbtree_t *ctx, const tchar_t *keyword) {
+    int32_t result = 0;
+    _cc_http_header_t *m;
+    _cc_rbtree_iterator_t *node = ctx->rb_node;
+
+    while (node) {
+        m = _cc_upcast(node, _cc_http_header_t, lnk);
+        result = _tcsicmp(keyword, m->keyword);
+        if (result < 0) {
+            node = node->left;
+        } else if (result > 0) {
+            node = node->right;
+        } else {
+            return m;
+        }
+    }
+    return nullptr;
+}
+
+static void _http_header_free(_cc_rbtree_iterator_t *node) {
+    _cc_http_header_free(_cc_upcast(node, _cc_http_header_t, lnk));
+}
+
+_CC_API_PUBLIC(void) _cc_http_header_destroy(_cc_rbtree_t *ctx) {
+    _cc_assert(ctx != nullptr);
+    _cc_rbtree_destroy(ctx, _http_header_free);
+}
+
+_CC_API_PUBLIC(bool_t) _cc_http_header_line(_cc_rbtree_t *headers, tchar_t *line, int length) {
     int first = 0, last = 0, i = 0;
-    _cc_map_element_t *m = (_cc_map_element_t*)_cc_malloc(sizeof(_cc_map_element_t));
+    _cc_http_header_t *m = (_cc_http_header_t*)_cc_malloc(sizeof(_cc_http_header_t));
 
     /* Find the first non-space letter */
     _cc_first_index_of(first, length, _cc_isspace(line[first]));
@@ -46,28 +115,18 @@ _CC_API_PUBLIC(bool_t) _cc_http_header_line(_cc_map_t *headers, tchar_t *line, i
         return false;
     }
     
-    m->name = _cc_tcsndup(&line[first], i);
-    if (m->name == nullptr) {
-        _cc_free(m);
-        return false;
-    }
-
+    m->keyword = _cc_sds_alloc(&line[first], i);
     last += 1;
     /* Find the first non-space letter */
     _cc_first_index_of(last, length, _cc_isspace(line[last]));
     /*Find the last non-space letter*/
     _cc_last_index_of(last, length, _cc_isspace(line[length]));
     if (last == length) {
+        _cc_http_header_free(m);
         return false;
     }
-
-    m->type = _CC_MAP_STRING_;
-    m->element.uni_string = _cc_tcsndup(&line[last], length - last);
-    if (m->element.uni_string == nullptr) {
-        _cc_map_element_free(m);
-        return false;
-    }
-    return _cc_map_push(headers, m);
+    m->value = _cc_sds_alloc(&line[last], length - last);
+    return _cc_http_header_push(headers, m);
 }
 
 /**/

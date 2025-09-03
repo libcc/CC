@@ -30,7 +30,6 @@
 #define _CC_MAX_STEP_           64
 
 static struct {
-    _cc_atomic32_t round;
     _cc_atomic32_t async_limit;
     _cc_atomic32_t refcount;
     _cc_atomic32_t slot_refcount;
@@ -139,12 +138,13 @@ _CC_API_PUBLIC(_cc_async_event_t*) _cc_get_async_event(void) {
 
 /**/
 _CC_API_PUBLIC(_cc_event_t*) _cc_get_event_by_id(uint32_t ident) {
-    if (g.slot_length <= ident) {
+	int32_t index = (int32_t)(ident & 0x0FFFFF);
+    if (g.slot_length <= index) {
         return nullptr;
     }
 #ifdef _CC_DEBUG_
     {
-        _cc_event_t *e = g.slots[ident & 0x0FFFFF];
+        _cc_event_t *e = g.slots[index];
         _cc_assert(e != nullptr);
         if (e->ident != ident) {
             _cc_logger_error(_T("event id:%d is deleted"), ident);
@@ -153,7 +153,7 @@ _CC_API_PUBLIC(_cc_event_t*) _cc_get_event_by_id(uint32_t ident) {
         return e;
     }
 #else
-    return g.slots[ident & 0x0FFFFF];
+    return g.slots[index];
 #endif
     
 }
@@ -283,7 +283,7 @@ _CC_API_PUBLIC(bool_t) _register_async_event(_cc_async_event_t *async) {
     if (g.async_limit >= 0xFFF) {
         async_limit = 0xFFFF;
         for (i = 0; i < g.async_limit; i++) {
-            if (_cc_atomic32_cas((_cc_atomic32_t*)&g.async[i], 0, (intptr_t)async)) {
+            if (_cc_atomic_cas((_cc_atomic_t*)&g.async[i], 0, (intptr_t)async)) {
                 async_limit = i;
                 break;
             }
@@ -400,7 +400,7 @@ _CC_API_PUBLIC(uint32_t) _valid_connected(_cc_event_t *e, uint32_t which) {
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _event_callback(_cc_async_event_t *async, _cc_event_t *e, uint16_t which) {
+_CC_API_PUBLIC(bool_t) _event_callback(_cc_async_event_t *async, _cc_event_t *e, uint32_t which) {
     /**/
     async->processed++;
     _cc_list_iterator_swap(&async->pending, &e->lnk);

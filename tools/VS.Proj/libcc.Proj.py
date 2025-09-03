@@ -6,6 +6,7 @@ LIBCCSources = [
 	"src/array.c",
 	"src/queue.c",
 	"src/buf.c",
+	"src/sds.c",
 	"src/string.c",
 	"src/url.c",
 	"src/UTF.c",
@@ -64,11 +65,6 @@ LIBCCHeaders = [
 	"include/libcc/atomic.h",
 	"include/libcc/buf.h",
 	"include/libcc/generic.h",
-	"include/libcc/core/compiler.h",
-	"include/libcc/core/platform.h",
-	"include/libcc/core/cpu_info.h",
-	"include/libcc/core/file.h",
-	"include/libcc/core/windows/sys_flock.h",
 	"include/libcc/dirent.h",
 	"include/libcc/list.h",
 	"include/libcc/endian.h",
@@ -83,13 +79,14 @@ LIBCCHeaders = [
 	"include/libcc/rbtree.h",
 	"include/libcc/ring.h",
 	"include/libcc/queue.h",
-	"include/libcc/socket/socket.h",
-	"include/libcc/socket/windows/sys_iocp.h",
-	"include/libcc/socket/windows/sys_socket.h",
+	"include/libcc/sds.h",
 	"include/libcc/string.h",
 	"include/libcc/hmap.h",
 	"include/libcc/tchar.h",
 	"include/libcc/thread.h",
+	"include/libcc/socket/socket.h",
+	"include/libcc/socket/windows/sys_iocp.h",
+	"include/libcc/socket/windows/sys_socket.h",
 	"include/libcc/thread/sys_thread.h",
 	"include/libcc/thread/windows/sys_thread.h",
 	"include/libcc/time.h",
@@ -110,12 +107,17 @@ LIBCCHeaders = [
 	"include/libcc/crypto/hmac.h",
 	"include/libcc/crypto/sha.h",
 	"include/libcc/crypto/xxtea.h",
+	"include/libcc/core/compiler.h",
+	"include/libcc/core/platform.h",
+	"include/libcc/core/cpu_info.h",
+	"include/libcc/core/file.h",
+	"include/libcc/core/windows/sys_flock.h",
 	"include/libcc/core/windows.h",
 	"include/libcc/core/windows/sys_mmap.h"
 ]
 
 if __name__ == "__main__":
-	vcxproj = VCXProj("libcc","StaticLibrary","../../Proj.Win/")
+	vcxproj = VCXProj("libcc","StaticLibrary","../../proj.Win/")
 	vcxproj.OutDir = "..\\lib"
 
 	vcxproj.addIncludePath(["C:\\240216\\third-party","C:\\240216\\01\\include"])

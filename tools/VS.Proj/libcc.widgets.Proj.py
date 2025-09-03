@@ -9,7 +9,6 @@ WidgetsSources = [
 	"src/widgets/generic/http.header.c",
 	"src/widgets/generic/http.request.parser.c",
 	"src/widgets/generic/http.response.parser.c",
-	"src/widgets/generic/map.c",
 	"src/widgets/generic/OpenSSL.c",
 	"src/widgets/db/mysql.c",
 	"src/widgets/db/sqlite.c",
@@ -40,7 +39,6 @@ WidgetsHeaders = [
 	"include/libcc/widgets/http.h",
 	"include/libcc/widgets/ini.h",
 	"include/libcc/widgets/json.h",
-	"include/libcc/widgets/map.h",
 	"include/libcc/widgets/socks5.h",
 	"include/libcc/widgets/sql.h",
 	"include/libcc/widgets/timeout.h",
@@ -66,7 +64,7 @@ WidgetsHeaders = [
 
 if __name__ == "__main__":
 
-	vcxproj = VCXProj("libcc.widgets","DynamicLibrary","../../Proj.Win/")
+	vcxproj = VCXProj("libcc.widgets","DynamicLibrary","../../proj.Win/")
 	vcxproj.OutDir = "..\\bin"
 	vcxproj.ImportLibrary = "..\\lib"
 

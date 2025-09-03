@@ -23,7 +23,7 @@
             "type": "cppdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}/bin/aarch64/",
-            "program": "${workspaceFolder}/bin/aarch64/debug/event",
+            "program": "${workspaceFolder}/bin/aarch64/debug/url_request",
             "args": [],
             "stopAtEntry": false,
             "environment": [],
