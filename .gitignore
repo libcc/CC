@@ -62,8 +62,6 @@ local.properties
 [Ll]ibs/
 [Dd]ebug/
 [Rr]elease/
-[Dd]ebug_Unicode/
-[Rr]elease_Unicode/
 #[Bb]uild/
 [Bb]in/
 [Oo]bj/
