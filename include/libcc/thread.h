@@ -44,8 +44,7 @@ typedef int32_t (*_cc_thread_callback_t)(pvoid_t);
 typedef enum {
     _CC_THREAD_STATE_ALIVE_,
     _CC_THREAD_STATE_DETACHED_,
-    _CC_THREAD_STATE_ZOMBIE_,
-    _CC_THREAD_STATE_CLEANED_,
+    _CC_THREAD_STATE_COMPLETE_,
 } _CC_THREAD_STATE_;
 
 struct _cc_thread {

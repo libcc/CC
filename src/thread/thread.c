@@ -43,9 +43,9 @@ _CC_API_PUBLIC(void) _cc_thread_running_function(void *args) {
     self->status = user_func(user_args);
 
     /* Mark us as ready to be joined (or detached) */
-    if (!_cc_atomic32_cas(&self->state, _CC_THREAD_STATE_ALIVE_, _CC_THREAD_STATE_ZOMBIE_)) {
+    if (!_cc_atomic32_cas(&self->state, _CC_THREAD_STATE_ALIVE_, _CC_THREAD_STATE_COMPLETE_)) {
         /* Clean up if something already detached us. */
-        if (_cc_atomic32_cas(&self->state, _CC_THREAD_STATE_DETACHED_, _CC_THREAD_STATE_CLEANED_)) {
+        if (_cc_atomic32_load(&self->state) == _CC_THREAD_STATE_DETACHED_) {
             _cc_safe_free(self->name);
             _cc_free(self);
         }
@@ -59,7 +59,10 @@ _CC_API_PUBLIC(_cc_thread_t*) _cc_thread(_cc_thread_callback_t callback, const t
 _CC_API_PUBLIC(_cc_thread_t*) _cc_thread_with_stacksize(_cc_thread_callback_t callback, const tchar_t *name, size_t stacksize,
                                                pvoid_t args) {
     _cc_thread_t *self;
-
+    if (!callback) {
+        _cc_logger(_CC_LOG_LEVEL_ERROR_,_T("Thread entry function is NULL"));
+        return NULL;
+    }
     /* Allocate memory for the thread info structure */
     self = _CC_MALLOC(_cc_thread_t);
     bzero(self, sizeof(_cc_thread_t));
@@ -122,11 +125,13 @@ _CC_API_PUBLIC(void) _cc_detach_thread(_cc_thread_t *self) {
         _cc_detach_sys_thread(self);
     } else {
         /* all other states are pretty final, see where we landed. */
-        const _cc_atomic32_t thread_state = _cc_atomic32_load(&self->state);
-        if ((thread_state == _CC_THREAD_STATE_DETACHED_) || (thread_state == _CC_THREAD_STATE_CLEANED_)) {
-            return; /* already detached (you shouldn't call this twice!) */
-        } else if (thread_state == _CC_THREAD_STATE_ZOMBIE_) {
-            _cc_wait_thread(self, nullptr); /* already done, clean it up. */
+        const _cc_atomic32_t state = _cc_atomic32_load(&self->state);
+        if (state == _CC_THREAD_STATE_DETACHED_) {
+            /* already detached (you shouldn't call this twice!) */
+            return;
+        } else if (state == _CC_THREAD_STATE_COMPLETE_) {
+            /* already done, clean it up. */
+            _cc_wait_thread(self, nullptr);
         } else {
             _cc_assert(0 && "Unexpected thread state");
         }

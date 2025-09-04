@@ -29,7 +29,10 @@
 #include <libcc/logger.h>
 
 int main() {
-    _cc_logger(_CC_LOG_LEVEL_INFO_, "Application started");
+    const tchar_t *logger_info = "Application started";
+    _cc_static_logger(_CC_LOG_LEVEL_INFO_, _T("Application started"));
+    _cc_logger_error(_T("Application started %s"), _T("Ok"));
+    _cc_logger(_CC_LOG_LEVEL_INFO_, logger_info);
     return 0;
 }
 ```
