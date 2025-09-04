@@ -1,4 +1,5 @@
 #include <libcc/string.h>
+#include <libcc/generic.h>
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -90,6 +91,25 @@ void test_cc_to_number() {
     printf("_cc_to_number test passed!\n");
 }
 
+static const tchar_t* fn(const tchar_t *ptr, int32_t *offset) {
+    *offset = 2;//sizeof("||") - 1;
+    return _tcsstr(ptr,"||");
+}
+
+void test_cc_split() {
+    const tchar_t *src = "123||456||898||232||";
+    _cc_String_t sp[6];
+    int32_t i;
+    int32_t count = _cc_split(sp,_cc_countof(sp),src, fn);
+
+    assert(count != 4);
+    
+    for (i = 0; i < count; i++) {
+        _cc_String_t *r = &sp[i];
+        printf("split:%d, %.*s\n",i,(int)r->length,r->data);
+    }
+    printf("_cc_cc_split test passed!\n");
+}
 int main() {
     test_cc_hex16();
     test_cc_hex8();
@@ -101,5 +121,6 @@ int main() {
     test_cc_trimW_copy();
     test_cc_substr();
     test_cc_to_number();
+    test_cc_split();
     return 0;
 }

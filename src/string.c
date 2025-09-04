@@ -234,79 +234,61 @@ _CC_API_PUBLIC(size_t) _cc_trimW_copy(wchar_t *dst, size_t dst_capacity,  const 
 
 
 _CC_API_PUBLIC(int32_t)
-_cc_splitA(_cc_AString_t *dst, int32_t count, char_t *src, int32_t(separator_fn)(char_t *, int32_t)) {
+_cc_splitA(_cc_AString_t *dst, int32_t count, const char_t *src, const char_t* (cb)(const char_t *, int32_t*)) {
+    int32_t offset = 0;
     int32_t i = 0;
-    char_t *p;
-    char_t *tmp;
-    _cc_AString_t *r;
+    const char_t *ptr = src;
+    const char_t *p;
 
     if (!src || !dst) {
         return 0;
     }
 
-    tmp = p = src;
-    while (*p) {
-        int32_t rc = separator_fn(p, i);
-        if (rc > 0) {
-            r = &dst[i++];
-            r->data = tmp;
-            r->length = (size_t)(p - tmp);
-            p += rc;
-            tmp = p;
+    while((p = cb(ptr, &offset)) != nullptr) {
+        _cc_AString_t *r = &dst[i++];
+        r->data = (char_t*)ptr;
+        r->length = (size_t)(p - ptr);
+        ptr = (p + offset);
 
-            if (i >= count) {
-                break;
-            }
-            continue;
-        } else if (rc < 0) {
-            break;
+        if (i >= count) {
+            return i;
         }
-        p++;
     }
 
-    if (tmp != p && count > i) {
-        r = &dst[i++];
-        r->data = tmp;
-        r->length = (size_t)(p - tmp);
+    if (*ptr && count > i) {
+        _cc_AString_t *r = &dst[i++];
+        r->data = (char_t*)ptr;
+        r->length = strlen(ptr);
     }
     return i;
 }
 
 _CC_API_PUBLIC(int32_t)
-_cc_splitW(_cc_WString_t *dst, int32_t count, wchar_t *src, int32_t(separator_fn)(wchar_t *, int32_t)) {
+_cc_splitW(_cc_WString_t *dst, int32_t count, const wchar_t *src, const wchar_t* (cb)(const wchar_t *, int32_t*)) {
+    int32_t offset = 0;
     int32_t i = 0;
-    wchar_t *p;
-    wchar_t *tmp;
-    _cc_WString_t *r;
+    const wchar_t *ptr = src;
+    const wchar_t *p;
 
     if (!src || !dst) {
         return 0;
     }
 
-    tmp = p = src;
-    while (*p) {
-        int32_t rc = separator_fn(p, i);
-        if (rc) {
-            r = &dst[i++];
-            r->data = tmp;
-            r->length = (size_t)(p - tmp);
-            p += rc;
-            tmp = p;
+    while((p = cb(ptr, &offset)) != nullptr) {
+        _cc_WString_t *r = &dst[i++];
+        r->data = (wchar_t*)ptr;
+        r->length = (size_t)(p - ptr);
+        ptr = (p + offset);
 
-            if (i >= count) {
-                break;
-            }
-            continue;
-        } else if (rc < 0) {
-            break;
+        if (i >= count) {
+            return i;
         }
-        p++;
     }
 
-    if (tmp != p && count > i) {
-        r = &dst[i++];
-        r->data = tmp;
-        r->length = (size_t)(p - tmp);
+    if (*ptr && count > i) {
+        _cc_WString_t *r = &dst[i++];
+        r->data = (wchar_t*)ptr;
+        r->length = wcslen(ptr);
     }
     return i;
 }

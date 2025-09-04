@@ -14,8 +14,6 @@ def GetFileExtension(file):
     return extension.lower()
 
 def readFileContext(file):
-    
-  
     if (len(fileContext) <= 0):
         return 0
 
@@ -24,18 +22,21 @@ def readFileContext(file):
 def transcoding(filename, coding):
     try:
         fileContext = codecs.open(filename, 'r').read()
-        encoding = chardet.detect(fileContext)["encoding"]
-        if (encoding == None):
-            print("Skipped empty file" + filename)
-            return
+        detected = chardet.detect(fileContext)
 
-        if coding != 'utf-8' and coding != 'gb2312':
-            print("file encoding:" + filename + " " + encoding)
-            return;
-        if (encoding.lower() != coding):
-            fileContext = fileContext.decode(encoding);
-            codecs.open(filename, 'w', coding).write(fileContext)
-            print ("convert:" + filename + " sucess "+ encoding + " "+coding)
+        if detected['encoding'] and detected['confidence'] > 0.7:
+            encoding = detected["encoding"]
+            if (encoding == None):
+                print("Skipped empty file" + filename)
+                return
+
+            if coding != 'utf-8' and coding != 'gb2312':
+                print("file encoding:" + filename + " " + encoding)
+                return;
+            if (encoding.lower() != coding):
+                fileContext = fileContext.decode(encoding);
+                codecs.open(filename, 'w', coding).write(fileContext)
+                print ("convert:" + filename + " sucess "+ encoding + " "+coding)
     except IOError as err:
         print ("I/O error: {0}".format(err))
 

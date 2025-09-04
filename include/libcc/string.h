@@ -136,10 +136,10 @@ _CC_API_PUBLIC(size_t) _cc_bytes2hex(const byte_t *, size_t, tchar_t *, size_t);
 _CC_API_PUBLIC(size_t) _cc_hex2bytes(const tchar_t *, size_t, byte_t *, size_t);
 /**/
 _CC_API_PUBLIC(int32_t)
-_cc_splitA(_cc_AString_t *dst, int32_t count, char_t *src, int32_t(separator)(char_t *, int32_t));
+_cc_splitA(_cc_AString_t *dst, int32_t count, const char_t *src, const char_t*(cb)(const char_t *, int32_t*));
 /**/
 _CC_API_PUBLIC(int32_t)
-_cc_splitW(_cc_WString_t *dst, int32_t count, wchar_t *src, int32_t(separator)(wchar_t *, int32_t));
+_cc_splitW(_cc_WString_t *dst, int32_t count, const wchar_t *src, const wchar_t*(cb)(const wchar_t *, int32_t*));
 /**/
 _CC_API_PUBLIC(tchar_t *) _cc_substr(tchar_t *, const tchar_t *, uint32_t, int32_t);
 /**/
