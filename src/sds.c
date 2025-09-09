@@ -62,20 +62,27 @@ _CC_API_PUBLIC(_cc_sds_t) _cc_sds_empty_alloc(size_t size) {
     return _cc_sds_alloc(nullptr, size);
 }
 
-
 _CC_API_PUBLIC(_cc_sds_t) _cc_sds_alloc(const tchar_t *s, size_t length) {
-    byte_t type = sds_rtype(length);
-    byte_t hdr_length = sds_hdr(type);
-    byte_t *hdr = (byte_t*)_cc_malloc(hdr_length + (length + 1) * sizeof(tchar_t));
-    byte_t *ptr = hdr + hdr_length;
+    byte_t type;
+    byte_t hdr_length;
+    byte_t *hdr;
+    byte_t *ptr;
 
-    size_t ts = 0;
+    size_t ptr_length = 0;
+    if (s) {
+        length = (length == 0) ? _tcslen(s) : length;
+    }
+    type = (length == 0) ? _SDS_MASK_8_ : sds_rtype(length);
+    hdr_length = sds_hdr(type);
+    hdr = (byte_t*)_cc_malloc(hdr_length + (length + 1) * sizeof(tchar_t));
+    ptr = hdr + hdr_length;
+
     if (s == nullptr) {
         *(tchar_t*)(ptr) = '\0';
     } else {
         memcpy(ptr, s, sizeof(tchar_t) * length);
         *(tchar_t*)(ptr + length) = '\0';
-        ts = length;
+        ptr_length = length;
     }
 
     /* flags pointer. */
@@ -84,30 +91,30 @@ _CC_API_PUBLIC(_cc_sds_t) _cc_sds_alloc(const tchar_t *s, size_t length) {
     switch (type) {
         case _SDS_MASK_5_: {
             struct _sds_hdr5 *h = (struct _sds_hdr5 *)hdr;
-            h->flags |= (ts << _SDS_BITS_);
+            h->flags |= (length << _SDS_BITS_);
             break;
         }
         case _SDS_MASK_8_: {
             struct _sds_hdr8 *h = (struct _sds_hdr8 *)hdr;
-            h->length = (uint8_t)ts;
+            h->length = (uint8_t)ptr_length;
             h->limit = (uint8_t)length;
             break;
         }
         case _SDS_MASK_16_: {
             struct _sds_hdr16 *h = (struct _sds_hdr16 *)hdr;
-            h->length = (uint16_t)ts;
+            h->length = (uint16_t)ptr_length;
             h->limit = (uint16_t)length;
             break;
         }
         case _SDS_MASK_32_: {
             struct _sds_hdr32 *h = (struct _sds_hdr32 *)hdr;
-            h->length = (uint32_t)ts;
+            h->length = (uint32_t)ptr_length;
             h->limit = (uint32_t)length;
             break;
         }
         case _SDS_MASK_64_: {
             struct _sds_hdr64 *h = (struct _sds_hdr64 *)hdr;
-            h->length = (uint64_t)ts;
+            h->length = (uint64_t)ptr_length;
             h->limit = (uint64_t)length;
             break;
         }
@@ -181,25 +188,25 @@ _CC_API_PUBLIC(_cc_sds_t) _cc_sds_format(const tchar_t *format, ...){
 }
 
 _CC_API_PUBLIC(_cc_sds_t) _cc_sds_cat(_cc_sds_t s, const tchar_t *t, size_t length) {
+    size_t curlen;
+    byte_t flags;
+
     if (s == nullptr) {
-        s = _cc_sds_alloc(t, length);
-    } else if (length <= _cc_sds_available(s)) {
-        size_t curlen = _cc_sds_length(s);
-        memcpy(s + curlen, t, sizeof(tchar_t) * length);
-        /* null-terminate */
-        s[curlen + length] = '\0';
-        _cc_sds_set_length(s, curlen + length);
-    } else {
-        size_t curlen = _cc_sds_length(s);
-        size_t newlen = curlen + length;
+        return _cc_sds_alloc(t, length);
+    }
+
+    flags = *(((byte_t*)s) - sizeof(byte_t));
+    curlen = _cc_sds_length(s);
+    if ((flags & _SDS_MASK_) == _SDS_MASK_5_ || _cc_sds_available(s) < length) {
         _cc_sds_t ss = _cc_sds_alloc(nullptr, curlen + length);
         memcpy(ss, s, sizeof(tchar_t) * curlen);
-        memcpy(ss + curlen, t, sizeof(tchar_t) * length);
-        /* null-terminate */
-        ss[newlen] = '\0';
-        _cc_sds_set_length(ss, newlen);
         _cc_sds_free(s);
         s = ss;
     }
+
+    memcpy(s + curlen, t, sizeof(tchar_t) * length);
+    /* null-terminate */
+    s[curlen + length] = '\0';
+    _cc_sds_set_length(s, curlen + length);
     return s;
 }

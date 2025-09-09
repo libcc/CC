@@ -7,6 +7,10 @@ TARGET_NAME = $(build)
 
 LIBS	+= cc cc.widgets
 
+ifdef debug
+	LIBS += cc.debug.malloc
+endif
+
 ifdef dll
 	LIBS += $(dll)
 endif

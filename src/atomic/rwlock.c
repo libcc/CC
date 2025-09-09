@@ -51,9 +51,6 @@ _CC_API_PUBLIC(void) _cc_cpu_pause(void) {
 
 /**/
 _CC_API_PUBLIC(void) _cc_lock_init(_cc_atomic_lock_t *lock) {
-    if (_cc_cpu_cores <= 0) {
-        _cc_get_cpu_cores();
-    }
     *lock = 0;
 }
 

@@ -43,14 +43,13 @@ enum _CC_INI_TYPES_ {
 typedef struct _cc_ini {
     byte_t type;    
     /**/
-    size_t length;
-    tchar_t *name;
+    _cc_sds_t name;
 
     union {
         bool_t uni_boolean;
         int64_t uni_int;
         float64_t uni_float;
-        tchar_t *uni_string;
+        _cc_sds_t uni_string;
         _cc_rbtree_t uni_object;
     } element;
     _cc_rbtree_iterator_t lnk;

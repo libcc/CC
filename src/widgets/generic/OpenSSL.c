@@ -23,7 +23,7 @@
 #include <libcc/string.h>
 #include <libcc/widgets/OpenSSL.h>
 
-#ifdef _CC_ENABLE_OPENSSL_
+#ifdef _CC_USE_OPENSSL_
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>

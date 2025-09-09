@@ -31,7 +31,7 @@ extern "C" {
 
 _CC_API_PUBLIC(_cc_ini_t*) _INI_alloc(int type);
 _CC_API_PUBLIC(void) _ini_free(_cc_ini_t* p);
-_CC_API_PUBLIC(_cc_ini_t*) _INI_push(_cc_rbtree_t* root, tchar_t *name, int type);
+_CC_API_PUBLIC(_cc_ini_t*) _INI_push(_cc_rbtree_t* root, _cc_sds_t name, int type);
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
 }

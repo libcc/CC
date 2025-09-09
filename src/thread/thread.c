@@ -64,8 +64,7 @@ _CC_API_PUBLIC(_cc_thread_t*) _cc_thread_with_stacksize(_cc_thread_callback_t ca
         return NULL;
     }
     /* Allocate memory for the thread info structure */
-    self = _CC_MALLOC(_cc_thread_t);
-    bzero(self, sizeof(_cc_thread_t));
+    self = (_cc_thread_t*)_cc_calloc(1,sizeof(_cc_thread_t));
     self->status = -1;
     self->stack_size = stacksize > 0 ? stacksize : 0;
     _cc_atomic32_set(&self->state, _CC_THREAD_STATE_ALIVE_);

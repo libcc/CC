@@ -48,7 +48,7 @@ public class Loader {
     }
 
     static void loadLibrary(String libraryName) throws UnsatisfiedLinkError, SecurityException, nullPointerException {
-        loadLibrary(libraryName, CCWidgets.context);
+        loadLibrary(libraryName, CCWidgets.mContext);
     }
 
     static void loadLibrary(String libraryName, Context context) throws UnsatisfiedLinkError, SecurityException, nullPointerException {

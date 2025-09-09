@@ -23,7 +23,7 @@ void test_json_alloc_array() {
     _cc_json_t *arr = _cc_json_alloc_array("test_array", 5);
     assert(arr != NULL);
     assert(arr->type == _CC_JSON_ARRAY_);
-    assert(arr->size == 5);
+    assert(_cc_array_available(arr->element.uni_array) == 5);
     _cc_free_json(arr);
     print_test_result(__func__, 1);
 }
@@ -74,7 +74,7 @@ void test_json_array_push() {
     _cc_json_t *item = _cc_json_alloc_object(_CC_JSON_INT_, "item");
     item->element.uni_int = 10;
     assert(_cc_json_array_push(arr, item));
-    assert(arr->length == 1);
+    assert(_cc_array_length(arr->element.uni_array) == 1);
     _cc_free_json(arr);
     print_test_result(__func__, 1);
 }
@@ -84,25 +84,32 @@ void test_json_array_remove() {
     _cc_json_t *item = _cc_json_alloc_object(_CC_JSON_INT_, "item");
     item->element.uni_int = 10;
     _cc_json_array_push(arr, item);
+    assert(_cc_array_length(arr->element.uni_array) == 1);
     assert(_cc_json_array_remove(arr, 0));
-    assert(arr->length == 0);
+    assert(_cc_array_length(arr->element.uni_array) == 0);
     _cc_free_json(arr);
     print_test_result(__func__, 1);
 }
 
 void test_json_parse() {
+    _cc_buf_t dump;
     _cc_json_t *parsed = _cc_json_parse(json_content.data, json_content.length);
     assert(parsed != NULL);
     assert(parsed->type == _CC_JSON_OBJECT_);
+    _cc_json_dump(parsed,&dump);
+    
     _cc_free_json(parsed);
     print_test_result(__func__, 1);
+
+    FILE *fp = _tfopen("test.json", _T("wb"));
+    assert(fp != NULL);
+    fwrite(dump.bytes, 1, dump.length, fp);
+    fclose(fp);
+    _cc_free_buf(&dump);
 }
 
 void test_json_from_file() {
-    FILE *fp = _tfopen("test.json", _T("wb"));
-    assert(fp != NULL);
-    fwrite(json_content.data, 1, json_content.length, fp);
-    fclose(fp);
+
     // Assuming a test file "test.json" exists with valid JSON content
     _cc_json_t *json = _cc_json_from_file("test.json");
     assert(json != NULL);

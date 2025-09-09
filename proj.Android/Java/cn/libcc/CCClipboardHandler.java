@@ -1,15 +1,15 @@
 package cn.libcc;
 
+import android.content.ClipboardManager;
+import android.content.ClipData;
 import android.content.Context;
 
-class ClipboardHandler implements
-    IClipboardHandler,
-    android.content.ClipboardManager.OnPrimaryClipChangedListener {
+class ClipboardHandler implements ClipboardManager.OnPrimaryClipChangedListener {
 
-    protected android.content.ClipboardManager mClipMgr;
+    protected ClipboardManager mClipMgr;
 
     ClipboardHandler() {
-       mClipMgr = (android.content.ClipboardManager) CCWidgets.context.getSystemService(Context.CLIPBOARD_SERVICE);
+       mClipMgr = (ClipboardManager) CCWidgets.mContext.getSystemService(Context.CLIPBOARD_SERVICE);
        mClipMgr.addPrimaryClipChangedListener(this);
     }
 
@@ -20,18 +20,23 @@ class ClipboardHandler implements
 
     @Override
     public String clipboardGetText() {
-        CharSequence text;
-        text = mClipMgr.getText();
-        if (text != null) {
-           return text.toString();
+        ClipData clip = mClipMgr.getPrimaryClip();
+        if (clip != null) {
+            ClipData.Item item = clip.getItemAt(0);
+            if (item != null) {
+                CharSequence text = item.getText();
+                if (text != null) {
+                    return text.toString();
+                }
+            }
         }
         return null;
     }
-
     @Override
     public void clipboardSetText(String string) {
        mClipMgr.removePrimaryClipChangedListener(this);
-       mClipMgr.setText(string);
+       ClipData clip = ClipData.newPlainText(null, string);
+       mClipMgr.setPrimaryClip(clip);
        mClipMgr.addPrimaryClipChangedListener(this);
     }
 

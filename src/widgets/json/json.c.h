@@ -31,15 +31,15 @@ extern "C" {
 
 /* Limits how deeply nested arrays/objects can be before JSON rejects to parse
  * them. This is to prevent stack overflows. */
-#define _JSON_NESTING_LIMIT_ 1000
+#define _JSON_NESTING_LIMIT_ 	1000
 
-#define _JSON_ARRAY_START_ _T('[')
-#define _JSON_ARRAY_END_ _T(']')
+#define _JSON_ARRAY_START_		_T('[')
+#define _JSON_ARRAY_END_		_T(']')
 
-#define _JSON_OBJECT_START_ _T('{')
-#define _JSON_OBJECT_END_ _T('}')
+#define _JSON_OBJECT_START_ 	_T('{')
+#define _JSON_OBJECT_END_ 		_T('}')
 
-#define _JSON_NEXT_TOKEN_ _T(',')
+#define _JSON_NEXT_TOKEN_ 		_T(',')
 
 int32_t _json_get_object(_cc_rbtree_iterator_t*, pvoid_t);
 
@@ -47,7 +47,6 @@ void _json_free_object_rb_node(_cc_rbtree_iterator_t *node);
 void _json_free_node(_cc_json_t *item);
 
 void _json_array_alloc(_cc_json_t* ctx, size_t size);
-bool_t _json_array_realloc(_cc_json_t *ctx, size_t size);
 
 size_t _json_array_push(_cc_json_t *ctx, _cc_json_t *item);
 bool_t _json_object_push(_cc_json_t *ctx, _cc_json_t *item, bool_t replacement);

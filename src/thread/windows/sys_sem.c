@@ -40,7 +40,7 @@
 /* Create a semaphore */
 _CC_API_PUBLIC(_cc_semaphore_t*) _cc_alloc_semaphore(int32_t initial_value) {
     /* Allocate sem memory */
-    _cc_semaphore_t *sem = _CC_MALLOC(_cc_semaphore_t);
+    _cc_semaphore_t *sem = (_cc_semaphore_t*)_cc_malloc(sizeof(_cc_semaphore_t));
     /* Create the semaphore, with max value 32K */
     sem->ident = _CC_CreateSemaphore(nullptr, initial_value, 32 * 1024, nullptr);
     sem->count = (LONG)initial_value;

@@ -45,8 +45,7 @@ static pfnTryAcquireSRWLockExclusive pTryAcquireSRWLockExclusive = nullptr;
 /** Create a mutex, initialized unlocked */
 _CC_API_PRIVATE(_cc_mutex_t*) _cc_alloc_mutex_cs(void) {
     /* Allocate mutex memory */
-    struct _cc_mutex_cs *mutex = _CC_MALLOC(struct _cc_mutex_cs);
-    bzero(mutex, sizeof(struct _cc_mutex_cs));
+    struct _cc_mutex_cs *mutex = (struct _cc_mutex_cs*)_cc_calloc(1,sizeof(struct _cc_mutex_cs));
 /* On SMP systems, a non-zero spin count generally helps performance */
 #if __CC_WINRT__
     InitializeCriticalSectionEx(&mutex->cs, 2000, 0);
@@ -60,10 +59,9 @@ _CC_API_PRIVATE(_cc_mutex_t*) _cc_alloc_mutex_cs(void) {
 /** Create a mutex, initialized unlocked */
 _CC_API_PRIVATE(_cc_mutex_t*) _cc_alloc_mutex_srw(void) {
     /* Allocate mutex memory */
-    struct _cc_mutex_srw *mutex = _CC_MALLOC(struct _cc_mutex_srw);
+    struct _cc_mutex_srw *mutex = (struct _cc_mutex_srw*)_cc_calloc(1, sizeof(struct _cc_mutex_srw));
     if (mutex) {
         pInitializeSRWLock(&mutex->srw);
-        bzero(mutex, sizeof(struct _cc_mutex_srw));
     }
     return (_cc_mutex_t *)mutex;
 }

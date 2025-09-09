@@ -23,171 +23,184 @@
 
 #define _CC_MAX_ARRAY_EXPAND_ 32
 
+typedef struct __array_hdr {
+    size_t limit;
+    size_t length;
+} __array_hdr_t;
 /**/
-_CC_API_PUBLIC(bool_t) _cc_alloc_array(_cc_array_t *ctx, size_t capacity) {
-    _cc_assert(ctx != nullptr);
-
-    ctx->limit = _cc_aligned_alloc_opt(capacity, 64);
-    ctx->length = 0;
-    ctx->data = _CC_CALLOC(pvoid_t, ctx->limit);
-    return true;
+_CC_API_PUBLIC(_cc_array_t) _cc_alloc_array(size_t capacity) {
+    __array_hdr_t *hdr = (__array_hdr_t*)_cc_malloc(sizeof(__array_hdr_t) + capacity * sizeof(uintptr_t));
+    hdr->limit = capacity;
+    hdr->length = 0;
+    return (_cc_array_t)(hdr + 1);
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _cc_realloc_array(_cc_array_t *ctx, size_t capacity) {
-    pvoid_t *data;
-
-    _cc_assert(ctx != nullptr);
-    if (capacity <= ctx->limit) {
-        return true;
+_CC_API_PUBLIC(_cc_array_t) _cc_realloc_array(_cc_array_t ctx, size_t capacity) {
+    size_t length;
+    __array_hdr_t *hdr;
+    _cc_assert(ctx != 0);
+    hdr = (__array_hdr_t *)((byte_t*)ctx - sizeof(__array_hdr_t));
+    if (capacity == hdr->limit) {
+        return (_cc_array_t)ctx;
     }
+    length = hdr->length;
 
-    capacity = _cc_aligned_alloc_opt(capacity, 64);
-    data = (pvoid_t *)_cc_realloc(ctx->data, sizeof(pvoid_t) * capacity);
-    bzero(&data[ctx->limit], (capacity - ctx->limit) * sizeof(pvoid_t));
-    ctx->data = data;
-    ctx->limit = capacity;
-
-    return true;
+    hdr = (__array_hdr_t *)_cc_realloc(hdr, sizeof(__array_hdr_t) + capacity * sizeof(uintptr_t));
+    hdr->limit = capacity;
+    hdr->length = length > capacity ? capacity : length;
+    return (_cc_array_t)(hdr + 1);
 }
 
-_CC_API_PUBLIC(pvoid_t) _cc_array_find(const _cc_array_t *ctx, const size_t index) {
-    _cc_assert(ctx != nullptr);
-
-    if (_cc_unlikely(ctx->limit <= index)) {
-        _cc_logger_error(_T("Array find: index out of range [%d] with size %d"), index, ctx->limit);
-        return nullptr;
-    }
-
-    return ctx->data[index];
+/**/
+_CC_API_PUBLIC(size_t) _cc_array_available(const _cc_array_t ctx) {
+    __array_hdr_t *hdr;
+    _cc_assert(ctx != 0);
+    hdr = (__array_hdr_t *)((byte_t *)ctx - sizeof(__array_hdr_t));
+    return hdr->limit - hdr->length;
 }
 
-_CC_API_PUBLIC(size_t) _cc_array_push(_cc_array_t *ctx, pvoid_t data) {
+/**/
+_CC_API_PUBLIC(void) _cc_free_array(_cc_array_t ctx) {
+    __array_hdr_t *hdr;
+    _cc_assert(ctx != 0);
+    hdr = (__array_hdr_t *)((byte_t *)ctx - sizeof(__array_hdr_t));
+    _cc_free(hdr);
+}
+
+/**/
+_CC_API_PUBLIC(size_t) _cc_array_length(const _cc_array_t ctx) {
+    _cc_assert(ctx != 0);
+    return ((__array_hdr_t *)((byte_t *)ctx - sizeof(__array_hdr_t)))->length;
+}
+
+_CC_API_PUBLIC(uintptr_t) _cc_array_get(const _cc_array_t ctx, const size_t index) {
+    __array_hdr_t *hdr;
+    _cc_assert(ctx != 0);
+
+    hdr = (__array_hdr_t *)((byte_t *)ctx - sizeof(__array_hdr_t));
+    if (_cc_unlikely(hdr->length <= index)) {
+        _cc_logger_error(_T("Array find: index out of range [%d] with size %d"), index, hdr->length);
+        return -1;
+    }
+    return *((uintptr_t*)(ctx) + index);
+}
+
+_CC_API_PUBLIC(size_t) _cc_array_push(_cc_array_t *ctx, uintptr_t data) {
     size_t index;
-    _cc_assert(ctx != nullptr && data != nullptr);
-    if (_cc_unlikely(data == nullptr)) {
-        return -1;
-    }
-    
-    index = ctx->length;
+    __array_hdr_t *hdr;
+    _cc_array_t ptr = ((_cc_array_t)*ctx);
+    _cc_assert(ctx != 0);
+
+    hdr = (__array_hdr_t *)((byte_t *)ptr - sizeof(__array_hdr_t));
+    index = hdr->length;
     /*if not enough space,expand first*/
-    if (ctx->limit <= 0x80000000 && index >= ctx->limit) {
-        _cc_realloc_array(ctx, index + 1);
+    if (index == hdr->limit) {
+        ptr = (uintptr_t)_cc_realloc_array(ptr, index + _CC_MAX_ARRAY_EXPAND_);
+        hdr = (__array_hdr_t *)((byte_t *)ptr - sizeof(__array_hdr_t));
+        *ctx = ptr;
     }
 
-    if (index >= ctx->limit) {
-        _cc_logger_error(_T("Array insert: index out of range [%d] with capacity %d"), index, ctx->limit);
-        return -1;
-    }
+    *((uintptr_t*)ptr + index) = data;
 
-    ctx->data[ctx->length++] = data;
+    hdr->length++;
+
     return index;
 }
 
-_CC_API_PUBLIC(pvoid_t) _cc_array_pop(_cc_array_t *ctx) {
-    _cc_assert(ctx != nullptr);
-    return _cc_array_remove(ctx, ctx->length - 1);
+_CC_API_PUBLIC(uintptr_t) _cc_array_pop(_cc_array_t ctx) {
+    __array_hdr_t *hdr;
+    uintptr_t data;
+    _cc_assert(ctx != 0);
+
+    hdr = (__array_hdr_t *)((byte_t *)ctx - sizeof(__array_hdr_t));
+    if (hdr->length > 0) {
+        /*data is the last element*/
+        data = *((uintptr_t *)ctx + hdr->length - 1);
+        hdr->length--;
+        return data;
+    }
+    return -1;
 }
 
-_CC_API_PUBLIC(bool_t) _cc_array_append(_cc_array_t *ctx, const _cc_array_t *append) {
+_CC_API_PUBLIC(void) _cc_array_append(_cc_array_t *ctx, const _cc_array_t append) {
+    __array_hdr_t *hdr;
+    __array_hdr_t *hdr2;
+    _cc_array_t ptr = ((_cc_array_t)*ctx);
     size_t capacity = 0;
-    _cc_assert(ctx != nullptr && append != nullptr);
+    _cc_assert(ctx != 0 && append != 0);
 
-    capacity = ctx->length + append->length;
+    hdr = (__array_hdr_t *)((byte_t *)ptr - sizeof(__array_hdr_t));
+    hdr2 = (__array_hdr_t *)((byte_t *)append - sizeof(__array_hdr_t));
+    capacity = hdr->length + hdr2->length;
     /*if not enough space,expand first*/
-    if (ctx->limit <= 0x80000000 && capacity > ctx->limit) {
-        _cc_realloc_array(ctx, capacity);
+    if (capacity > hdr->limit) {
+        ptr = _cc_realloc_array(ptr, capacity);
+        hdr = (__array_hdr_t *)((byte_t *)ptr - sizeof(__array_hdr_t));
+        *ctx = ptr;
     }
 
-    memcpy(ctx->data[ctx->length], append->data[0], append->length * sizeof(pvoid_t));
-
-    ctx->length = capacity;
-
-    return true;
+    memcpy((uintptr_t*)ptr + hdr->length, (uintptr_t*)append, hdr2->length * sizeof(uintptr_t));
+    hdr->length = capacity;
 }
 
-_CC_API_PUBLIC(bool_t) _cc_array_insert(_cc_array_t *ctx, const size_t index, pvoid_t data) {
-    _cc_assert(ctx != nullptr && data != nullptr);
-
-    if (_cc_unlikely(data == nullptr)) {
-        return -1;
-    }
-
-    if (index >= ctx->limit) {
-        _cc_logger_error(_T("Array push: index out of range [%d] with capacity %d"), index, ctx->limit);
-        return -1;
-    }
-
-    ctx->data[index] = data;
-    return true;
-}
-
-_CC_API_PUBLIC(bool_t) _cc_array_set(_cc_array_t *ctx, const size_t index, pvoid_t data) {
-    _cc_assert(ctx != nullptr);
-
-    if (_cc_unlikely(index >= ctx->limit)) {
-        _cc_logger_error(_T("Array insert: index out of range [%d] with size %d"), index, ctx->limit);
+_CC_API_PUBLIC(bool_t) _cc_array_set(_cc_array_t ctx, const size_t index, uintptr_t data) {
+    __array_hdr_t *hdr;
+    _cc_assert(ctx != 0);
+    hdr = (__array_hdr_t *)((byte_t *)ctx - sizeof(__array_hdr_t));
+    if (index >= hdr->length) {
+        _cc_logger_error(_T("Array set: index out of range [%d] with length %d"), index, hdr->length);
         return false;
     }
 
-    if (ctx->data[index] && data == nullptr) {
-        ctx->length--;
-    }
+    *((uintptr_t*)ctx + index) = data;
 
-    ctx->data[index] = data;
     return true;
 }
 
-_CC_API_PUBLIC(pvoid_t) _cc_array_remove(_cc_array_t *ctx, const size_t index) {
-    size_t move_count;
-    pvoid_t data;
-    if (_cc_unlikely(ctx == nullptr || ctx->data == nullptr || ctx->limit <= index)) {
-        return nullptr;
+_CC_API_PUBLIC(uintptr_t) _cc_array_remove(_cc_array_t ctx, const size_t index) {
+    uintptr_t data;
+    uintptr_t *ptr;
+    __array_hdr_t *hdr;
+    _cc_assert(ctx != 0);
+    hdr = (__array_hdr_t *)((byte_t *)ctx - sizeof(__array_hdr_t));
+    
+    if (index >= hdr->length) {
+        _cc_logger_error(_T("Array remove: index out of range [%d] with length %d"), index, hdr->length);
+        return -1;
+    } else if ((hdr->length - 1) == index) {
+        /*data is the last element*/
+        data = *((uintptr_t*)ctx + hdr->length - 1);
+        hdr->length--;
+    } else {
+        size_t n = hdr->length - index - 1;
+        ptr = ((uintptr_t*)ctx + index);
+        data = *ptr;
+        if (n > 0) {
+            memmove(ptr, ptr + 1, n * sizeof(uintptr_t));
+        }
+        hdr->length--;
     }
-    
-    data = ctx->data[index];
-    move_count = ctx->length - index - 1;
-    
-    if (move_count > 0) {
-        memmove(&ctx->data[index], &ctx->data[index + 1], move_count * sizeof(pvoid_t));
-    }
-    
-    ctx->length--;
     return data;
 }
 
-_CC_API_PUBLIC(bool_t) _cc_free_array(_cc_array_t *ctx) {
-    _cc_assert(ctx != nullptr);
-
-    _cc_safe_free(ctx->data);
-    ctx->length = 0;
-    ctx->limit = 0;
-
+_CC_API_PUBLIC(bool_t) _cc_array_cleanup(_cc_array_t ctx) {
+    __array_hdr_t *hdr;
+    _cc_assert(ctx != 0);
+    hdr = (__array_hdr_t *)((byte_t *)ctx - sizeof(__array_hdr_t));
+    hdr->length = 0;
     return true;
 }
 
-_CC_API_PUBLIC(bool_t) _cc_array_cleanup(_cc_array_t *ctx) {
-    _cc_assert(ctx != nullptr);
-    bzero(ctx->data, sizeof(pvoid_t) * ctx->limit);
-    ctx->length = 0;
-
-    return true;
+_CC_API_PUBLIC(uintptr_t*) _cc_array_begin(const _cc_array_t ctx) {
+    _cc_assert(ctx != 0);
+    return (uintptr_t*)ctx;
 }
 
-_CC_API_PUBLIC(size_t) _cc_array_length(const _cc_array_t *ctx) {
-    _cc_assert(ctx != nullptr);
+_CC_API_PUBLIC(uintptr_t*) _cc_array_end(const _cc_array_t ctx) {
+    __array_hdr_t *hdr;
+    _cc_assert(ctx != 0);
+    hdr = (__array_hdr_t *)((byte_t *)ctx - sizeof(__array_hdr_t));
 
-    return ctx->length;
-}
-
-_CC_API_PUBLIC(pvoid_t) _cc_array_begin(const _cc_array_t *ctx) {
-    _cc_assert(ctx != nullptr);
-
-    return ctx->data[0];
-}
-
-_CC_API_PUBLIC(pvoid_t) _cc_array_end(const _cc_array_t *ctx) {
-    _cc_assert(ctx != nullptr);
-
-    return ctx->data[ctx->limit - 1];
+    return ((uintptr_t*)ctx + hdr->length - 1);
 }

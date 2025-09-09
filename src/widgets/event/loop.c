@@ -21,6 +21,7 @@
 #include <libcc/alloc.h>
 #include <libcc/thread.h>
 #include "event.c.h"
+
 static struct {
     bool_t keep_active;
     int32_t count;
@@ -28,6 +29,7 @@ static struct {
     _cc_thread_t **threads;
     void (*callback)(_cc_async_event_t*, bool_t);
 } g = {false, 0, nullptr, nullptr, nullptr};
+
 /**/
 _CC_API_PRIVATE(int32_t) _running(pvoid_t args) {
     _cc_async_event_t *async = (_cc_async_event_t *)args;
@@ -58,12 +60,8 @@ _CC_API_PUBLIC(bool_t) _cc_alloc_async_event(int32_t cores, void (*cb)(_cc_async
         return false;
     }
 
-    srand((uint32_t)time(nullptr));
-    
-    _cc_install_socket();
-    
     if (cores <= 0) {
-        cores = _cc_get_cpu_cores();
+        cores = _cc_cpu_cores;
     }
     
     //0xFFF
@@ -93,7 +91,7 @@ _CC_API_PUBLIC(bool_t) _cc_alloc_async_event(int32_t cores, void (*cb)(_cc_async
             continue;
         }
         n->args = nullptr;
-        *(threads + i) = _cc_thread(_running, _T("event loop"), n);
+        *(threads + i) = _cc_thread(_running, _T("async event"), n);
         g.count++;
     }
     
@@ -122,9 +120,6 @@ _CC_API_PUBLIC(bool_t) _cc_free_async_event(void) {
         _cc_free(g.async_events);
         g.async_events = nullptr;
     }
-
-    _cc_uninstall_socket();
-    
     return true;
 }
 

@@ -8,7 +8,6 @@ static uint16_t port = 3000;
 
 // 自定义测试宏
 #define TEST_CASE(name) printf("Running test: %s\n", #name); name();
-#define ASSERT(cond) assert(cond)
 
 void test_accept(_cc_async_event_t *async, _cc_event_t *e) {
     _cc_socket_t fd;
@@ -88,7 +87,7 @@ static bool_t test_event_callback(_cc_async_event_t *async, _cc_event_t *e, cons
 
     if (which & _CC_EVENT_TIMEOUT_) {
         _cc_logger_debug(_T("%d timeout."), e->ident);
-        if (times++ > 10) {
+        if (times++ > 2) {
             if (_cc_send(e->fd, (byte_t*)"close", 5) < 0) {
                 _cc_logger_debug(_T("%d send close fail."), e->ident);
                 return false;
@@ -115,34 +114,18 @@ static bool_t test_event_timeout_callback(_cc_async_event_t *async, _cc_event_t 
 // 测试缓冲区分配
 void test_buffer_allocation() {
     _cc_event_buffer_t *buffer = _cc_alloc_event_buffer();
-    ASSERT(buffer != NULL);
+    assert(buffer != NULL);
     _cc_free_event_buffer(buffer);
-}
-
-// 测试读缓冲区分配
-void test_read_buffer_allocation() {
-    _cc_event_rbuf_t rbuf = {0};
-    _cc_alloc_event_rbuf(&rbuf, 1024);
-    ASSERT(rbuf.limit == 1024);
-    ASSERT(rbuf.bytes != NULL);
-}
-
-// 测试写缓冲区分配
-void test_write_buffer_allocation() {
-    _cc_event_wbuf_t wbuf = {0};
-    _cc_alloc_event_wbuf(&wbuf, 1024);
-    ASSERT(wbuf.limit == 1024);
-    ASSERT(wbuf.bytes != NULL);
 }
 
 // 测试事件超时
 void test_event_timeout() {
     _cc_event_t *event;
     _cc_async_event_t *async = _cc_get_async_event();
-    ASSERT(async != NULL);
+    assert(async != NULL);
 
     event = _cc_add_event_timeout(async, 6000, test_event_timeout_callback, nullptr);
-    ASSERT(event != NULL);
+    assert(event != NULL);
 }
 // 测试监听服务
 void test_event_tcp_listen() {
@@ -151,7 +134,7 @@ void test_event_tcp_listen() {
     _cc_async_event_t *async = _cc_get_async_event();
 
     event = _cc_event_alloc(async, _CC_EVENT_ACCEPT_);
-    ASSERT(event != NULL);
+    assert(event != NULL);
     if (event == nullptr) {
         return;
     }
@@ -162,7 +145,7 @@ void test_event_tcp_listen() {
     _cc_inet_ipv4_addr(&sa, nullptr, port);
     if (!_cc_tcp_listen(async, event, (_cc_sockaddr_t *)&sa, sizeof(struct sockaddr_in))) {
         _cc_free_event(async, event);    
-        ASSERT(FALSE);
+        assert(false);
         return ;
     }
 }
@@ -171,10 +154,10 @@ void test_event_tcp_connect() {
     struct sockaddr_in sa;
     _cc_event_t *event;
     _cc_async_event_t *async = _cc_get_async_event();
-    ASSERT(async != NULL);
+    assert(async != NULL);
 
     event = _cc_event_alloc(async, _CC_EVENT_CONNECT_|_CC_EVENT_TIMEOUT_);
-    ASSERT(event != NULL);
+    assert(event != NULL);
     if (event == nullptr) {
         return;
     }
@@ -190,16 +173,18 @@ void test_event_tcp_connect() {
 }
 
 int main() {
+    int i;
     _cc_alloc_async_event(0, nullptr);
 
     printf("sizeof(_cc_event_t) == %zu\nRunning tests...\n",sizeof(_cc_event_t));
     TEST_CASE(test_buffer_allocation);
-    TEST_CASE(test_read_buffer_allocation);
-    TEST_CASE(test_write_buffer_allocation);
     TEST_CASE(test_event_tcp_listen);
     TEST_CASE(test_event_tcp_connect);
     TEST_CASE(test_event_timeout);
 
+    for (i = 0; i < 88; i++) {
+        test_event_tcp_connect();
+    }
     while((c = getchar()) != 'q') {
         _cc_sleep(100);
     }

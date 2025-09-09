@@ -19,30 +19,6 @@
  * 3. This notice may not be removed or altered from any source distribution.
 */
 #include "xml.c.h"
-
-_CC_API_PRIVATE(_cc_xml_attr_t*) _XML_attr_alloc(_cc_xml_attr_t *ctx, tchar_t *name, tchar_t *value) {
-    if (ctx == nullptr) {
-        ctx = (_cc_xml_attr_t *)_cc_malloc(sizeof(_cc_xml_attr_t));
-        ctx->name = nullptr;
-        ctx->value = nullptr;
-    }
-
-    if (name) {
-        if (ctx->name) {
-            _cc_free((pvoid_t)ctx->name);
-        }
-        ctx->name = name;
-    }
-
-    if (ctx->value) {
-        _cc_free((pvoid_t)ctx->value);
-    }
-
-    ctx->value = value;
-
-    return ctx;
-}
-
 /*
  * Utility to jump whitespace and cr/lf
  */
@@ -69,7 +45,7 @@ bool_t _XML_jump_whitespace(_cc_sbuf_t *const buffer) {
 }
 
 /**/
-bool_t _XML_attr_push(_cc_rbtree_t *ctx, tchar_t *name, tchar_t *value) {
+bool_t _XML_attr_push(_cc_rbtree_t *ctx, _cc_sds_t name, _cc_sds_t value) {
     int32_t result = 0;
     _cc_xml_attr_t *item = nullptr;
     _cc_rbtree_iterator_t **node = &(ctx->rb_node), *parent = nullptr;
@@ -85,16 +61,18 @@ bool_t _XML_attr_push(_cc_rbtree_t *ctx, tchar_t *name, tchar_t *value) {
         } else if (result > 0) {
             node = &((*node)->right);
         } else {
-            _XML_attr_alloc(item, name, value);
+            _cc_sds_free(name);
+            if (item->value) {
+                _cc_sds_free(item->value);
+            }
+            item->value = value;
             return true;
         }
     }
 
-    item = _XML_attr_alloc(nullptr, name, value);
-    if (item == nullptr) {
-        return false;
-    }
-
+    item = (_cc_xml_attr_t *)_cc_malloc(sizeof(_cc_xml_attr_t));
+    item->name = name;
+    item->value = value;
     _cc_rbtree_insert(ctx, &item->lnk, parent, node);
     return true;
 }
@@ -119,7 +97,7 @@ _CC_API_PUBLIC(bool_t) _cc_xml_element_append(_cc_xml_t *ctx, _cc_xml_t *child) 
     return true;
 }
 /**/
-_CC_API_PUBLIC(const tchar_t*) _cc_xml_element_text(_cc_xml_t *ctx) {
+_CC_API_PUBLIC(const _cc_sds_t) _cc_xml_element_text(_cc_xml_t *ctx) {
     if (ctx && !_cc_list_iterator_empty(&ctx->element.uni_child)) {
         _cc_xml_t *item = _cc_upcast(ctx->element.uni_child.next, _cc_xml_t, lnk);
         if (item->type == _CC_XML_CONTEXT_) {
@@ -136,7 +114,7 @@ _CC_API_PRIVATE(int32_t) _XML_attr_find(_cc_rbtree_iterator_t *iter, pvoid_t arg
 }
 
 /**/
-_CC_API_PUBLIC(const tchar_t*) _cc_xml_element_attr_find(_cc_xml_t *ctx, const tchar_t *keyword) {
+_CC_API_PUBLIC(const _cc_sds_t) _cc_xml_element_attr(_cc_xml_t *ctx, const tchar_t *keyword) {
     if (ctx && ctx->attr.rb_node != nullptr) {
         _cc_rbtree_iterator_t *item = _cc_rbtree_get(&ctx->attr, (pvoid_t)keyword, _XML_attr_find);
         if (item) {
@@ -150,17 +128,20 @@ _CC_API_PUBLIC(const tchar_t*) _cc_xml_element_attr_find(_cc_xml_t *ctx, const t
 _CC_API_PUBLIC(bool_t) _cc_xml_element_set_attr(_cc_xml_t *ctx, const tchar_t *keyword, const tchar_t *fmt, ...) {
     tchar_t buf[1024];
     _cc_assert(fmt != nullptr);
+    size_t length;
 
     if (nullptr != _tcschr((tchar_t *)fmt, '%')) {
         va_list args;
         va_start(args, fmt);
-        _vsntprintf(buf, _cc_countof(buf), fmt, args);
+        length = _vsntprintf(buf, _cc_countof(buf), fmt, args);
         va_end(args);
 
         fmt = buf;
+    } else {
+        length = _tcslen(fmt);
     }
 
-    return _XML_attr_push(&ctx->attr, _cc_tcsdup(keyword), _cc_tcsdup(fmt));
+    return _XML_attr_push(&ctx->attr, _cc_sds_alloc(keyword,_tcslen(keyword)), _cc_sds_alloc(fmt, length));
 }
 
 /**/
@@ -224,11 +205,11 @@ _CC_API_PUBLIC(_cc_xml_t*) _cc_xml_element_find(_cc_xml_t *ctx, tchar_t *item) {
 _CC_API_PRIVATE(void) _xml_free_attr_rb_node(_cc_rbtree_iterator_t *node) {
     _cc_xml_attr_t *p = _cc_upcast(node, _cc_xml_attr_t, lnk);
     if (p->name) {
-        _cc_free(p->name);
+        _cc_sds_free(p->name);
     }
 
     if (p->value) {
-        _cc_free(p->value);
+        _cc_sds_free(p->value);
     }
     _cc_free(p);
 }
@@ -236,7 +217,7 @@ _CC_API_PRIVATE(void) _xml_free_attr_rb_node(_cc_rbtree_iterator_t *node) {
 /**/
 static void _xml_free(_cc_xml_t *ctx) {
     if (ctx->name) {
-        _cc_free(ctx->name);
+        _cc_sds_free(ctx->name);
     }
 
     _cc_rbtree_destroy(&ctx->attr, _xml_free_attr_rb_node);
@@ -244,14 +225,14 @@ static void _xml_free(_cc_xml_t *ctx) {
     switch (ctx->type) {
     case _CC_XML_COMMENT_:
         if (ctx->element.uni_comment) {
-            _cc_free(ctx->element.uni_comment);
+            _cc_sds_free(ctx->element.uni_comment);
             ctx->element.uni_comment = nullptr;
         }
         break;
 
     case _CC_XML_CONTEXT_:
         if (ctx->element.uni_context.text) {
-            _cc_free(ctx->element.uni_context.text);
+            _cc_sds_free(ctx->element.uni_context.text);
             ctx->element.uni_context.text = nullptr;
         }
         break;
@@ -277,30 +258,21 @@ _CC_API_PUBLIC(const tchar_t*) _cc_xml_error(void) {
 }
 
 /**/
-static void _dump_xml_buffer(_cc_xml_t *XML, int32_t depth, _cc_buf_t *buf) {
-    tchar_t depth_buf[1024] = {0};
-    int32_t i = 0;
+static void _dump_xml_buffer(_cc_xml_t *XML, _cc_buf_t *buf) {
     _cc_list_iterator_t *v = nullptr;
 
-    depth &= 1023;
-    for (i = 0; i < depth; i++) {
-        depth_buf[i] = _T('\t');
-    }
-
-    _cc_buf_append(buf, (byte_t *)depth_buf, i * sizeof(tchar_t));
-
     if (XML->type == _CC_XML_COMMENT_) {
-        _cc_buf_appendf(buf, _T("<!-- %s -->\n"), XML->element.uni_comment);
+        _cc_buf_appendf(buf, _T("<!-- %s -->"), XML->element.uni_comment);
         return;
     } else if (XML->type == _CC_XML_CONTEXT_) {
         if (XML->element.uni_context.cdata) {
-            _cc_buf_appendf(buf, _T("<![CDATA[%s]]>\n"), XML->element.uni_context.text);
+            _cc_buf_appendf(buf, _T("<![CDATA[%s]]>"), XML->element.uni_context.text);
         } else {
-            _cc_buf_appendf(buf, _T("%s\n"), XML->element.uni_context.text);
+            _cc_buf_append(buf, XML->element.uni_context.text,_cc_sds_length(XML->element.uni_context.text) - 1 * sizeof(tchar_t));
         }
         return;
     } else if (XML->type == _CC_XML_DOCTYPE_) {
-        _cc_buf_appendf(buf, _T("<!DOCTYPE %s/>\n"), XML->element.uni_doctype);
+        _cc_buf_appendf(buf, _T("<!DOCTYPE %s/>"), XML->element.uni_doctype);
         return;
     }
 
@@ -312,18 +284,16 @@ static void _dump_xml_buffer(_cc_xml_t *XML, int32_t depth, _cc_buf_t *buf) {
         });
 
         if (XML->type == _CC_XML_NULL_) {
-            _cc_buf_puts(buf, _T(" />\n"));
+            _cc_buf_puts(buf, _T(" />"));
             return;
         }
 
-        _cc_buf_puts(buf, _T(">\n"));
-
+        _cc_buf_puts(buf, _T(">"));
+        
         _cc_list_iterator_for(v, &XML->element.uni_child) {
-            _dump_xml_buffer(_cc_upcast(v, _cc_xml_t, lnk), depth + 1, buf);
+            _dump_xml_buffer(_cc_upcast(v, _cc_xml_t, lnk), buf);
         }
-
-        _cc_buf_append(buf, (byte_t *)depth_buf, i * sizeof(tchar_t));
-        _cc_buf_appendf(buf, _T("</%s>\n"), XML->name);
+        _cc_buf_appendf(buf, _T("</%s>"), XML->name);
     }
 }
 
@@ -331,8 +301,8 @@ static void _dump_xml_buffer(_cc_xml_t *XML, int32_t depth, _cc_buf_t *buf) {
 _CC_API_PUBLIC(void) _cc_dump_xml(_cc_xml_t *XML,_cc_buf_t *buf) {
     _cc_list_iterator_t *v;
     _cc_alloc_buf(buf,_CC_16K_BUFFER_SIZE_);
-    _cc_buf_puts(buf, _T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"));
+    _cc_buf_puts(buf, _T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"));
     _cc_list_iterator_for(v, &XML->element.uni_child) {
-        _dump_xml_buffer(_cc_upcast(v, _cc_xml_t, lnk), 0, buf);
+        _dump_xml_buffer(_cc_upcast(v, _cc_xml_t, lnk), buf);
     }
 }

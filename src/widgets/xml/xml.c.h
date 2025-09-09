@@ -33,7 +33,7 @@ extern "C" {
     do {                                                                \
         bzero((_NODE), sizeof(_cc_xml_t));                              \
         (_NODE)->type = _TYPE;                                          \
-        (_NODE)->name = nullptr;                                           \
+        (_NODE)->name = nullptr;                                        \
         _CC_RB_INIT_ROOT(&(_NODE)->attr);                               \
         _cc_list_iterator_cleanup(&(_NODE)->lnk);                       \
         _cc_list_iterator_cleanup(&(_NODE)->element.uni_child);         \

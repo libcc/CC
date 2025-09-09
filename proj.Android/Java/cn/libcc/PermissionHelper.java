@@ -42,9 +42,9 @@ public class PermissionHelper {
     }
 
     public static void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        for (int i = 0; i < grantResults.length; i++) {
-            boolean result = (grantResults[i] == PackageManager.PERMISSION_GRANTED);
+        //for (int i = 0; i < grantResults.length; i++) {
+            boolean result = (grantResults[0] == PackageManager.PERMISSION_GRANTED);
             CCWidgets.nativePermissionResult(requestCode, result);
-        }
+        //}
     }
 }

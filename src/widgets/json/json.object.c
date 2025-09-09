@@ -30,11 +30,9 @@ _CC_API_PUBLIC(_cc_json_t*) _cc_json_alloc_object(byte_t type, const tchar_t *ke
     _cc_json_t *item = (_cc_json_t *)_cc_malloc(sizeof(_cc_json_t));
     bzero(item, sizeof(_cc_json_t));
     item->type = type;
-    item->size = 0;
-    item->length = 0;
     item->element.uni_object.rb_node = nullptr;
     if (keyword) {
-        item->name = _cc_tcsdup(keyword);
+        item->name = _cc_sds_alloc(keyword,_tcslen(keyword));
     } else {
         item->name = nullptr;
     }
@@ -79,6 +77,7 @@ _CC_API_PUBLIC(bool_t) _json_object_push(_cc_json_t *ctx, _cc_json_t *item, bool
     _cc_rbtree_insert(root, &item->lnk, parent, node);
     return true;
 }
+
 /**/
 _CC_API_PUBLIC(bool_t) _cc_json_object_push(_cc_json_t *ctx, _cc_json_t *item, bool_t replacement) {
     if (_cc_unlikely(ctx == nullptr || item == nullptr)) {
@@ -90,14 +89,15 @@ _CC_API_PUBLIC(bool_t) _cc_json_object_push(_cc_json_t *ctx, _cc_json_t *item, b
     }
 
     if (ctx->type == _CC_JSON_ARRAY_) {
-        return _json_array_push(ctx, item) != -1;
+        _json_array_push(ctx, item);
+        return true;
     }
 
-    if (ctx->type != _CC_JSON_OBJECT_) {
-        return false;
+    if (ctx->type == _CC_JSON_OBJECT_) {
+        return _json_object_push(ctx,item,replacement);
     }
 
-    return _json_object_push(ctx,item,replacement);
+    return false;
 }
 
 

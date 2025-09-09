@@ -25,6 +25,8 @@
 #include "list.h"
 #include "string.h"
 
+#ifdef _CC_USE_CC_DEBUG_MALLOC_
+
 #if defined(__CC_USE_TCMALLOC__)
     #include <google/tcmalloc.h>
     #if (TC_VERSION_MAJOR == 1 && TC_VERSION_MINOR >= 6) || (TC_VERSION_MAJOR > 1)
@@ -43,19 +45,50 @@
     #include <malloc/malloc.h>
     #define _cc_malloc_size(p) malloc_size(p)
 #endif
+
+#endif /* _CC_USE_CC_DEBUG_MALLOC_ */
+
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifdef _CC_DEBUG_
-#define _CC_ENABLE_MEMORY_TRACKED_ 1
-#endif
+#ifdef _CC_USE_CC_DEBUG_MALLOC_
+/**/
+_CC_API_PUBLIC(pvoid_t) _cc_debug_malloc(size_t n, const tchar_t *file, const int line);
+/**/
+_CC_API_PUBLIC(pvoid_t) _cc_debug_calloc(size_t c, size_t n, const tchar_t *file, const int line);
+/**/
+_CC_API_PUBLIC(pvoid_t) _cc_debug_realloc(pvoid_t d, size_t n, const tchar_t *file, const int line);
+/**/
+_CC_API_PUBLIC(void) _cc_debug_free(pvoid_t p);
+/**/
+_CC_API_PUBLIC(wchar_t*) _cc_debug_strdupW(const wchar_t *str, const tchar_t *file, const int line);
+/**/
+_CC_API_PUBLIC(char_t*) _cc_debug_strdupA(const char_t *str, const tchar_t *file, const int line);
+/**/
+_CC_API_PUBLIC(wchar_t*) _cc_debug_strndupW(const wchar_t *str, size_t n, const tchar_t *file, const int line);
+/**/
+_CC_API_PUBLIC(char_t*) _cc_debug_strndupA(const char_t *str, size_t n, const tchar_t *file, const int line);
 
-#define _CC_MEM_MALLOC_  0x01
-#define _CC_MEM_CALLOC_  0x02
-#define _CC_MEM_REALLOC_ 0x03
-#define _CC_MEM_FREE_    0x04
+/**/
+#define _cc_malloc(N) _cc_debug_malloc((N), _CC_FILE_, _CC_LINE_)
+/**/
+#define _cc_calloc(C, N) _cc_debug_calloc((C), (N), _CC_FILE_, _CC_LINE_)
+/**/
+#define _cc_realloc(P, N) _cc_debug_realloc((P),(N), _CC_FILE_, _CC_LINE_)
+/**/
+#define _cc_free(P) _cc_debug_free(P)
+/**/
+#define _cc_strdupA(P) _cc_debug_strdupA((P), _CC_FILE_, _CC_LINE_)
+/**/
+#define _cc_strdupW(P) _cc_debug_strdupW((P), _CC_FILE_, _CC_LINE_)
+/**/
+#define _cc_strndupA(P,N) _cc_debug_strndupA((P), (N), _CC_FILE_, _CC_LINE_)
+/**/
+#define _cc_strndupW(P,N) _cc_debug_strndupW((P), (N), _CC_FILE_, _CC_LINE_)
+
+#else
 
 /**/
 _CC_API_PUBLIC(pvoid_t) _cc_malloc(size_t);
@@ -75,10 +108,7 @@ _CC_API_PUBLIC(char_t*) _cc_strndupA(const char_t*,size_t);
 /**/
 _CC_API_PUBLIC(wchar_t*) _cc_strndupW(const wchar_t*,size_t);
 
-/**/
-#define _CC_MALLOCX(T,C) ((T*)_cc_malloc(sizeof(T) * (C)))
-#define _CC_MALLOC(T) ((T*)_cc_malloc(sizeof(T)))
-#define _CC_CALLOC(T,C) ((T*)_cc_calloc(C,sizeof(T)))
+#endif /* _CC_USE_CC_DEBUG_MALLOC_ */
 
 /**/
 #ifdef _CC_UNICODE_
@@ -88,12 +118,12 @@ _CC_API_PUBLIC(wchar_t*) _cc_strndupW(const wchar_t*,size_t);
     #define _cc_tcsdup(d)       _cc_strdupA(d)
     #define _cc_tcsndup(d,n)     _cc_strndupA(d,n)
 #endif
-    
+
 /**/
 #define _cc_safe_free(d) do {\
     if ((d)) {\
         _cc_free((d));\
-        (d)=nullptr;\
+        (d) = nullptr;\
     }\
 } while (0)
 

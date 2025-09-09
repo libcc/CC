@@ -23,6 +23,7 @@
 
 #include <stdarg.h>
 #include <stdint.h>
+#include "logger.h"
 #include "string.h"
 
 /* Set up for C function definitions, even when using C++ */
@@ -154,7 +155,10 @@ _CC_FORCE_INLINE_ void _cc_sds_set_length(_cc_sds_t s, size_t length) {
     switch (flags & _SDS_MASK_) {
         case _SDS_MASK_5_: {
             struct _sds_hdr5 *h = (struct _sds_hdr5 *)(hdr - sizeof(struct _sds_hdr5));
-            h->flags = (byte_t)(_SDS_MASK_5_ | (length << _SDS_BITS_));
+            if (length > (h->flags >> _SDS_BITS_)) {
+                _cc_assert(length <= (h->flags >> _SDS_BITS_));
+                _cc_static_logger(_CC_LOG_LEVEL_ALERT_,_T("SDS: length overflow"));
+            }
         }
         break;
         case _SDS_MASK_8_: {
@@ -185,7 +189,8 @@ _CC_FORCE_INLINE_ size_t _cc_sds_available(const _cc_sds_t s) {
     byte_t flags = *(hdr - sizeof(byte_t));
     switch (flags & _SDS_MASK_) {
         case _SDS_MASK_5_: {
-            return 0;
+            struct _sds_hdr5 *h = (struct _sds_hdr5 *)(hdr - sizeof(struct _sds_hdr5));
+            return (h->flags >> _SDS_BITS_);
         }
         case _SDS_MASK_8_: {
             struct _sds_hdr8 *h = (struct _sds_hdr8 *)(hdr - sizeof(struct _sds_hdr8));

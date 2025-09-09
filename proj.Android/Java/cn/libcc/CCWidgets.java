@@ -25,6 +25,7 @@ import android.provider.Settings;
 import android.telephony.TelephonyManager;
 
 public class CCWidgets  {
+    public static String TAG = "CC-JNI";
 
     public static native String nativeGetVersion();
     public static native boolean nativeSetupJNI();
@@ -33,18 +34,14 @@ public class CCWidgets  {
     public static native void nativePause();
     public static native void nativeResume();
     public static native void nativePermissionResult(int requestCode, boolean result);
-    //public static native String nativeGetHint(String name);
-    //public static native boolean nativeGetHintBoolean(String name, boolean default_value);
     public static native void nativeSetPowerInfo(int plugged,int charged,int battery,int seconds,int percent);
-
     public static native void nativeDropFile(String filename);
+
     public static native void nativeClipboardChanged();
     public static native void nativeLocaleChanged();
     public static native void nativeDarkModeChanged(boolean enabled);
-
     public static native void nativeFocusChanged(boolean hasFocus);
 
-    public static boolean mHasFocus;
 
     public static final int NetworkType_NotPermission = 0;
     public static final int NetworkType_None = 0;
@@ -56,20 +53,26 @@ public class CCWidgets  {
     public static final int NetworkType_5GA = 6;
 
     protected static Locale mCurrentLocale;
-    protected static IClipboardHandler iClipboardHandler = null ;
-    public static String TAG = "CC-JNI";
-    public static Context context = null;
+    protected static ClipboardHandler mClipboardHandler = null;
+    public static boolean mHasFocus;
+    public static Context mContext = null;
 
     static {
         Loader.staticInit();
     }
 
     public static void initialize(Context context) {
-        nativeSetupJNI();
+        try {
+            Thread.currentThread().setName("CCActivity");
+        } catch (Exception e) {
+            Log.v(TAG, "modify thread properties failed " + e.toString());
+        }
 
-        CCWidgets.context = context;
-        iClipboardHandler = new ClipboardHandler();
+        CCWidgets.mContext = context;
+        mClipboardHandler = new ClipboardHandler();
         mHasFocus = true;
+
+        nativeSetupJNI();
 
         try {
             if (Build.VERSION.SDK_INT < 24 /* Android 7.0 (N) */) {
@@ -95,15 +98,15 @@ public class CCWidgets  {
 
         if (mCurrentLocale == null || !mCurrentLocale.equals(newConfig.locale)) {
             mCurrentLocale = newConfig.locale;
-            CCWidgets.nativeLocaleChanged();
+            nativeLocaleChanged();
         }
 
         switch (newConfig.uiMode & Configuration.UI_MODE_NIGHT_MASK) {
         case Configuration.UI_MODE_NIGHT_NO:
-            CCWidgets.nativeDarkModeChanged(false);
+            nativeDarkModeChanged(false);
             break;
         case Configuration.UI_MODE_NIGHT_YES:
-            CCWidgets.nativeDarkModeChanged(true);
+            nativeDarkModeChanged(true);
             break;
         }
     }
@@ -111,17 +114,13 @@ public class CCWidgets  {
     public static void onWindowFocusChanged(boolean hasFocus) {
         //Log.v(TAG, "onWindowFocusChanged(): " + hasFocus);
         mHasFocus = hasFocus;
-        if (hasFocus) {
-           nativeFocusChanged(true);
-        } else {
-           nativeFocusChanged(false);
-        }
+        nativeFocusChanged(hasFocus);
     }
     /**
      * Get the device's Universally Unique Identifier (UUID).
      */
-    public static String getUuid(Context context) {
-        return Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+    public static String getUuid() {
+        return Settings.Secure.getString(CCWidgets.mContext.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
     }
 
     /**
@@ -173,7 +172,7 @@ public class CCWidgets  {
      * This method is called by CC using JNI.
      */
     public static Context getContext() {
-        return context;
+        return CCWidgets.mContext;
     }
     /**
      * This method is called by CC using JNI.
@@ -185,7 +184,7 @@ public class CCWidgets  {
      * This method is called by CC using JNI.
      */
     public static void registerPowerInfo() {
-        context.registerReceiver(new BatteryBroadcastReceiver(), new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        CCWidgets.mContext.registerReceiver(new BatteryBroadcastReceiver(), new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
     }
    /**
      * This method is called by CC using JNI.
@@ -197,31 +196,31 @@ public class CCWidgets  {
      * This method is called by CC using JNI.
      */
     public static boolean clipboardHasText() {
-        return iClipboardHandler.clipboardHasText();
+        return mClipboardHandler.clipboardHasText();
     }
 
     /**
      * This method is called by CC using JNI.
      */
     public static String clipboardGetText() {
-        return iClipboardHandler.clipboardGetText();
+        return mClipboardHandler.clipboardGetText();
     }
 
     /**
      * This method is called by CC using JNI.
      */
-    public static void clipboardSetText(String string) { iClipboardHandler.clipboardSetText(string); }
+    public static void clipboardSetText(String string) { mClipboardHandler.clipboardSetText(string); }
 
     /**
      * This method is called by CC using JNI.
      */
     public static int openFileDescriptor(String uri, String mode) throws Exception {
-        if (CCWidgets.context == null) {
+        if (CCWidgets.mContext == null) {
             return -1;
         }
 
         try {
-            ParcelFileDescriptor pfd = CCWidgets.context.getContentResolver().openFileDescriptor(Uri.parse(uri), mode);
+            ParcelFileDescriptor pfd = CCWidgets.mContext.getContentResolver().openFileDescriptor(Uri.parse(uri), mode);
             return pfd != null ? pfd.detachFd() : -1;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -233,20 +232,20 @@ public class CCWidgets  {
      * This method is called by CC using JNI.
      */
     public static String getCachePath() {
-        return context.getCacheDir().getPath();
+        return CCWidgets.mContext.getCacheDir().getPath();
     }
     /**
      * This method is called by CC using JNI.
      */
     public static File getFilesDir() {
         for (int a = 0; a < 10; a++) {
-            File path = context.getFilesDir();
+            File path = CCWidgets.mContext.getFilesDir();
             if (path != null) {
                 return path;
             }
         }
         try {
-            ApplicationInfo info = context.getApplicationInfo();
+            ApplicationInfo info = CCWidgets.mContext.getApplicationInfo();
             File path = new File(info.dataDir, "files");
             path.mkdirs();
             return path;
@@ -264,7 +263,7 @@ public class CCWidgets  {
      * This method is called by CC using JNI.
      */
     public static String getPackageName() {
-        return context.getPackageName();
+        return CCWidgets.mContext.getPackageName();
     }
 
     public static Boolean isWifiConnected() {
@@ -274,7 +273,7 @@ public class CCWidgets  {
     public static Boolean isBluetoothEnabled() {
         BluetoothAdapter defaultAdapter;
         try {
-            if (context.getPackageManager().checkPermission("android.permission.BLUETOOTH", context.getPackageName()) != 0 ||
+            if (CCWidgets.mContext.getPackageManager().checkPermission("android.permission.BLUETOOTH", CCWidgets.mContext.getPackageName()) != 0 ||
                (defaultAdapter = BluetoothAdapter.getDefaultAdapter()) == null) {
                 return false;
             }
@@ -285,11 +284,11 @@ public class CCWidgets  {
     }
 
     public static int getNetworkType() {
-        if (context.checkCallingOrSelfPermission("android.permission.ACCESS_NETWORK_STATE") != 0) {
+        if (CCWidgets.mContext.checkCallingOrSelfPermission("android.permission.ACCESS_NETWORK_STATE") != 0) {
             return NetworkType_NotPermission;
         }
 
-        ConnectivityManager connectivity = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager connectivity = (ConnectivityManager) CCWidgets.mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
 
         if (connectivity == NULL){
             return NetworkType_None;
@@ -353,7 +352,7 @@ public class CCWidgets  {
             }
             i.addFlags(flags);
 
-            context.startActivity(i);
+            CCWidgets.mContext.startActivity(i);
         } catch (Exception ex) {
             return -1;
         }
@@ -399,12 +398,12 @@ public class CCWidgets  {
     }
 
     public static void showToast2(String msg) {
-        Utils.toast(CCWidgets.context, msg);
+        Utils.toast(CCWidgets.mContext, msg);
     } 
     /**
      * This method is called by CC using JNI.
      */
     public static void showToast(String m, int duration, int gravity, int xOffset, int yOffset)  {
-        Utils.toast(context, m, duration, gravity, xOffset, yOffset);
+        Utils.toast(CCWidgets.mContext, m, duration, gravity, xOffset, yOffset);
     }
 }

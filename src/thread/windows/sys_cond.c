@@ -38,9 +38,7 @@ static fptrSleepConditionVariableCS pSleepConditionVariableCS = nullptr;
 #endif
 /* Create a condition variable */
 _CC_API_PUBLIC(_cc_condition_t*) _cc_alloc_condition(void) {
-    _cc_condition_t *cond = _CC_MALLOC(_cc_condition_t);
-    bzero(cond, sizeof(_cc_condition_t));
-
+    _cc_condition_t *cond = (_cc_condition_t*)_cc_calloc(1,sizeof(_cc_condition_t));
 #ifdef _CC_WINDOWS_SUPPORTED_CONDITION_
 #if __WINRT__
     pInitializeConditionVariable = InitializeConditionVariable;

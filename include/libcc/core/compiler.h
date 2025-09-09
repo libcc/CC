@@ -335,9 +335,9 @@
     #endif
 #endif /* _CC_CALL_ */
 
-#if defined(_CC_EXPORT_SHARED_LIBRARY_)
+#if defined(_CC_API_USE_DYNAMIC_)
     #define _CC_API_PUBLIC(t) _CC_API_EXPORT_ t 
-#elif defined(_CC_IMPORT_SHARED_LIBRARY_)
+#elif defined(_CC_API_IMPORT_DYNAMIC_)
     #define _CC_API_PUBLIC(t) _CC_API_IMPORT_ t
 #else
     #define _CC_API_PUBLIC(t) t

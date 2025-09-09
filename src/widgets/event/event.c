@@ -83,9 +83,9 @@ _CC_API_PRIVATE(_cc_event_t*) _cc_reserve_event(uint16_t baseid) {
                 e->ident = i;
                 _cc_queue_sync_push(&g.idles, (_cc_queue_iterator_t*)(&e->lnk));
             }
-
             g.slot_length = expand_length;
-            g.slot_refcount = 0;
+            //g.slot_refcount = 0;
+            _cc_atomic32_set(&g.slot_refcount, 0);
         } else {
             _cc_sleep(0);
         }
@@ -265,17 +265,6 @@ _CC_API_PUBLIC(bool_t) _register_async_event(_cc_async_event_t *async) {
         g.async = _cc_calloc(0xFFF, sizeof(_cc_async_event_t*));
     }
 
-    if (!_cc_alloc_array(&async->changes, _CC_MAX_CHANGE_EVENTS_)) {
-        _cc_assert(false);
-        return false;
-    }
-
-    async->processed = 0;
-    async->running = 0;
-    async->timer = 0;
-    async->diff = 0;
-    async->tick = _cc_get_ticks();
-
     while (g.async == nullptr) {
         _cc_sleep(10);
     }
@@ -289,16 +278,19 @@ _CC_API_PUBLIC(bool_t) _register_async_event(_cc_async_event_t *async) {
             }
         }
         if (async_limit == 0xFFFF) {
-            _cc_free_array(&async->changes);
             _cc_logger_error(_T("The maximum number of events supported by asynchronous events is %d"), g.async_limit);
             return false;
         }
-        g.async[async_limit] = async;
     } else {
         async_limit = _cc_atomic32_inc(&g.async_limit);
-        g.async[async_limit] = async;
     }
 
+    async->changes = _cc_alloc_array(_CC_MAX_CHANGE_EVENTS_);
+    async->processed = 0;
+    async->running = 0;
+    async->timer = 0;
+    async->diff = 0;
+    async->tick = _cc_get_ticks();
     async->ident = (uint16_t)async_limit & 0xFFF;
 #ifdef _CC_EVENT_USE_MUTEX_
     async->lock = _cc_alloc_mutex();
@@ -320,6 +312,8 @@ _CC_API_PUBLIC(bool_t) _register_async_event(_cc_async_event_t *async) {
     _cc_list_iterator_cleanup(&async->no_timer);
 
     async->running = 1;
+
+    g.async[async_limit] = async;
     return true;
 }
 
@@ -350,10 +344,10 @@ _CC_API_PUBLIC(bool_t) _unregister_async_event(_cc_async_event_t *async) {
 
     _event_lock(async);
     async->running = 0;
-    _cc_array_for_each(_cc_event_t, e, i, &async->changes, {
+    _cc_array_for_each(_cc_event_t, e, i, async->changes, {
         _cc_list_iterator_swap(&async->pending, &e->lnk);
     });
-    _cc_free_array(&async->changes);
+    _cc_free_array(async->changes);
     _event_unlock(async);
     
     for (i = 0; i < _CC_TIMEOUT_NEAR_; i++) {
@@ -371,13 +365,15 @@ _CC_API_PUBLIC(bool_t) _unregister_async_event(_cc_async_event_t *async) {
     if (_cc_atomic32_dec_ref(&g.refcount)) {;
         //
         for (i = 0; i < g.slot_length; i += _CC_MAX_STEP_) {
-            _cc_free(&g.slots[i]);
+            _cc_free(g.slots[i]);
         }
-
-        g.slots = nullptr;
-        g.slot_length = 0;
-
+        _cc_free(g.slots);
+        _cc_free(g.async);
         _cc_queue_iterator_cleanup(&g.idles);
+        g.slot_length = 0;
+        g.slots = nullptr;
+        g.async = nullptr;
+        
     } else {
         g.async[async->ident] = 0;
     }
@@ -428,16 +424,12 @@ _CC_API_PUBLIC(bool_t) _reset_event(_cc_async_event_t *async, _cc_event_t *e) {
         return false;
     }
 
-    _event_lock(async);
     if (_CC_ISSET_BIT(_CC_EVENT_CHANGING_, e->flags) == 0) {
-        if (_cc_array_push(&async->changes, e) != -1) {
-            _CC_SET_BIT(_CC_EVENT_CHANGING_, e->flags);
-        } else {
-            _cc_logger_debug(_T("_cc_event_reset fail"));
-            results = false;
-        }
+        _event_lock(async);
+        _cc_array_push(&async->changes, (uintptr_t)e);
+        _CC_SET_BIT(_CC_EVENT_CHANGING_, e->flags);
+        _event_unlock(async);
     }
-    _event_unlock(async);
 
     return results;
 }
@@ -457,14 +449,18 @@ _CC_API_PUBLIC(void) _reset_event_pending(_cc_async_event_t *async, void (*_rese
     _cc_list_iterator_t *head;
     _cc_list_iterator_t *next;
     _cc_list_iterator_t *curr;
+    size_t length = _cc_array_length(async->changes);
 
-    if (async->changes.length > 0) {
+    if (length > 0) {
+        size_t i;
+        _cc_event_t *e;
         _event_lock(async);
-        _cc_array_for_each(_cc_event_t, e, i, &async->changes, {
+        for (i = 0; i < length; i++) {
+            e = ((_cc_event_t*)*((uintptr_t*)(async->changes) + i));
             _CC_UNSET_BIT(_CC_EVENT_CHANGING_, e->flags);
             _cc_list_iterator_swap(&async->pending, &e->lnk);
-        });
-        async->changes.length = 0;
+        }
+        _cc_array_cleanup(async->changes);
         _event_unlock(async);
     }
 

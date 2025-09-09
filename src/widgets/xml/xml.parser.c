@@ -38,8 +38,8 @@ _CC_API_PRIVATE(bool_t) _XML_is_name_char(int ch) {
     return _XML_is_name_start_char(ch) || _CC_ISDIGIT(ch) || ch == '.' || ch == '-';
 }
 
-_CC_API_PRIVATE(tchar_t*) _XML_parser_name(_cc_sbuf_t *const buffer) {
-    tchar_t *output = nullptr;
+_CC_API_PRIVATE(_cc_sds_t) _XML_parser_name(_cc_sbuf_t *const buffer) {
+    _cc_sds_t output = nullptr;
     const tchar_t *start = _cc_sbuf_offset(buffer), *ended = nullptr;
     const tchar_t *p = start;
 
@@ -62,17 +62,13 @@ _CC_API_PRIVATE(tchar_t*) _XML_parser_name(_cc_sbuf_t *const buffer) {
         return nullptr;
     }
 
-    output = (tchar_t *)_cc_tcsndup(start, (size_t)(ended - start));
-    if (output == nullptr) {
-        return nullptr;
-    }
-
+    output = _cc_sds_alloc(start, (size_t)(ended - start));
     buffer->offset = (size_t)(p - buffer->content);
 
     return output;
 }
 
-_CC_API_PRIVATE(bool_t) _XML_parser_doctype(_cc_sbuf_t *const buffer, tchar_t **output) {
+_CC_API_PRIVATE(_cc_sds_t) _XML_parser_doctype(_cc_sbuf_t *const buffer) {
     const tchar_t *p = _cc_sbuf_offset(buffer);
     const tchar_t *start = p;
 
@@ -80,23 +76,14 @@ _CC_API_PRIVATE(bool_t) _XML_parser_doctype(_cc_sbuf_t *const buffer, tchar_t **
         if (*p == _XML_ELEMENT_END_) {
             break;
         }
-
         p++;
     }
 
     buffer->offset = (size_t)(p - buffer->content) + 1;
-
-    *output = (tchar_t *)_cc_tcsndup(start, (size_t)(p - start));
-    if (_cc_likely(*output != nullptr)) {
-        return true;
-    }
-
-    _cc_free(*output);
-    *output = nullptr;
-    return false;
+    return _cc_sds_alloc(start, (size_t)(p - start));
 }
 
-_CC_API_PRIVATE(bool_t) _XML_parser_comments(_cc_sbuf_t *const buffer, tchar_t **output) {
+_CC_API_PRIVATE(bool_t) _XML_parser_comments(_cc_sbuf_t *const buffer, _cc_sds_t *output) {
     const tchar_t *p = _cc_sbuf_offset(buffer);
     const tchar_t *start = p;
     const tchar_t *endpos = nullptr;
@@ -132,13 +119,13 @@ _CC_API_PRIVATE(bool_t) _XML_parser_comments(_cc_sbuf_t *const buffer, tchar_t *
 
     /* This is at most how much we need for the output */
     alloc_length = sizeof(tchar_t) * ((size_t)(p - start) - skipped_bytes + 1);
-    *output = (tchar_t *)_cc_malloc(alloc_length);
-    if (_convert_text(*output, alloc_length, start, p)) {
+    *output = _cc_sds_alloc(nullptr, alloc_length);
+    if (_convert_text(*output, start, p)) {
         buffer->offset = (size_t)(p - buffer->content) + 3;
         return true;
     }
 
-    _cc_free(*output);
+    _cc_sds_free(*output);
     *output = nullptr;
 
     return false;
@@ -196,14 +183,14 @@ _CC_API_PRIVATE(bool_t) _XML_text_parser(_cc_sbuf_t *const buffer, _cc_xml_conte
     }
 
     /* This is at most how much we need for the output */
-    alloc_length = _cc_buf_length(&buf) + 1;
-    context->text = (tchar_t *)_cc_malloc(alloc_length * sizeof(tchar_t));
-    if (_convert_text(context->text, alloc_length, (const tchar_t *)buf.bytes, (const tchar_t *)buf.bytes + buf.length)) {
+    start = _cc_buf_stringify(&buf,&alloc_length);
+    context->text = _cc_sds_alloc(nullptr, alloc_length);
+    if (_convert_text(context->text, (const tchar_t *)buf.bytes, (const tchar_t *)start + alloc_length)) {
         _cc_free_buf(&buf);
         return true;
     }
 
-    _cc_free(context->text);
+    _cc_sds_free(context->text);
     context->text = nullptr;
 
     _cc_free_buf(&buf);
@@ -230,13 +217,13 @@ _CC_API_PRIVATE(int32_t) _XML_is_attr_value_end_tag(const tchar_t *p, const tcha
     return quotes == *p ? 1 : 0;
 }
 
-_CC_API_PRIVATE(tchar_t*) _XML_parser_attr_value(_cc_sbuf_t *const buffer) {
+_CC_API_PRIVATE(_cc_sds_t) _XML_parser_attr_value(_cc_sbuf_t *const buffer) {
     const tchar_t *p = _cc_sbuf_offset(buffer);
     const tchar_t *start = nullptr;
     const tchar_t *endpos = nullptr;
+    _cc_sds_t output = nullptr;
     size_t alloc_length = 0;
     size_t skipped_bytes = 0;
-    tchar_t *output = nullptr;
     tchar_t quotes = *p;
     int32_t endflag = 0;
 
@@ -276,15 +263,14 @@ _CC_API_PRIVATE(tchar_t*) _XML_parser_attr_value(_cc_sbuf_t *const buffer) {
     }
     
     /* This is at most how much we need for the output */
-    alloc_length = sizeof(tchar_t) * ((size_t)(endpos - start) - skipped_bytes + 1);
-    output = (tchar_t *)_cc_malloc(alloc_length);
+    alloc_length = ((size_t)(endpos - start) - skipped_bytes + 1);
+    output = _cc_sds_alloc(nullptr, alloc_length);
 
-    if (_convert_text(output, alloc_length, start, endpos)) {
+    if (_convert_text(output, start, endpos)) {
         buffer->offset = (size_t)(p - buffer->content) + endflag;
         return output;
     }
-
-    _cc_free(output);
+    _cc_sds_free(output);
     return nullptr;
 }
 
@@ -292,8 +278,8 @@ _CC_API_PRIVATE(int) _XML_attr_read(_cc_rbtree_t *ctx, _cc_sbuf_t *const buffer)
     const tchar_t *tmp;
 
     do {
-        tchar_t *name = nullptr;
-        tchar_t *value = nullptr;
+        _cc_sds_t name = nullptr;
+        _cc_sds_t value = nullptr;
         if (!_XML_jump_whitespace(buffer)) {
             return false;
         }
@@ -327,7 +313,8 @@ _CC_API_PRIVATE(int) _XML_attr_read(_cc_rbtree_t *ctx, _cc_sbuf_t *const buffer)
         }
 
         if (!_XML_jump_whitespace(buffer)) {
-            return false;
+            _cc_sds_free(name);
+            break;
         }
 
         if (_cc_sbuf_access(buffer) && _cc_sbuf_offset_equal(buffer, '=')) {
@@ -336,22 +323,17 @@ _CC_API_PRIVATE(int) _XML_attr_read(_cc_rbtree_t *ctx, _cc_sbuf_t *const buffer)
             */
             buffer->offset++;
             if (!_XML_jump_whitespace(buffer)) {
-                return false;
+                _cc_sds_free(name);
+                break;
             }
             /*parse the value*/
             value = _XML_parser_attr_value(buffer);
             if (value == nullptr) {
-                _cc_free(name);
+                _cc_sds_free(name);
                 break;
             }
         }
-
-        if (!_XML_attr_push(ctx, name, value)) {
-            _cc_free(value);
-            _cc_free(name);
-            break;
-        }
-
+        _XML_attr_push(ctx, name, value);
     } while (_cc_sbuf_access(buffer));
 
     return 0;
@@ -401,9 +383,7 @@ static bool_t _XML_child_read(_cc_xml_t *ctx, _cc_sbuf_t *const buffer, int32_t 
                     if (!_XML_jump_whitespace(buffer)) {
                         return false;
                     }
-                    if(!_XML_parser_doctype(buffer, &item->element.uni_doctype)) {
-                        return false;
-                    }
+                    item->element.uni_doctype = _XML_parser_doctype(buffer);
                     item->type = _CC_XML_DOCTYPE_;
                 } else {
                     return false;
@@ -442,17 +422,13 @@ static bool_t _XML_child_read(_cc_xml_t *ctx, _cc_sbuf_t *const buffer, int32_t 
 
                 p = _cc_sbuf_offset(buffer);
                 if (*p == _XML_ELEMENT_START_ && *(p + 1) == _XML_ELEMENT_SLASH_) {
-                    tchar_t end_tag[128];
-                    int32_t end_tag_lengtn = _sntprintf(end_tag, _cc_countof(end_tag), _T("</%s"), item->name);
-                    if (_tcsncmp(_cc_sbuf_offset(buffer), end_tag, end_tag_lengtn) != 0) {
+                    size_t tag_lengtn = _cc_sds_length(item->name);
+                    /* skip </ */
+                    if (_tcsncmp(p + 2, item->name, tag_lengtn) != 0) {
                         return false;
                     }
-                    /* skip </item-name */
-                    buffer->offset += end_tag_lengtn;
-
-                    if (!_XML_jump_whitespace(buffer)) {
-                        return false;
-                    }
+                    /* skip </tag-name */
+                    buffer->offset += tag_lengtn + 2;
                     if (_cc_sbuf_offset_unequal(buffer, _XML_ELEMENT_END_)) {
                         return false;
                     }
@@ -524,39 +500,14 @@ _CC_API_PUBLIC(_cc_xml_t*) _cc_xml_parser(_cc_sbuf_t *const buffer) {
 _CC_API_PUBLIC(_cc_xml_t*) _cc_xml_from_file(const tchar_t *file_name) {
     _cc_sbuf_t buffer;
     _cc_xml_t *item = nullptr;
-
-    byte_t *content = nullptr;
-    size_t offset = 0;
-
     _cc_buf_t buf;
 
     if (!_cc_buf_from_file(&buf, file_name)) {
         return nullptr;
     }
-    content = buf.bytes;
 
-    /*----BOM----
-    EF BB BF = UTF-8
-    FE FF 00 = UTF-16, big-endian
-    FF FE    = UTF-16, little-endian
-
-    00 00 FE FF = UTF-32, big-endian
-    FF FE 00 00 = UTF-32, little-endian
-    */
-
-    /*UTF8 BOM */
-    if (*content == 0xEF && *(content + 1) == 0xBB && *(content + 2) == 0xBF) {
-        offset = 3;
-    }
-
-#ifdef _CC_UNICODE_
-    _cc_buf_utf8_to_utf16(buf, (uint32_t)offset);
-    buffer.content = (tchar_t *)buf->bytes;
+    buffer.content = (tchar_t*)buf.bytes;
     buffer.length = buf.length / sizeof(tchar_t);
-#else
-    buffer.content = (tchar_t *)(content + offset);
-    buffer.length = (buf.length - offset) / sizeof(tchar_t);
-#endif
     buffer.offset = 0;
     buffer.line = 1;
     buffer.depth = 0;

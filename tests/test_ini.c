@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 
-const _cc_String_t ini_content = _cc_String("[section1]\nkey1 = value1\nkey2 = value2\n[section2]\nkey3 = value3");
+const _cc_String_t ini_content = _cc_String("[section1]\nkey1 = value1 #adfsd\n;abcd  \nkey2 = \"value2  \"\n[section2]\nkey3 = value3");
 
 static void test_ini_parse() {
     _cc_ini_t* ini = _cc_parse_ini(ini_content.data, ini_content.length);
@@ -68,16 +68,20 @@ static void test_ini_parse() {
     }
     
     printf("INI parsing test passed\n");
+
+    _cc_buf_t dump;
+    _cc_dump_ini(ini, &dump);
+    FILE *fp = fopen("test.ini", "w");
+    assert(fp != NULL);
+    fwrite(dump.bytes, 1, dump.length, fp);
+    fclose(fp);
+    _cc_free_buf(&dump);
+
     _cc_free_ini(ini);
 }
 
 static void test_ini_from_file() {
-    FILE *fp = fopen("test.ini", "wb");
-    assert(fp != NULL);
-    fwrite(ini_content.data, 1, ini_content.length, fp);
-    fclose(fp);
-
-    _cc_ini_t* ini = _cc_ini_from_file(file_path);
+    _cc_ini_t* ini = _cc_ini_from_file("test.ini");
     
     if (ini == NULL) {
         printf("Failed to parse INI file\n");
@@ -104,7 +108,7 @@ static void test_ini_from_file() {
 
 static void test_ini_error_handling() {
     const tchar_t* invalid_ini = _T("[section1\nkey1 = value1");
-    _cc_ini_t* ini = _cc_parse_ini(invalid_ini);
+    _cc_ini_t* ini = _cc_parse_ini(invalid_ini, _tcslen(invalid_ini));
     
     if (ini != NULL) {
         printf("Failed to detect invalid INI content\n");
@@ -123,7 +127,7 @@ static void test_ini_error_handling() {
 
 int main() {
     test_ini_parse();
-    test_ini_from_file();
     test_ini_error_handling();
+    test_ini_from_file();
     return 0;
 }

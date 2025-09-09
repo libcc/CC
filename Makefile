@@ -4,12 +4,15 @@ SRCROOT	:= $(abspath .)
 THIRD_PARTY_PATH = $(abspath $(SRCROOT)/..)/third-party
 INCLUDE_PATH += $(THIRD_PARTY_PATH)
 
-
 #生成的文件名
 TARGET_NAME = cc
 
 ifdef shared
-	MACROS += _CC_ENABLE_SHARED_LIBRARY_=1
+	MACROS += _CC_API_USE_DYNAMIC_
+endif
+
+ifdef debug
+	MACROS += _CC_USE_CC_DEBUG_MALLOC_
 endif
 
 #MACROS += _CC_SYSLOG_RFC5424_

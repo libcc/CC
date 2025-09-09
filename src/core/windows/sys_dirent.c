@@ -95,7 +95,7 @@ _CC_API_PUBLIC(DIR*) opendir(const tchar_t *dir_path) {
         return nullptr;
     }
 
-    dp = _CC_MALLOC(DIR);
+    dp = (DIR*)_cc_malloc(sizeof(DIR));
     dir_len = _tcslen(dir_path);
     dp->dir = (tchar_t *)_cc_malloc(sizeof(tchar_t) * (dir_len + 3));
 

@@ -72,22 +72,20 @@ _CC_API_PUBLIC(_cc_json_t*) _cc_json_array_find(const _cc_json_t *ctx, uint32_t 
     _cc_assert(ctx != nullptr);
 
     if (ctx->type == _CC_JSON_ARRAY_) {
-        if (_cc_unlikely(ctx->size <= index)) {
-            _cc_logger_error(_T("Array find: index out of range [%d] with size %d"), index, ctx->size);
-            return nullptr;
+        uintptr_t arr = _cc_array_get(ctx->element.uni_array, index);
+        if (arr != -1) {
+            return (_cc_json_t*)arr;
         }
-        return (_cc_json_t *)(ctx->element.uni_array[index]);
     }
 
     return nullptr;
 }
 
 _CC_API_PUBLIC(_cc_json_t*) _cc_json_object_find(const _cc_json_t *ctx, const tchar_t *keyword) {
-    _cc_rbtree_iterator_t *node;
     _cc_assert(ctx != nullptr);
 
     if (ctx->type == _CC_JSON_OBJECT_) {
-        node = _cc_rbtree_get(&ctx->element.uni_object, (pvoid_t)keyword, _json_get_object);
+        _cc_rbtree_iterator_t *node = _cc_rbtree_get(&ctx->element.uni_object, (pvoid_t)keyword, _json_get_object);
         if (node) {
             return _cc_upcast(node, _cc_json_t, lnk);
         }
@@ -108,25 +106,18 @@ _CC_API_PUBLIC(void) _json_free_node(_cc_json_t *item) {
         break;
     case _CC_JSON_STRING_:
         if (item->element.uni_string) {
-            _cc_free(item->element.uni_string);
+            _cc_sds_free(item->element.uni_string);
         }
         break;
     case _CC_JSON_ARRAY_:
         _destroy_json_array(item);
         break;
     }
-    _cc_safe_free(item->name);
-    _cc_free(item);
-}
 
-void _destroy_json_array(_cc_json_t *root) {
-    size_t i;
-    size_t length = root->length;
-
-    for (i = 0; i < length; i++) {
-        _json_free_node(root->element.uni_array[i]);
+    if (item->name) {
+        _cc_sds_free(item->name);
     }
-    _cc_free(root->element.uni_array);
+    _cc_free(item);
 }
 
 void _destroy_json_object(_cc_json_t *root) {
@@ -144,12 +135,16 @@ _CC_API_PUBLIC(void) _cc_free_json(_cc_json_t *item) {
 _CC_API_PUBLIC(_cc_json_t*) _cc_json_add_boolean(_cc_json_t *ctx, const tchar_t *keyword, bool_t value) {
     _cc_json_t *item = _cc_json_alloc_object(_CC_JSON_BOOLEAN_, keyword);
     item->element.uni_boolean = value;
+
     if (ctx->type == _CC_JSON_ARRAY_) {
         _json_array_push(ctx, item);
-    } else {
+        return item;
+    } else if (ctx->type == _CC_JSON_OBJECT_) {
         _json_object_push(ctx, item, true);
+        return item;
     }
-    return item;
+    _json_free_node(item);
+    return nullptr;
 }
 
 /**/
@@ -158,10 +153,13 @@ _CC_API_PUBLIC(_cc_json_t*) _cc_json_add_number(_cc_json_t *ctx, const tchar_t *
     item->element.uni_int = value;
     if (ctx->type == _CC_JSON_ARRAY_) {
         _json_array_push(ctx, item);
-    } else {
+        return item;
+    } else if (ctx->type == _CC_JSON_OBJECT_) {
         _json_object_push(ctx, item, true);
+        return item;
     }
-    return item;
+    _json_free_node(item);
+    return nullptr;
 }
 
 /**/
@@ -170,28 +168,49 @@ _CC_API_PUBLIC(_cc_json_t*) _cc_json_add_float(_cc_json_t *ctx, const tchar_t *k
     item->element.uni_float = value;
     if (ctx->type == _CC_JSON_ARRAY_) {
         _json_array_push(ctx, item);
-    } else {
+        return item;
+    } else if (ctx->type == _CC_JSON_OBJECT_) {
         _json_object_push(ctx, item, true);
+        return item;
     }
-    return item;
+    _json_free_node(item);
+    return nullptr;
 }
 
 /**/
 _CC_API_PUBLIC(_cc_json_t*) _cc_json_add_string(_cc_json_t *ctx, const tchar_t *keyword, const tchar_t *value) {
     _cc_json_t *item = _cc_json_alloc_object(_CC_JSON_STRING_, keyword);
-    item->element.uni_string = _cc_tcsdup(value);
+    item->element.uni_string = _cc_sds_alloc(value,_tcslen(value));
     if (ctx->type == _CC_JSON_ARRAY_) {
         _json_array_push(ctx, item);
-    } else {
+        return item;
+    } else if (ctx->type == _CC_JSON_OBJECT_) {
         _json_object_push(ctx, item, true);
+        return item;
     }
-    return item;
+    _json_free_node(item);
+    return nullptr;
 }
 
 /**/
-_CC_API_PRIVATE(void) _cc_json_dump_array(_cc_json_t *item, _cc_buf_t *buf, int32_t depth);
+_CC_API_PUBLIC(_cc_json_t*) _cc_json_add_sds(_cc_json_t *ctx, const tchar_t *keyword, const _cc_sds_t value) {
+    _cc_json_t *item = _cc_json_alloc_object(_CC_JSON_STRING_, keyword);
+    item->element.uni_string = value;
+    if (ctx->type == _CC_JSON_ARRAY_) {
+        _json_array_push(ctx, item);
+        return item;
+    } else if (ctx->type == _CC_JSON_OBJECT_) {
+        _json_object_push(ctx, item, true);
+        return item;
+    }
+    _json_free_node(item);
+    return nullptr;
+}
+
 /**/
-_CC_API_PRIVATE(void) _cc_json_dump_object(_cc_json_t *item, _cc_buf_t *buf, int32_t depth);
+_CC_API_PRIVATE(void) _cc_json_dump_array(_cc_json_t *item, _cc_buf_t *buf);
+/**/
+_CC_API_PRIVATE(void) _cc_json_dump_object(_cc_json_t *item, _cc_buf_t *buf);
 
 _CC_API_PRIVATE(void) _cc_json_dump_string(const tchar_t *output, _cc_buf_t *buf) {
     const tchar_t *p = output;
@@ -231,7 +250,7 @@ _CC_API_PRIVATE(void) _cc_json_dump_string(const tchar_t *output, _cc_buf_t *buf
 }
 
 /**/
-static void _cc_json_dump_value(_cc_json_t *item, _cc_buf_t *buf, int32_t depth) {
+static void _cc_json_dump_value(_cc_json_t *item, _cc_buf_t *buf) {
     switch (item->type) {
     case _CC_JSON_NULL_: {
         _cc_buf_append(buf, (const pvoid_t) _T("null"), 4);
@@ -276,10 +295,10 @@ static void _cc_json_dump_value(_cc_json_t *item, _cc_buf_t *buf, int32_t depth)
         _cc_buf_appendf(buf, _T("%lld"), (long long)item->element.uni_int);
     } break;
     case _CC_JSON_OBJECT_: {
-        _cc_json_dump_object(item, buf, depth + 1);
+        _cc_json_dump_object(item, buf);
     } break;
     case _CC_JSON_ARRAY_: {
-        _cc_json_dump_array(item, buf, depth);
+        _cc_json_dump_array(item, buf);
     } break;
     case _CC_JSON_STRING_: {
         _cc_json_dump_string(item->element.uni_string, buf);
@@ -290,14 +309,15 @@ static void _cc_json_dump_value(_cc_json_t *item, _cc_buf_t *buf, int32_t depth)
 }
 
 /**/
-_CC_API_PRIVATE(void) _cc_json_dump_array(_cc_json_t *root, _cc_buf_t *buf, int32_t depth) {
+_CC_API_PRIVATE(void) _cc_json_dump_array(_cc_json_t *root, _cc_buf_t *buf) {
     size_t i, length;
 
     _buf_char_put(buf, _JSON_ARRAY_START_);
-    length = root->length;
+    length = _cc_array_length(root->element.uni_array);
 
     for (i = 0; i < length; i++) {
-        _cc_json_dump_value((_cc_json_t *)(root->element.uni_array[i]), buf, depth);
+        _cc_json_t *v = ((_cc_json_t*)*((uintptr_t*)(root->element.uni_array) + i));
+        _cc_json_dump_value(v, buf);
         _buf_char_put(buf, _JSON_NEXT_TOKEN_);
     }
 
@@ -308,55 +328,33 @@ _CC_API_PRIVATE(void) _cc_json_dump_array(_cc_json_t *root, _cc_buf_t *buf, int3
     _buf_char_put(buf, _JSON_ARRAY_END_);
 }
     /**/
-_CC_API_PRIVATE(void) _cc_json_dump_object(_cc_json_t *root, _cc_buf_t *buf, int32_t depth) {
+_CC_API_PRIVATE(void) _cc_json_dump_object(_cc_json_t *root, _cc_buf_t *buf) {
     _cc_json_t *item = nullptr;
     _cc_rbtree_iterator_t *next, *head;
-    tchar_t depth_buf[1024];
 
-    int32_t i;
     _buf_char_put(buf, _JSON_OBJECT_START_);
-    _buf_char_put(buf, _CC_LF_);
-
-    depth &= 1023;
-
-    for (i = 0; i < depth; i++) {
-        depth_buf[i] = _T('\t');
-    }
-    depth_buf[i] = 0;
-    
     head = next = _cc_rbtree_first(&root->element.uni_object);
     while (next) {
         item = _cc_upcast(next, _cc_json_t, lnk);
 
-        _cc_buf_append(buf, depth_buf, sizeof(tchar_t) * depth);
-
         _cc_json_dump_string(item->name, buf);
         _cc_buf_append(buf, _T(": "), 2 * sizeof(tchar_t));
 
-        _cc_json_dump_value(item, buf, depth);
+        _cc_json_dump_value(item, buf);
 
         _buf_char_put(buf, _JSON_NEXT_TOKEN_);
-        _buf_char_put(buf, _CC_LF_);
 
         next = _cc_rbtree_next(next);
     }
 
     if (head) {
-        buf->length -= 2;
-        _buf_char_put(buf, _CC_LF_);
-    }
-
-    if (depth > 0) {
-        depth_buf[depth - 1] = _JSON_OBJECT_END_;
+        buf->bytes[buf->length - 1] = _JSON_OBJECT_END_;
     } else {
-        depth_buf[depth++] = _JSON_OBJECT_END_;
+        _buf_char_put(buf, _JSON_OBJECT_START_);
     }
-    depth_buf[depth] = 0;
-
-    _cc_buf_append(buf, depth_buf, sizeof(tchar_t) * depth);
 }
 
 _CC_API_PUBLIC(void) _cc_json_dump(_cc_json_t *item, _cc_buf_t *buf) {
     _cc_alloc_buf(buf, _CC_16K_BUFFER_SIZE_);
-    _cc_json_dump_value(item, buf, 0);
+    _cc_json_dump_value(item, buf);
 }

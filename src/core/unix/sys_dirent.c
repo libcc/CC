@@ -193,7 +193,8 @@ _CC_API_PUBLIC(size_t) _cc_get_folder(_cc_folder_t folder, tchar_t *path, size_t
     if (param) {
         return _sntprintf(path, length, "%s/%s", pw->pw_dir, param);
     } else {
-        _tcsncpy(path, pw->pw_dir, length);
+        //_tcsncpy(path, pw->pw_dir, length);
+        memcpy(path, pw->pw_dir, length * sizeof(tchar_t));
         path[length - 1] = 0;
         return _tcslen(path);
     }

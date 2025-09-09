@@ -23,7 +23,7 @@
 
 #include "dylib.h"
 #include "timeout.h"
-#ifndef _CC_WIDGETS_EXPORT_SHARED_LIBRARY_
+#ifndef _CC_WIDGETS_API_USE_DYNAMIC_
 #include "dns.h"
 #include "ftp.h"
 #include "smtp.h"

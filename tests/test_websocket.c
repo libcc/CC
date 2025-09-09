@@ -64,7 +64,6 @@ _CC_API_PRIVATE(void) _WebSocketFree(_WebSocket_t *ws) {
 
 /**/
 _CC_API_PRIVATE(bool_t) _WebSocketData(_cc_event_t *e) {
-    bool_t contice
     _WSHeader_t header = {0};
     _cc_event_rbuf_t *r = &e->buffer->r;
 
@@ -128,7 +127,7 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
         struct sockaddr_in remote_addr = {0};
         _cc_socklen_t remote_addr_len = sizeof(struct sockaddr_in);
 
-        fd = _cc_event_accept(async, e, &remote_addr, &remote_addr_len);
+        fd = _cc_event_accept(async, e, (_cc_sockaddr_t*)&remote_addr, &remote_addr_len);
         if (fd == _CC_INVALID_SOCKET_) {
             _cc_logger_error(_T("accept fail %s.\n"), _cc_last_error(_cc_last_errno()));
             return true;
@@ -207,7 +206,7 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
             }
 
             if (ws->buffer.bytes == nullptr && ws->payload > 0) {
-                _cc_buf_alloc(&ws->buffer, (size_t)ws->payload);
+                _cc_alloc_buf(&ws->buffer, (size_t)ws->payload);
             }
             connection = _cc_http_header_find(&ws->request->headers,_T("Connection"));
             upgrade = _cc_http_header_find(&ws->request->headers, _T("Upgrade"));
@@ -271,7 +270,7 @@ int main(int argc, char *const argv[]) {
     }
     e = _cc_event_alloc(&async, _CC_EVENT_ACCEPT_);
     if (e == nullptr) {
-        async.quit(&async);
+        async.free(&async);
         return -1;
     }
     e->callback = network_event_callback;

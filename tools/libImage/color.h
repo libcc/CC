@@ -32,7 +32,7 @@
 #include <android/asset_manager_jni.h>
 #endif
 
-#if defined(_CC_IMAGE_EXPORT_SHARED_LIBRARY_)
+#if defined(_CC_IMAGE_API_USE_DYNAMIC_)
     #define _CC_IMAGE_API(t) _CC_API_EXPORT_ t
 #else
     #define _CC_IMAGE_API(t) t

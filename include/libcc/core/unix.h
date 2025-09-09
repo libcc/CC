@@ -29,7 +29,9 @@
 extern "C" {
 #endif
 
-#define _CC_HAVE_SYSCONF_ 1
+#define _CC_HAVE_SYSCONF_       1
+#define _CC_HAVE_SYSCTLBYNAME_  1
+
 /**
  * @brief Get Current Proccess Id
  *

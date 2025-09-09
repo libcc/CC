@@ -28,8 +28,8 @@
 extern "C" {
 #endif
 typedef struct _cc_XML_attr {
-    tchar_t* name;
-    tchar_t* value;
+    _cc_sds_t name;
+    _cc_sds_t value;
 
     _cc_rbtree_iterator_t lnk;
 } _cc_xml_attr_t;
@@ -47,18 +47,18 @@ enum _CC_XML_TYPES_ {
 
 typedef struct _cc_xml_context {
     byte_t cdata;
-    tchar_t* text;
+    _cc_sds_t text;
 } _cc_xml_context_t;
 
 typedef struct _cc_xml {
     /* The type of the item, as above. */
     byte_t type;
 
-    tchar_t* name;
+    _cc_sds_t name;
 
     union {
-        tchar_t* uni_comment;
-        tchar_t* uni_doctype;
+        _cc_sds_t uni_comment;
+        _cc_sds_t uni_doctype;
         _cc_xml_context_t uni_context;
         _cc_list_iterator_t uni_child;
     } element;
@@ -155,7 +155,7 @@ _CC_WIDGETS_API(_cc_xml_t*) _cc_xml_element_find(_cc_xml_t* ctx, tchar_t* item);
  *
  * @return text
  */
-_CC_WIDGETS_API(const tchar_t*) _cc_xml_element_text(_cc_xml_t* ctx);
+_CC_WIDGETS_API(const _cc_sds_t) _cc_xml_element_text(_cc_xml_t* ctx);
 /**
  * @brief Get XML attribute value
  *
@@ -164,8 +164,8 @@ _CC_WIDGETS_API(const tchar_t*) _cc_xml_element_text(_cc_xml_t* ctx);
  *
  * @return attribute value
  */
-_CC_WIDGETS_API(const tchar_t*)
-_cc_xml_element_attr_find(_cc_xml_t* ctx, const tchar_t* keyword);
+_CC_WIDGETS_API(const _cc_sds_t)
+_cc_xml_element_attr(_cc_xml_t* ctx, const tchar_t* keyword);
 
 /**
  * @brief Set XML attribute value

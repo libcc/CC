@@ -22,7 +22,7 @@
 #ifndef _C_CC_WIDGETS_OPENSSL_C_H_INCLUDED_
 #define _C_CC_WIDGETS_OPENSSL_C_H_INCLUDED_
 
-//#define _CC_ENABLE_OPENSSL_ 1
+//#define _CC_USE_OPENSSL_ 1
 
 #include "event.h"
 

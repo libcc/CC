@@ -1005,8 +1005,8 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
-					"_CC_ENABLE_OPENSSL_=1",
-					"_CC_WIDGETS_EXPORT_SHARED_LIBRARY_=1",
+					"_CC_USE_OPENSSL_=1",
+					"_CC_WIDGETS_API_USE_DYNAMIC_=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					../include,
@@ -1040,8 +1040,8 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_CC_ENABLE_UNIXODBC_=1",
-					"_CC_ENABLE_OPENSSL_=1",
-					"_CC_WIDGETS_EXPORT_SHARED_LIBRARY_=1",
+					"_CC_USE_OPENSSL_=1",
+					"_CC_WIDGETS_API_USE_DYNAMIC_=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					../include,

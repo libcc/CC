@@ -275,5 +275,6 @@ int main(int argc, char *const argv[]) {
         _cc_sleep(100);
     }
     _cc_free_async_event();
+    _SSL_quit(openSSL);
     return 0;
 }

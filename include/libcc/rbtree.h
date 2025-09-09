@@ -58,15 +58,15 @@ struct _cc_rbtree_iterator {
     // the kernal guarantees 'uintptr_t' same size as 'ptr' at compile time
     // but here we assume it works until it doesn't
     uintptr_t parent_color;
-    struct _cc_rbtree_iterator _cc_alignas(8) *right;
-    struct _cc_rbtree_iterator _cc_alignas(8) *left;
+    struct _cc_rbtree_iterator *right;
+    struct _cc_rbtree_iterator *left;
 };
 
 typedef struct _cc_rbtree_iterator _cc_rbtree_iterator_t;
 
 /* The alignment might seem pointless, but allegedly CRIS needs it */
 struct _cc_rbtree {
-    _cc_rbtree_iterator_t _cc_alignas(8) *rb_node;
+    _cc_rbtree_iterator_t *rb_node;
 };
 
 typedef struct _cc_rbtree _cc_rbtree_t;

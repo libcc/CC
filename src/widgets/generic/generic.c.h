@@ -24,7 +24,7 @@
 
 #include <libcc/alloc.h>
 #include <libcc/buf.h>
-#include <libcc/string.h>
+#include <libcc/sds.h>
 #include <math.h>
 #include <wchar.h>
 
@@ -42,9 +42,8 @@ typedef struct {
 _CC_FORCE_INLINE_ bool_t _buf_char_put(_cc_buf_t *ctx, const tchar_t data) {
     return _cc_buf_append(ctx, (pvoid_t)&data, sizeof(tchar_t));
 }
-
 /**/
-tchar_t* _convert_text(tchar_t *alloc_bytes, size_t alloc_length, const tchar_t *src, const tchar_t *endpos);
+tchar_t* _convert_text(_cc_sds_t sds, const tchar_t *src, const tchar_t *endpos);
 /**/
 void _cc_syntax_error(_cc_syntax_error_t *error);
 /**/

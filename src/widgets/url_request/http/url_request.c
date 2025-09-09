@@ -31,7 +31,7 @@ _CC_WIDGETS_API(void) _cc_reset_url_request(_cc_url_request_t *request) {
     request->status = _CC_HTTP_STATUS_HEADER_;
     request->handshaking = (request->url.scheme.ident == _CC_SCHEME_HTTPS_);
 
-#ifdef _CC_ENABLE_OPENSSL_
+#ifdef _CC_USE_OPENSSL_
     if (request->ssl) {
         _SSL_free(request->ssl);
         request->ssl = nullptr;
@@ -46,7 +46,7 @@ _CC_WIDGETS_API(void) _cc_reset_url_request(_cc_url_request_t *request) {
 _CC_API_PUBLIC(void) _cc_free_url_request(_cc_url_request_t *request) {
     _cc_assert(request != nullptr);
 
-#ifdef _CC_ENABLE_OPENSSL_
+#ifdef _CC_USE_OPENSSL_
     if (request->ssl) {
         _SSL_free(request->ssl);
         request->ssl = nullptr;
@@ -91,7 +91,7 @@ _CC_API_PUBLIC(bool_t) _cc_url_request_header(_cc_url_request_t *request, _cc_ev
 /**/
 _CC_API_PUBLIC(bool_t) _cc_url_request_ssl_handshake(_cc_url_request_t *request, _cc_event_t *e) {
     _cc_assert(request != nullptr);
-#ifdef _CC_ENABLE_OPENSSL_
+#ifdef _CC_USE_OPENSSL_
     switch (_SSL_do_handshake(request->ssl)) {
     case _CC_SSL_HS_ESTABLISHED_:
         request->handshaking = false;
@@ -196,7 +196,7 @@ _CC_API_PUBLIC(bool_t) _cc_url_request_response_body(_cc_url_request_t *request,
 /**/
 _CC_API_PUBLIC(bool_t) _cc_url_request_read(_cc_url_request_t *request, _cc_event_t *e) {
     _cc_assert(request != nullptr);
-#ifdef _CC_ENABLE_OPENSSL_
+#ifdef _CC_USE_OPENSSL_
     if (request->url.scheme.ident == _CC_SCHEME_HTTPS_ && request->ssl) {
         return _SSL_event_read(request->ssl, e);
     }
@@ -207,7 +207,7 @@ _CC_API_PUBLIC(bool_t) _cc_url_request_read(_cc_url_request_t *request, _cc_even
 /**/
 _CC_API_PUBLIC(bool_t) _cc_url_request_sendbuf(_cc_url_request_t *request, _cc_event_t *e) {
     _cc_assert(request != nullptr);
-#ifdef _CC_ENABLE_OPENSSL_
+#ifdef _CC_USE_OPENSSL_
     if (request->url.scheme.ident == _CC_SCHEME_HTTPS_ && request->ssl) {
         return _SSL_sendbuf(request->ssl, e) >= 0;
     }

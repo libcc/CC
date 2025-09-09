@@ -49,9 +49,10 @@ _CC_API_PUBLIC(const tchar_t*) _cc_get_syntax_error(void) {
     return _cc_global_syntax_error.content;
 }
 
-_CC_API_PUBLIC(tchar_t *) _convert_text(tchar_t *alloc_bytes, size_t alloc_length, const tchar_t *input_ptr, const tchar_t *endpos) {
-    tchar_t *output_ptr = alloc_bytes;
-    tchar_t *output_endpos = alloc_bytes + alloc_length - 1; /* -1 for zero terminator */
+_CC_API_PUBLIC(tchar_t *) _convert_text(_cc_sds_t sds, const tchar_t *input_ptr, const tchar_t *endpos) {
+    size_t alloc_length = _cc_sds_available(sds);
+    tchar_t *output_ptr = (tchar_t*)sds;
+    tchar_t *output_endpos = output_ptr + alloc_length - 1; /* -1 for zero terminator */
     /* loop through the string literal */
     while (input_ptr < endpos && output_ptr < output_endpos) {
         if (*input_ptr != '\\') {
@@ -106,7 +107,7 @@ _CC_API_PUBLIC(tchar_t *) _convert_text(tchar_t *alloc_bytes, size_t alloc_lengt
                 /* UTF-16 literal */
                 case 'u':{ 
                     sequence_length = _cc_convert_utf16_literal_to_utf8(&input_ptr, endpos, output_ptr, 
-                        alloc_length - (output_ptr - alloc_bytes));
+                        alloc_length - (output_ptr - (tchar_t*)sds));
                     if (sequence_length == 0) {
                         /* failed to convert UTF16-literal to UTF-8 */
                         return nullptr;
@@ -122,6 +123,7 @@ _CC_API_PUBLIC(tchar_t *) _convert_text(tchar_t *alloc_bytes, size_t alloc_lengt
 
     /* zero terminate the output */
     *output_ptr = '\0';
+    _cc_sds_set_length(sds, (size_t)(output_ptr - (tchar_t*)sds));
 
     return output_ptr;
 }

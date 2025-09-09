@@ -13,11 +13,11 @@
     "tasks": [
         {
             "label": "test",
-            "args": [".bin","target=tests","build=url_request","debug=1"],
+            "args": [".bin","target=tests","build=ini","debug=1"],
         },
         {
             "label": "build-widgets",
-            "args": [".dll","target=widgets","all=1","debug=1"],
+            "args": [".dylib","target=widgets","all=1","debug=1"],
         },
         {
             "label": "clean",

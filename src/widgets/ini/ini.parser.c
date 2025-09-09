@@ -84,8 +84,8 @@ bool_t _INI_buf_jump_comments(_cc_sbuf_t* const buffer) {
     return _cc_sbuf_access(buffer);
 }
 
-_CC_API_PRIVATE(tchar_t*) _INI_read_name(_cc_sbuf_t* const buffer) {
-    tchar_t* output = nullptr;
+_CC_API_PRIVATE(_cc_sds_t) _INI_read_name(_cc_sbuf_t* const buffer) {
+    _cc_sds_t output = nullptr;
     const tchar_t *start = _cc_sbuf_offset(buffer);
     const tchar_t *endpos = nullptr;
     const tchar_t* p = start;
@@ -103,7 +103,7 @@ _CC_API_PRIVATE(tchar_t*) _INI_read_name(_cc_sbuf_t* const buffer) {
     }
     /* -1 skip ']', '=', whitespace */
     endpos = p - 1;
-    output = (tchar_t*)_cc_tcsndup(start, (size_t)(endpos - start) + 1);
+    output = (_cc_sds_t)_cc_sds_alloc(start, (size_t)(endpos - start) + 1);
     buffer->offset = (size_t)(p - buffer->content);
 
     return output;
@@ -125,7 +125,6 @@ _CC_API_PRIVATE(bool_t) _INI_value_endflag(const tchar_t* p, const tchar_t quote
     if (*p == _T(';') || (*p == _T('/') && *(p + 1) == _T('/')) || (*p == _T('/') && *(p + 1) == _T('*'))) {
         return true;
     }
-
     return false;
 }
 
@@ -170,22 +169,21 @@ _CC_API_PRIVATE(bool_t) _INI_read_string(_cc_sbuf_t* const buffer, _cc_ini_t *it
         return false;
     }
 
-    endpos = p - 1;
     if (quotes) {
+        endpos = p - 1;
         while (start < endpos && _CC_ISSPACE(*(endpos - 1))) {
             endpos--;
         }
         endflag = 1;
+    } else {
+        endpos = p;
     }
-
     /* This is at most how much we need for the item->element.uni_string */
     alloc_length = (size_t)(endpos - start);
 
-    item->element.uni_string = (tchar_t*)_cc_malloc(sizeof(tchar_t) * (alloc_length - skipped_bytes));
-    endpos = _convert_text(item->element.uni_string, alloc_length, start, endpos);
+    item->element.uni_string = (_cc_sds_t)_cc_sds_alloc(nullptr, (alloc_length - skipped_bytes + 1));
+    endpos = _convert_text(item->element.uni_string, start, endpos);
     if (endpos) {
-        item->length = (endpos - item->element.uni_string);
-        
         buffer->offset = (size_t)(p - buffer->content) + endflag;
         return true;
     }
@@ -196,7 +194,7 @@ _CC_API_PRIVATE(bool_t) _INI_read_string(_cc_sbuf_t* const buffer, _cc_ini_t *it
 _CC_API_PRIVATE(bool_t) _INI_read(_cc_ini_t* root, _cc_sbuf_t* const buffer) {
     while (_INI_buf_jump_comments(buffer) && *_cc_sbuf_offset(buffer) == '[') {
         _cc_ini_t* section;
-        tchar_t *name;
+        _cc_sds_t name;
         /* skip [ */
         buffer->offset++;
 
@@ -207,12 +205,14 @@ _CC_API_PRIVATE(bool_t) _INI_read(_cc_ini_t* root, _cc_sbuf_t* const buffer) {
 
         name = _INI_read_name(buffer);
         if ((*_cc_sbuf_offset(buffer) != _T(']'))) {
+            _cc_sds_free(name);
             return false;
         }
 
         /* skip ] */
         buffer->offset++;
         if (!_INI_buf_jump_comments(buffer)) {
+            _cc_sds_free(name);
             buffer->offset--;
             return false;
         }
@@ -225,12 +225,12 @@ _CC_API_PRIVATE(bool_t) _INI_read(_cc_ini_t* root, _cc_sbuf_t* const buffer) {
 
             if (!_INI_buf_jump_comments(buffer)) {
                 buffer->offset--;
-                _cc_free(name);
+                _cc_sds_free(name);
                 return false;
             }
 
             if ((*_cc_sbuf_offset(buffer) != _T('='))) {
-                _cc_free(name);
+                _cc_sds_free(name);
                 return false;
             }
 
@@ -239,7 +239,7 @@ _CC_API_PRIVATE(bool_t) _INI_read(_cc_ini_t* root, _cc_sbuf_t* const buffer) {
 
             if (!_INI_buf_jump_comments(buffer)) {
                 buffer->offset--;
-                _cc_free(name);
+                _cc_sds_free(name);
                 return false;
             }
 
@@ -289,45 +289,14 @@ _CC_API_PUBLIC(_cc_ini_t*) _cc_ini_parser(_cc_sbuf_t* const buffer) {
 _CC_API_PUBLIC(_cc_ini_t*) _cc_ini_from_file(const tchar_t* file_name) {
     _cc_sbuf_t buffer;
     _cc_ini_t* item = nullptr;
-
-    byte_t* content = nullptr;
-    size_t offset = 0;
     _cc_buf_t buf;
 
-    if (!_cc_buf_from_file(&buf,file_name)) {
+    if (!_cc_buf_from_file(&buf, file_name)) {
         return nullptr;
     }
-    content = buf.bytes;
 
-    /*----BOM----
-    EF BB BF = UTF-8
-    FE FF 00 = UTF-16, big-endian
-    FF FE    = UTF-16, little-endian
-
-    00 00 FE FF = UTF-32, big-endian
-    FF FE 00 00 = UTF-32, little-endian
-    */
-
-    /*UTF8 BOM */
-    if (*content == 0xEF && *(content + 1) == 0xBB && *(content + 2) == 0xBF) {
-        offset = 3;
-        /*UTF-32 BOM */
-    } else if ((*content == 0x00 && *(content + 1) == 0x00 &&
-                *(content + 2) == 0xFE && *(content + 3) == 0xFF) ||
-               (*content == 0xFF && *(content + 1) == 0xFE &&
-                *(content + 2) == 0x00 && *(content + 3) == 0x00)) {
-        offset = 4;
-        /*UTF-16 BOM big-endian*/
-    } else if (*content == 0xFE && *(content + 1) == 0xFF &&
-               *(content + 2) == 0x00) {
-        offset = 3;
-        /*UTF-16 BOM little-endian*/
-    } else if (*content == 0xFF && *(content + 1) == 0xFE) {
-        offset = 2;
-    }
-
-    buffer.content = (tchar_t*)(content + offset);
-    buffer.length = (buf.length - offset) / sizeof(tchar_t);
+    buffer.content = (tchar_t*)buf.bytes;
+    buffer.length = buf.length / sizeof(tchar_t);
     buffer.offset = 0;
     buffer.line = 1;
     buffer.depth = 0;

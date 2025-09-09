@@ -9,7 +9,12 @@ ifdef all
 	url_request = 1
 endif
 
-MACROS	+= _CC_WIDGETS_EXPORT_SHARED_LIBRARY_=1
+MACROS	+= _CC_WIDGETS_API_USE_DYNAMIC_=1
+LIBS	+= cc
+
+ifdef debug
+	LIBS += cc.debug.malloc
+endif
 
 ifeq ($(PLATFORM), osx)
 	INCLUDE_PATH	+= /opt/homebrew/include
@@ -126,7 +131,7 @@ LOCAL_SRC_FILES += \
 endif # --json db--
 
 ifdef url_request
-MACROS			+= _CC_ENABLE_OPENSSL_=1
+MACROS			+= _CC_USE_OPENSSL_=1
 LOCAL_SRC_FILES += \
 					$(WIDGET_FILES)/generic/gzip.o \
 					$(WIDGET_FILES)/generic/http.header.o \
@@ -166,4 +171,5 @@ endif # --end url_request --
 LOCAL_SRC_FILES += \
 					$(WIDGET_FILES)/generic/generic.o \
 					$(WIDGET_FILES)/generic/WS.o \
-					$(WIDGET_FILES)/widgets.o
+					$(WIDGET_FILES)/widgets.o \
+					$(WIDGET_FILES)/main.o

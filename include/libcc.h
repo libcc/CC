@@ -41,6 +41,7 @@
 #include "libcc/uuid.h"
 #include "libcc/hmap.h"
 #include "libcc/rbtree.h"
+#include "libcc/sds.h"
 #include "libcc/queue.h"
 #include "libcc/version.h"
 

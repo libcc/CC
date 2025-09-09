@@ -73,10 +73,10 @@ typedef _cc_sbuf_wchar_t _cc_sbuf_t;
  * @brief get a pointer to the BUFFER at the position
  */
 #define _cc_sbuf_offset(BUFFER) ((BUFFER)->content + (BUFFER)->offset)
-#define _cc_sbuf_offset_at(BUFFER, INDEX) ((BUFFER)->content + (BUFFER)->offset + (INDEX))
+#define _cc_sbuf_offset_at(BUFFER, INDEX) ((BUFFER)->content + ((BUFFER)->offset + (INDEX)))
 
-#define _cc_sbuf_offset_unequal(BUFFER,X) (*((BUFFER)->content + (BUFFER)->offset) != (X))
-#define _cc_sbuf_offset_equal(BUFFER,X) (*((BUFFER)->content + (BUFFER)->offset) == (X))
+#define _cc_sbuf_offset_unequal(BUFFER,X) (*(_cc_sbuf_offset(BUFFER)) != (X))
+#define _cc_sbuf_offset_equal(BUFFER,X) (*(_cc_sbuf_offset(BUFFER)) == (X))
 
 #define _cc_sbuf_if_offset(BUFFER, FN) do {\
     while (_cc_sbuf_access(BUFFER) && (FN)) {\

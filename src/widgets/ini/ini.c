@@ -29,14 +29,13 @@ _CC_API_PUBLIC(_cc_ini_t*) _INI_alloc(int type) {
     bzero(ctx, sizeof(_cc_ini_t));
     ctx->type = type;
     ctx->element.uni_object.rb_node = nullptr;
-    ctx->length = 0;
     
     return ctx;
 }
 
 _CC_API_PUBLIC(void) _ini_free(_cc_ini_t* p) {
     if (p->name) {
-        _cc_free(p->name);
+        _cc_sds_free(p->name);
     }
     switch(p->type) {
     case _CC_INI_SECTION_:
@@ -44,19 +43,14 @@ _CC_API_PUBLIC(void) _ini_free(_cc_ini_t* p) {
         break;
     case _CC_INI_STRING_:
         if (p->element.uni_string) {
-            _cc_free(p->element.uni_string);
+            _cc_sds_free(p->element.uni_string);
         }
         break;
     }
     _cc_free(p);
 }
 
-_CC_API_PRIVATE(int32_t) _INI_get(_cc_rbtree_iterator_t* v, pvoid_t args) {
-    _cc_ini_t* element = _cc_upcast(v, _cc_ini_t, lnk);
-    return _tcscmp((const tchar_t*)args, element->name);
-}
-
-_CC_API_PUBLIC(_cc_ini_t*) _INI_push(_cc_rbtree_t* root, tchar_t *name, int type) {
+_CC_API_PUBLIC(_cc_ini_t*) _INI_push(_cc_rbtree_t* root, _cc_sds_t name, int type) {
     _cc_rbtree_iterator_t **node;
     _cc_rbtree_iterator_t *parent = NULL;
     _cc_ini_t* item;
@@ -75,7 +69,7 @@ _CC_API_PUBLIC(_cc_ini_t*) _INI_push(_cc_rbtree_t* root, tchar_t *name, int type
         } else if (result > 0) {
             node = &((*node)->right);
         } else {
-            _cc_free(name);
+            _cc_sds_free(name);
             return item;
         }
     }
@@ -87,13 +81,21 @@ _CC_API_PUBLIC(_cc_ini_t*) _INI_push(_cc_rbtree_t* root, tchar_t *name, int type
 
 /**/
 _CC_API_PUBLIC(_cc_ini_t*) _cc_ini_find(_cc_ini_t* item, const tchar_t* name) {
-    _cc_rbtree_iterator_t* node;
+    int32_t result = 0;
+    _cc_rbtree_iterator_t *node = item->element.uni_object.rb_node;
 
-    node = _cc_rbtree_get(&item->element.uni_object, (pvoid_t)name, _INI_get);
-    if (node == NULL) {
-        return NULL;
+    while (node) {    
+        _cc_ini_t* element = _cc_upcast(node, _cc_ini_t, lnk);
+        result = _tcscmp(name, element->name);
+        if (result < 0) {
+            node = node->left;
+        } else if (result > 0) {
+            node = node->right;
+        } else {
+            return element;
+        }
     }
-    return _cc_upcast(node, _cc_ini_t, lnk);
+    return nullptr;
 }
 /**/
 _CC_API_PUBLIC(const tchar_t*) _cc_ini_find_string(_cc_ini_t* item, const tchar_t* name) {

@@ -121,7 +121,7 @@ public class Utils {
     }
 
     public static void saveSetting(JSONObject jsonObject) {
-        File dataPathFile = new File(CCWidgets.context.getFilesDir().getPath(), "libcc.setting.db");
+        File dataPathFile = new File(CCWidgets.mContext.getFilesDir().getPath(), "libcc.setting.db");
         try {
             FileOutputStream outputStream = new FileOutputStream(dataPathFile);
             outputStream.write(jsonObject.toString().getBytes());
@@ -134,7 +134,7 @@ public class Utils {
 
     public static JSONObject readSetting() {
         try {
-            File dataPathFile = new File(CCWidgets.context.getFilesDir().getPath(), "libcc.setting.db");
+            File dataPathFile = new File(CCWidgets.mContext.getFilesDir().getPath(), "libcc.setting.db");
             if (!dataPathFile.exists()) {
                 return new JSONObject();
             }

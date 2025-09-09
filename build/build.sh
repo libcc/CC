@@ -49,4 +49,6 @@ $MAKE_TOOL .a platform=$PLATFORM $DEBUG
 
 cd ./build
 
+$MAKE_TOOL $TARGET_NAME platform=$PLATFORM target=debug.malloc $DEBUG
+
 $MAKE_TOOL $TARGET_NAME platform=$PLATFORM target=widgets all=1 $DEBUG

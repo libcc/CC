@@ -83,7 +83,7 @@ _CC_API_PUBLIC(bool_t) _cc_alloc_buf(_cc_buf_t *ctx, size_t initial) {
     memset(ctx, 0, sizeof(_cc_buf_t));
     ctx->limit = _cc_aligned_alloc_opt(initial, 64);
     ctx->length = 0;
-    ctx->bytes = _CC_CALLOC(byte_t, ctx->limit);
+    ctx->bytes = (byte_t*)_cc_calloc(ctx->limit,sizeof(byte_t));
 
     return true;
 }
@@ -293,10 +293,33 @@ _CC_API_PUBLIC(bool_t) _cc_buf_from_file(_cc_buf_t* buf,const tchar_t *file_name
 
     if (_cc_likely(file_size > 0)) {
         _cc_alloc_buf(buf, file_size);
+
+        r = _cc_file_read(f, buf->bytes, sizeof(byte_t), 3);
+        if (r < 0) {
+            _cc_free_buf(buf);
+            return false;
+        }
+        buf->length = r;
+
+        /*----BOM----
+        EF BB BF = UTF-8
+        FE FF 00 = UTF-16, big-endian
+        FF FE    = UTF-16, little-endian
+        */
+
+        /*UTF8 BOM */
+        if (buf->bytes[0] == 0xEF && buf->bytes[1] == 0xBB && buf->bytes[2] == 0xBF) {
+            buf->length = 0;
+        }
+
         while ((r = _cc_file_read(f, buf->bytes + buf->length, 
                 sizeof(byte_t), buf->limit - buf->length)) > 0) {
             buf->length += r;
         }
+
+#ifdef _CC_UNICODE_
+        _cc_buf_utf8_to_utf16(buf, 0);
+#endif
     }
     _cc_file_close(f);
 

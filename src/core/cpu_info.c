@@ -32,8 +32,12 @@
 #include <mach/mach_types.h>
 #include <mach/mach.h>
 #elif defined(__CC_OPENBSD__) && defined(__powerpc__)
+#include <sys/types.h>
 #include <sys/param.h>
 #include <machine/cpu.h>
+#elif defined(__CC_FREEBSD__) && defined(__powerpc__)
+#include <machine/cpu.h>
+#include <sys/auxv.h>
 #endif
 
 /**/

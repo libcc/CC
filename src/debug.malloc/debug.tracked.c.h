@@ -18,28 +18,44 @@
  *    misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
 */
-#ifndef _C_CC_WIDGETS_DYLIB_H_INCLUDED_
-#define _C_CC_WIDGETS_DYLIB_H_INCLUDED_
 
-#include "../alloc.h"
-#include "../time.h"
-#include "../url.h"
-#include "../buf.h"
-#include "../math.h"
-#include "../thread.h"
-#include "../rbtree.h"
-#include "../array.h"
-#include "../list.h"
-#include "../sds.h"
-#include "../atomic.h"
-#include "../mutex.h"
-#include "../socket/socket.h"
-#include "../types.h"
+#ifndef _C_CC_MEMORY_TRACKED_C_H_INCLUDED_
+#define _C_CC_MEMORY_TRACKED_C_H_INCLUDED_
 
-#if defined(_CC_WIDGETS_API_USE_DYNAMIC_)
-    #define _CC_WIDGETS_API(t) _CC_API_EXPORT_ t
-#else
-    #define _CC_WIDGETS_API(t) _CC_API_IMPORT_ t
+#include <libcc/types.h>
+
+/* Set up for C function definitions, even when using C++ */
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#endif /*_C_CC_WIDGETS_DYLIB_H_INCLUDED_*/
+#define _CC_DEBUG_MALLOC_   0x01
+#define _CC_DEBUG_CALLOC_   0x02
+#define _CC_DEBUG_REALLOC_  0x03
+
+#pragma pack(push, 1)
+typedef struct _cc_debug_alloc {
+    /*
+    ** 2020-01-01 00:00:00
+    ** (create_time + 1577808000)
+    */
+    uint32_t type;
+    uint32_t create_time;
+    uint32_t line;
+    size_t size;
+    tchar_t *file;
+    _cc_list_iterator_t lnk;
+} _cc_debug_alloc_t;
+
+#pragma pack(pop)
+/**/
+pvoid_t _debug_alloc_link(const pvoid_t data, size_t n, const tchar_t *file_name, const int32_t line, byte_t m_type);
+/**/
+pvoid_t _debug_alloc_unlink(const pvoid_t data);
+
+/* Ends C function definitions when using C++ */
+#ifdef __cplusplus
+}
+#endif
+
+#endif /*_C_CC_MEMORY_TRACKED_C_H_INCLUDED_*/
