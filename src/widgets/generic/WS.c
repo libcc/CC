@@ -21,14 +21,14 @@
 #include <libcc/widgets/WS.h>
 
 /**/
-_CC_API_PUBLIC(void) _WSMask(byte_t *data, int64_t length, byte_t *mask) {
+_CC_API_PUBLIC(void) _CCWSMask(byte_t *data, int64_t length, byte_t *mask) {
     int64_t i;
     for (i = 0; i < length; ++i) {
         *(data + i) ^= *(mask + (i & 0x03));
     }
 }
 /**/
-_CC_WIDGETS_API(int32_t) _WSReverseHeader(byte_t *header, byte_t operation, int64_t length, byte_t *mask) {
+_CC_WIDGETS_API(int32_t) _CCWSReverseHeader(byte_t *header, byte_t operation, int64_t length, byte_t *mask) {
     int32_t offset = 0;
     byte_t m = (mask != nullptr) ? 0x80 : 0x00;
    
@@ -62,7 +62,7 @@ _CC_WIDGETS_API(int32_t) _WSReverseHeader(byte_t *header, byte_t operation, int6
     return (-1 * offset);
 }
 /**/
-_CC_API_PUBLIC(int32_t) _WSHeader(byte_t *header, byte_t operation, int64_t length, byte_t *mask) {
+_CC_API_PUBLIC(int32_t) _CCWSHeader(byte_t *header, byte_t operation, int64_t length, byte_t *mask) {
     int32_t offset = 1;
     byte_t m = (mask != nullptr) ? 0x80 : 0x00;
     header[0] = (operation == 0) ? 0x00 : (0x80 | operation);
@@ -100,7 +100,7 @@ _CC_API_PUBLIC(int32_t) _WSHeader(byte_t *header, byte_t operation, int64_t leng
 }
 
 /**/
-_CC_API_PUBLIC(int) _WSRead(_WSHeader_t *header) {
+_CC_API_PUBLIC(int) _CCWSRead(_WSHeader_t *header) {
     byte_t mask;
     byte_t *buf = &header->bytes[header->offset];
     int64_t payload;

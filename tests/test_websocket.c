@@ -72,10 +72,10 @@ _CC_API_PRIVATE(bool_t) _WebSocketData(_cc_event_t *e) {
     header.offset = 0;
 
     do {
-        if (_WSRead(&header) == WS_DATA_OK) {
+        if (_CCWSRead(&header) == WS_DATA_OK) {
             if (header.payload > 0 && header.mask) {
                 //Get the complete packet
-                _WSMask(header.bytes + header.offset, header.payload, header.mask);
+                _CCWSMask(header.bytes + header.offset, header.payload, header.mask);
             }
             //You can handle the packet
             //fn(header, header.bytes + header.offset, header.payload);

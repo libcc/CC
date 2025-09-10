@@ -86,7 +86,7 @@ enum _WS_OPCODE_ {
 
 };
 
-typedef struct _WSHeader {
+typedef struct _CCWSHeader {
     byte_t fin;
     byte_t rsv;
     byte_t opc;
@@ -95,16 +95,16 @@ typedef struct _WSHeader {
     int64_t payload;
     byte_t *mask;
     byte_t *bytes;
-} _WSHeader_t;
+} _CCWSHeader_t;
 
 /**/
-_CC_WIDGETS_API(void) _WSMask(byte_t *data, int64_t length, byte_t *mask);
+_CC_WIDGETS_API(void) _CCWSMask(byte_t *data, int64_t length, byte_t *mask);
 /**/
-_CC_WIDGETS_API(int32_t) _WSHeader(byte_t *header, byte_t operation, int64_t length, byte_t *mask);
+_CC_WIDGETS_API(int32_t) _CCWSHeader(byte_t *header, byte_t operation, int64_t length, byte_t *mask);
 /**/
-_CC_WIDGETS_API(int32_t) _WSReverseHeader(byte_t *header, byte_t operation, int64_t length, byte_t *mask);
+_CC_WIDGETS_API(int32_t) _CCWSReverseHeader(byte_t *header, byte_t operation, int64_t length, byte_t *mask);
 /**/
-_CC_WIDGETS_API(int) _WSRead(_WSHeader_t *header);
+_CC_WIDGETS_API(int) _CCWSRead(_WSHeader_t *header);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
