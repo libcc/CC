@@ -112,8 +112,8 @@ _CC_FORCE_INLINE_ void _cc_sdsx(const _cc_sds_t s, struct _sds_hdr *hdrx) {
         break;
         case _SDS_MASK_64_: {
             struct _sds_hdr64 *h = (struct _sds_hdr64 *)(hdr - sizeof(struct _sds_hdr64));
-            hdrx->length = h->length;
-            hdrx->limit = h->limit;
+            hdrx->length = (size_t)h->length;
+            hdrx->limit = (size_t)h->limit;
             hdrx->flags = h->flags;
         }
         break;
@@ -143,7 +143,7 @@ _CC_FORCE_INLINE_ size_t _cc_sds_length(const _cc_sds_t s) {
         }
         case _SDS_MASK_64_: {
             struct _sds_hdr64 *h = (struct _sds_hdr64 *)(hdr - sizeof(struct _sds_hdr64));
-            return h->length;
+            return (size_t)h->length;
         }
     }
     return 0;
@@ -155,8 +155,8 @@ _CC_FORCE_INLINE_ void _cc_sds_set_length(_cc_sds_t s, size_t length) {
     switch (flags & _SDS_MASK_) {
         case _SDS_MASK_5_: {
             struct _sds_hdr5 *h = (struct _sds_hdr5 *)(hdr - sizeof(struct _sds_hdr5));
-            if (length > (h->flags >> _SDS_BITS_)) {
-                _cc_assert(length <= (h->flags >> _SDS_BITS_));
+            if (length > (size_t)(h->flags >> _SDS_BITS_)) {
+                _cc_assert(length <= (size_t)(h->flags >> _SDS_BITS_));
                 _cc_static_logger(_CC_LOG_LEVEL_ALERT_,_T("SDS: length overflow"));
             }
         }
@@ -206,7 +206,7 @@ _CC_FORCE_INLINE_ size_t _cc_sds_available(const _cc_sds_t s) {
         }
         case _SDS_MASK_64_: {
             struct _sds_hdr64 *h = (struct _sds_hdr64 *)(hdr - sizeof(struct _sds_hdr64));
-            return h->limit - h->length;
+            return (size_t)(h->limit - h->length);
         }
     }
     return 0;

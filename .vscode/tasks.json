@@ -13,7 +13,7 @@
     "tasks": [
         {
             "label": "test",
-            "args": [".bin","target=tests","build=ini","debug=1"],
+            "args": [".bin","target=tests","build=ws","debug=1"],
         },
         {
             "label": "build-widgets",

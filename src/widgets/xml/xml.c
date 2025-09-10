@@ -127,8 +127,8 @@ _CC_API_PUBLIC(const _cc_sds_t) _cc_xml_element_attr(_cc_xml_t *ctx, const tchar
 
 _CC_API_PUBLIC(bool_t) _cc_xml_element_set_attr(_cc_xml_t *ctx, const tchar_t *keyword, const tchar_t *fmt, ...) {
     tchar_t buf[1024];
-    _cc_assert(fmt != nullptr);
     size_t length;
+    _cc_assert(fmt != nullptr);
 
     if (nullptr != _tcschr((tchar_t *)fmt, '%')) {
         va_list args;

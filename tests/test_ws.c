@@ -64,7 +64,7 @@ _CC_API_PRIVATE(void) _WebSocketFree(_WebSocket_t *ws) {
 
 /**/
 _CC_API_PRIVATE(bool_t) _WebSocketData(_cc_event_t *e) {
-    _WSHeader_t header = {0};
+    _CCWSHeader_t header = {0};
     _cc_event_rbuf_t *r = &e->buffer->r;
 
     header.bytes = r->bytes;
@@ -276,7 +276,7 @@ int main(int argc, char *const argv[]) {
     e->callback = network_event_callback;
     e->timeout = 60000;
 
-    _cc_inet_ipv4_addr(&sa, nullptr, 8080);
+    _cc_inet_ipv4_addr(&sa, nullptr, 5500);
     _cc_tcp_listen(&async, e, (_cc_sockaddr_t *)&sa, sizeof(struct sockaddr_in));
 
     while (1) {

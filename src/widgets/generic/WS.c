@@ -100,7 +100,7 @@ _CC_API_PUBLIC(int32_t) _CCWSHeader(byte_t *header, byte_t operation, int64_t le
 }
 
 /**/
-_CC_API_PUBLIC(int) _CCWSRead(_WSHeader_t *header) {
+_CC_API_PUBLIC(int) _CCWSRead(_CCWSHeader_t *header) {
     byte_t mask;
     byte_t *buf = &header->bytes[header->offset];
     int64_t payload;

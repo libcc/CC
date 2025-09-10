@@ -23,11 +23,11 @@
             "type": "cppdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}/bin/aarch64/",
-            "program": "${workspaceFolder}/bin/aarch64/debug/ini",
+            "program": "${workspaceFolder}/bin/aarch64/debug/ws",
             "args": [],
             "stopAtEntry": false,
             "environment": [],
-            "externalConsole": true,
+            //"externalConsole": true,
             "MIMode": "lldb",
             "preLaunchTask": "test",
             "setupCommands": [{

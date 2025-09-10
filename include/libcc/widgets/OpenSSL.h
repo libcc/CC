@@ -59,6 +59,10 @@ typedef struct _cc_SSL _cc_SSL_t;
 	}
 #endif
 
+_CC_WIDGETS_API(bool_t) _SSL_setup(_cc_OpenSSL_t *ssl,
+                                const tchar_t *cert_file,
+                                const tchar_t *key_file,
+                                const tchar_t *key_password);
 
 _CC_WIDGETS_API(_cc_OpenSSL_t*) _SSL_init(bool_t is_client);
 /**/
@@ -67,6 +71,10 @@ _CC_WIDGETS_API(void) _SSL_quit(_cc_OpenSSL_t *);
 _CC_WIDGETS_API(_cc_SSL_t*) _SSL_alloc(_cc_OpenSSL_t*);
 /**/
 _CC_WIDGETS_API(bool_t) _SSL_free(_cc_SSL_t*);
+/**/
+_CC_WIDGETS_API(bool_t) _SSL_do_handshaking(_cc_SSL_t *ssl);
+/**/
+_CC_WIDGETS_API(bool_t) _SSL_accept(_cc_SSL_t *ssl, _cc_socket_t fd);
 /**/
 _CC_WIDGETS_API(bool_t) _SSL_connect(_cc_SSL_t *ctx, _cc_socket_t fd);
 /**/
@@ -80,7 +88,7 @@ _CC_WIDGETS_API(int32_t) _SSL_read(_cc_SSL_t*, byte_t*, int32_t);
 /**/
 _CC_WIDGETS_API(int32_t) _SSL_sendbuf(_cc_SSL_t*, _cc_event_t*);
 /**/
-_CC_API_PUBLIC(int32_t) _SSL_event_send(_cc_SSL_t*, _cc_event_t*, const byte_t*, int32_t);
+_CC_WIDGETS_API(int32_t) _SSL_event_send(_cc_SSL_t*, _cc_event_t*, const byte_t*, int32_t);
 /**/
 _CC_WIDGETS_API(bool_t) _SSL_event_read(_cc_SSL_t*, _cc_event_t*);
 

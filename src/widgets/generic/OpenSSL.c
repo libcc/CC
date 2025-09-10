@@ -38,6 +38,7 @@ struct _cc_SSL {
     SSL *handle;
     BIO *bio;
     _cc_OpenSSL_t *ctx;
+    byte_t do_handshaking;
 };
 
 struct _cc_OpenSSL {
@@ -239,43 +240,46 @@ _CC_API_PUBLIC(_cc_SSL_t*) _SSL_alloc(_cc_OpenSSL_t* ctx) {
     // SSL_set_bio(ssl->handle, ssl->bio, ssl->bio);
 
     ssl->ctx = ctx;
+    ssl->do_handshaking = true;
 
     return ssl;
 }
-/*
-typedef (int (*_SSL_setup_callback_t)(const tchar_t *host, pvoid_t context));
 
-_CC_API_PUBLIC(void) _SSL_setup(_cc_SSL_t *ssl, int mode, 
+_CC_API_PUBLIC(bool_t) _SSL_setup(_cc_OpenSSL_t *ssl,
                                 const tchar_t *cert_file,
                                 const tchar_t *key_file,
-                                const tchar_t * key_password,
-                                _SSL_setup_callback_t fn) {
+                                const tchar_t *key_password) {
 
-    SSL_CTX_set_verify(ssl->handle, mode, nullptr);
+    //SSL_CTX_set_verify(ssl->handle, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, nullptr);
+    SSL_CTX_set_verify(ssl->handle, SSL_VERIFY_NONE, nullptr);
 
     if (ssl) {
         static _cc_atomic64_t session_id = 0;
         uint64_t session_id_context = _cc_atomic64_inc(&session_id);
-        SSL_CTX_set_session_id_context(ssl->handle, (BYTE*)&session_id_context, sizeof(session_id_context));
+        SSL_CTX_set_session_id_context(ssl->handle, (byte_t*)&session_id_context, sizeof(session_id_context));
     }
 
     if (key_password) {
         SSL_CTX_set_default_passwd_cb_userdata(ssl->handle, (void*)key_password);
     }
 
-    if (!SSL_CTX_use_PrivateKey_file(sslCtx, (key_file), SSL_FILETYPE_PEM)) {
-        return ;
+    if (SSL_CTX_use_PrivateKey_file(ssl->handle, key_file, SSL_FILETYPE_PEM) <= 0) {
+        _cc_logger_error(_T("SSL_CTX_use_PrivateKey_file failed: %s\n"), ERR_reason_error_string(ERR_get_error()));
+        return false;
     }
 
-    if (!SSL_CTX_use_certificate_chain_file(sslCtx, (cert_file))){
-        return ;
+    if (SSL_CTX_use_certificate_file(ssl->handle, cert_file, SSL_FILETYPE_PEM) <= 0) {
+        _cc_logger_error(_T("SSL_CTX_use_certificate_file failed: %s\n"), ERR_reason_error_string(ERR_get_error()));
+        return false;
     }
 
-    if (!SSL_CTX_check_private_key(sslCtx)){
-        return ;
+    if (!SSL_CTX_check_private_key(ssl->handle)) {
+        _cc_logger_error(_T("SSL_CTX_check_private_key failed: %s\n"), ERR_reason_error_string(ERR_get_error()));
+        return false;
     }
+    return true;
 }
-*/
+
 _CC_API_PUBLIC(void) _SSL_set_host_name(_cc_SSL_t *ssl, tchar_t *host, size_t length) {
 #ifdef _CC_UNICODE_
     char host_utf8[256];
@@ -289,10 +293,38 @@ _CC_API_PUBLIC(void) _SSL_set_host_name(_cc_SSL_t *ssl, tchar_t *host, size_t le
 #endif
 }
 
+_CC_API_PUBLIC(bool_t) _SSL_accept(_cc_SSL_t *ssl, _cc_socket_t fd) {
+    int rs;
+    SSL_set_fd(ssl->handle, (int)fd);
+    rs = SSL_accept(ssl->handle);
+    if (rs <= 0) {
+        rs = SSL_get_error(ssl->handle, rs);
+        if (rs == SSL_ERROR_WANT_READ || rs == SSL_ERROR_WANT_WRITE) {
+            ssl->do_handshaking = true;
+            return true;
+        }
+        _cc_logger_error(_T("SSL_accept failed: %s\n"), ERR_reason_error_string(ERR_get_error()));
+        return false;
+    }
+    ssl->do_handshaking = false;
+    return true;
+}
+
 _CC_API_PUBLIC(bool_t) _SSL_connect(_cc_SSL_t *ssl, _cc_socket_t fd) {
+    ERR_clear_error();
     SSL_set_fd(ssl->handle, (int)fd);
     SSL_set_connect_state(ssl->handle);
+
+    if (SSL_do_handshake(ssl->handle) == 1) {
+        ssl->do_handshaking = false;
+    } else {
+        ssl->do_handshaking = true;
+    }
     return true;
+}
+
+_CC_API_PUBLIC(bool_t) _SSL_do_handshaking(_cc_SSL_t *ssl) {
+    return ssl->do_handshaking;
 }
 
 _CC_API_PUBLIC(uint16_t) _SSL_do_handshake(_cc_SSL_t *ssl) {
@@ -302,8 +334,10 @@ _CC_API_PUBLIC(uint16_t) _SSL_do_handshake(_cc_SSL_t *ssl) {
 
     rs = SSL_do_handshake(ssl->handle);
     if (rs == 1) {
+        ssl->do_handshaking = false;
         return _CC_SSL_HS_ESTABLISHED_;
     }
+    ssl->do_handshaking = true;
 
     switch (SSL_get_error(ssl->handle, rs)) {
     case SSL_ERROR_ZERO_RETURN:

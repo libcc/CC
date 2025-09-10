@@ -40,7 +40,6 @@ struct _cc_async_event_priv {
     _cc_list_iterator_t overlapped_active;
     _cc_list_iterator_t overlapped_idle;
     int32_t idle_count;
-    _cc_atomic_lock_t lock;
 };
 
 typedef struct _iocp_overlapped {

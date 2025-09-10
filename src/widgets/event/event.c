@@ -339,7 +339,7 @@ _CC_API_PRIVATE(void) _event_link_free(_cc_async_event_t *async, _cc_list_iterat
 
 /**/
 _CC_API_PUBLIC(bool_t) _unregister_async_event(_cc_async_event_t *async) {
-    size_t i, j;
+    int32_t i, j;
     _cc_assert(async != nullptr);
 
     _event_lock(async);
