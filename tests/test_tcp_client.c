@@ -2,6 +2,9 @@
 #include <locale.h>
 #include <libcc/widgets/event.h>
 
+//A simple example program which connects to a daytime server and prints the response:
+//
+
 static bool_t onConnected(_cc_async_event_t *async, _cc_event_t *e);
 static bool_t onDisconnect(_cc_async_event_t *async, _cc_event_t *e);
 static bool_t onRead(_cc_async_event_t *async, _cc_event_t *e);
