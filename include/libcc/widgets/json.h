@@ -64,13 +64,6 @@ struct _cc_json {
 
 };
 
-#define _CC_JSON_RETURN_VALUE(O, T, V)                                                                                 \
-    do {                                                                                                               \
-        if (O && O->type == T) {                                                                                       \
-            return O->element.V;                                                                                       \
-        }                                                                                                              \
-    } while (0)
-
 /**
  * @brief Create a JSON object
  *
@@ -303,7 +296,9 @@ _CC_FORCE_INLINE_ float64_t _cc_json_float(const _cc_json_t *ctx) {
  * @return String
  */
 _CC_FORCE_INLINE_ const _cc_sds_t _cc_json_string(const _cc_json_t *ctx) {
-    _CC_JSON_RETURN_VALUE(ctx, _CC_JSON_STRING_, uni_string);
+    if (ctx && ctx->type == _CC_JSON_STRING_) {
+        return ctx->element.uni_string;
+    }
     return nullptr;
 }
 
@@ -314,7 +309,7 @@ _CC_FORCE_INLINE_ const _cc_sds_t _cc_json_string(const _cc_json_t *ctx) {
  *
  * @return _cc_rbtree_t
  */
-_CC_FORCE_INLINE_ const _cc_rbtree_t *_cc_json_object(const _cc_json_t *ctx) {
+_CC_FORCE_INLINE_ const _cc_rbtree_t* _cc_json_object(const _cc_json_t *ctx) {
     if (ctx && ctx->type == _CC_JSON_OBJECT_) {
         return &ctx->element.uni_object;
     }
@@ -328,7 +323,7 @@ _CC_FORCE_INLINE_ const _cc_rbtree_t *_cc_json_object(const _cc_json_t *ctx) {
  *
  * @return _cc_array_t
  */
-_CC_FORCE_INLINE_ const _cc_array_t _cc_json_array(const _cc_json_t *ctx) {
+_CC_FORCE_INLINE_ _cc_array_t _cc_json_array(const _cc_json_t *ctx) {
     if (ctx && ctx->type == _CC_JSON_ARRAY_) {
         return ctx->element.uni_array;
     }
@@ -342,7 +337,9 @@ _CC_FORCE_INLINE_ const _cc_array_t _cc_json_array(const _cc_json_t *ctx) {
  * @return Boolen
  */
 _CC_FORCE_INLINE_ bool_t _cc_json_boolean(const _cc_json_t *ctx) {
-    _CC_JSON_RETURN_VALUE(ctx, _CC_JSON_BOOLEAN_, uni_boolean);
+    if (ctx && ctx->type == _CC_JSON_BOOLEAN_) {
+        return ctx->element.uni_boolean;
+    }
     return false;
 }
 /**
@@ -389,7 +386,7 @@ _CC_FORCE_INLINE_ const _cc_sds_t _cc_json_object_find_string(const _cc_json_t *
  *
  * @return JSON Array
  */
-_CC_FORCE_INLINE_ const _cc_array_t _cc_json_object_find_array(const _cc_json_t *ctx, const tchar_t *keyword) {
+_CC_FORCE_INLINE_ _cc_array_t _cc_json_object_find_array(const _cc_json_t *ctx, const tchar_t *keyword) {
     return _cc_json_array(_cc_json_object_find(ctx, keyword));
 }
 
@@ -461,7 +458,7 @@ _CC_FORCE_INLINE_ const _cc_sds_t _cc_json_array_find_string(const _cc_json_t *c
  *
  * @return JSON object
  */
-_CC_FORCE_INLINE_ const _cc_rbtree_t *_cc_json_array_find_object(const _cc_json_t *ctx, const uint32_t index) {
+_CC_FORCE_INLINE_ const _cc_rbtree_t* _cc_json_array_find_object(const _cc_json_t *ctx, const uint32_t index) {
     return _cc_json_object(_cc_json_array_find(ctx, index));
 }
 
@@ -473,7 +470,7 @@ _CC_FORCE_INLINE_ const _cc_rbtree_t *_cc_json_array_find_object(const _cc_json_
  *
  * @return JSON array
  */
-_CC_FORCE_INLINE_ const _cc_array_t _cc_json_array_find_array(const _cc_json_t *ctx, const uint32_t index) {
+_CC_FORCE_INLINE_ _cc_array_t _cc_json_array_find_array(const _cc_json_t *ctx, const uint32_t index) {
     return _cc_json_array(_cc_json_array_find(ctx, index));
 }
 

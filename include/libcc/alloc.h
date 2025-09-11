@@ -25,7 +25,7 @@
 #include "list.h"
 #include "string.h"
 
-#ifdef _CC_USE_CC_DEBUG_MALLOC_
+#ifdef _CC_USE_DEBUG_MALLOC_
 
 #if defined(__CC_USE_TCMALLOC__)
     #include <google/tcmalloc.h>
@@ -46,14 +46,14 @@
     #define _cc_malloc_size(p) malloc_size(p)
 #endif
 
-#endif /* _CC_USE_CC_DEBUG_MALLOC_ */
+#endif /* _CC_USE_DEBUG_MALLOC_ */
 
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifdef _CC_USE_CC_DEBUG_MALLOC_
+#ifdef _CC_USE_DEBUG_MALLOC_
 /**/
 _CC_API_PUBLIC(pvoid_t) _cc_debug_malloc(size_t n, const tchar_t *file, const int line);
 /**/
@@ -108,7 +108,7 @@ _CC_API_PUBLIC(char_t*) _cc_strndupA(const char_t*,size_t);
 /**/
 _CC_API_PUBLIC(wchar_t*) _cc_strndupW(const wchar_t*,size_t);
 
-#endif /* _CC_USE_CC_DEBUG_MALLOC_ */
+#endif /* _CC_USE_DEBUG_MALLOC_ */
 
 /**/
 #ifdef _CC_UNICODE_

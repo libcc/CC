@@ -20,7 +20,7 @@
 */
 #include <libcc/alloc.h>
 
-#ifndef _CC_USE_CC_DEBUG_MALLOC_
+#ifndef _CC_USE_DEBUG_MALLOC_
 
 /* Explicitly override malloc/free etc when using tcmalloc. */
 #if defined(__CC_USE_TCMALLOC__)

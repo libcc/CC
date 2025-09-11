@@ -316,7 +316,7 @@ _CC_API_PRIVATE(void) _cc_json_dump_array(_cc_json_t *root, _cc_buf_t *buf) {
     length = _cc_array_length(root->element.uni_array);
 
     for (i = 0; i < length; i++) {
-        _cc_json_t *v = ((_cc_json_t*)*((uintptr_t*)(root->element.uni_array) + i));
+        _cc_json_t *v = (_cc_json_t*)_cc_array_value(root->element.uni_array, i);
         _cc_json_dump_value(v, buf);
         _buf_char_put(buf, _JSON_NEXT_TOKEN_);
     }

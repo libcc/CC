@@ -83,7 +83,7 @@ _CC_API_PUBLIC(uintptr_t) _cc_array_get(const _cc_array_t ctx, const size_t inde
         _cc_logger_error(_T("Array find: index out of range [%d] with size %d"), index, hdr->length);
         return -1;
     }
-    return *((uintptr_t*)(ctx) + index);
+    return _cc_array_value(ctx,index);
 }
 
 _CC_API_PUBLIC(size_t) _cc_array_push(_cc_array_t *ctx, uintptr_t data) {

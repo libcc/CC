@@ -12,7 +12,7 @@ ifdef shared
 endif
 
 ifdef debug
-	MACROS += _CC_USE_CC_DEBUG_MALLOC_
+	MACROS += _CC_USE_DEBUG_MALLOC_
 endif
 
 #MACROS += _CC_SYSLOG_RFC5424_

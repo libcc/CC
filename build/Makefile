@@ -2,7 +2,7 @@
 SRCROOT	:= $(abspath ..)
 
 ifdef debug
-	MACROS += _CC_USE_CC_DEBUG_MALLOC_
+	MACROS += _CC_USE_DEBUG_MALLOC_
 endif
 
 #指定第三方库安装路径
