@@ -24,40 +24,51 @@
 #define CHUNK_SOURCE        (1024 * 8)
 #define CHUNK_DEST          (1024 * 32)
 
-_CC_API_PUBLIC(void) _gzip_clean(pvoid_t gzip) {
+struct _gzip {
+    z_stream strm;
+    int (*cb)(z_streamp, int);
+};
+
+_CC_API_PUBLIC(void) _gzip_free(_gzip_t *gzip) {
     /* clean up */
-    (void)inflateEnd((z_stream*)gzip);
+    (void)inflateEnd((z_stream*)&gzip->strm);
     _cc_free(gzip);
 }
 
-_CC_API_PUBLIC(void) _gzip_reset(pvoid_t gzip) {
+_CC_API_PUBLIC(void) _gzip_reset(_gzip_t *gzip) {
     /*  */
-    (void)inflateReset((z_stream*)gzip);
+    (void)inflateReset((z_stream*)&gzip->strm);
 }
 
-_CC_API_PUBLIC(bool_t) _alloc_gzip_inf(pvoid_t *gzip) {
-    z_stream *strm = (z_stream*)_cc_malloc(sizeof(z_stream));
+_CC_API_PUBLIC(_gzip_t*) _gzip_alloc(byte_t m) {
+    _gzip_t *gzip = (_gzip_t*)_cc_malloc(sizeof(_gzip_t));
     /* allocate inflate state */
-    strm->zalloc = Z_NULL;
-    strm->zfree = Z_NULL;
-    strm->opaque = Z_NULL;
-    strm->avail_in = 0;
-    strm->next_in = Z_NULL;
-
-    if (inflateInit2(strm, MAX_WBITS + 32) != Z_OK) {
-        _cc_free(strm);
-        return false;
+    gzip->strm.zalloc = Z_NULL;
+    gzip->strm.zfree = Z_NULL;
+    gzip->strm.opaque = Z_NULL;
+    gzip->strm.avail_in = 0;
+    gzip->strm.next_in = Z_NULL;
+    if (m == _GZIP_INF_) {
+        if (inflateInit2(&gzip->strm, MAX_WBITS + 32) != Z_OK) {
+            _cc_free(gzip);
+            return nullptr;
+        }
+        gzip->cb = inflate;
+    } else {
+        if (deflateInit2(&gzip->strm, Z_DEFAULT_COMPRESSION, Z_DEFLATED, MAX_WBITS + 16, MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY) != Z_OK) {
+            _cc_free(gzip);
+            return nullptr;
+        }
+        gzip->cb = deflate;
     }
-
-    *gzip = strm;
-    return true;
+    return gzip;
 }
 
-_CC_API_PUBLIC(bool_t) _gzip_inf(pvoid_t gzip, byte_t *source, size_t length, _cc_buf_t *buffer) {
+_CC_API_PUBLIC(bool_t) _gzip(_gzip_t *gzip, byte_t *source, size_t length, _cc_buf_t *buffer) {
     int res = Z_STREAM_ERROR;
     size_t have, left = 0;
     byte_t out[CHUNK_DEST];
-    z_stream *strm = (z_stream*)gzip;
+    z_stream *strm = (z_stream*)&gzip->strm;
 
     /* decompress until deflate stream ends or end of file */
     do {
@@ -73,7 +84,7 @@ _CC_API_PUBLIC(bool_t) _gzip_inf(pvoid_t gzip, byte_t *source, size_t length, _c
         do {
             strm->avail_out = CHUNK_DEST;
             strm->next_out = (Bytef *)out;
-            res = inflate(strm, Z_NO_FLUSH);
+            res = gzip->cb(strm, Z_NO_FLUSH);
             switch (res) {
             case Z_NEED_DICT:
             case Z_DATA_ERROR:

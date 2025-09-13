@@ -2,7 +2,6 @@
 #include <libcc.h>
 #include <libcc/widgets/widgets.h>
 
-
 _CC_API_PRIVATE(void) _attach(void) {
 	srand((uint32_t)time(nullptr));
     _cc_get_cpu_cores();
@@ -14,7 +13,6 @@ _CC_API_PRIVATE(void) _attach(void) {
 _CC_API_PRIVATE(void) _detach(void) {
 	_cc_uninstall_socket();
 	_cc_logger_debug("widgets detach");
-
 }
 
 #ifdef __CC_WINDOWS__

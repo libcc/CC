@@ -38,7 +38,6 @@ struct _cc_SSL {
     SSL *handle;
     BIO *bio;
     _cc_OpenSSL_t *ctx;
-    byte_t do_handshaking;
 };
 
 struct _cc_OpenSSL {
@@ -240,7 +239,6 @@ _CC_API_PUBLIC(_cc_SSL_t*) _SSL_alloc(_cc_OpenSSL_t* ctx) {
     // SSL_set_bio(ssl->handle, ssl->bio, ssl->bio);
 
     ssl->ctx = ctx;
-    ssl->do_handshaking = true;
 
     return ssl;
 }
@@ -300,13 +298,11 @@ _CC_API_PUBLIC(bool_t) _SSL_accept(_cc_SSL_t *ssl, _cc_socket_t fd) {
     if (rs <= 0) {
         rs = SSL_get_error(ssl->handle, rs);
         if (rs == SSL_ERROR_WANT_READ || rs == SSL_ERROR_WANT_WRITE) {
-            ssl->do_handshaking = true;
             return true;
         }
         _cc_logger_error(_T("SSL_accept failed: %s\n"), ERR_reason_error_string(ERR_get_error()));
         return false;
     }
-    ssl->do_handshaking = false;
     return true;
 }
 
@@ -315,16 +311,7 @@ _CC_API_PUBLIC(bool_t) _SSL_connect(_cc_SSL_t *ssl, _cc_socket_t fd) {
     SSL_set_fd(ssl->handle, (int)fd);
     SSL_set_connect_state(ssl->handle);
 
-    if (SSL_do_handshake(ssl->handle) == 1) {
-        ssl->do_handshaking = false;
-    } else {
-        ssl->do_handshaking = true;
-    }
     return true;
-}
-
-_CC_API_PUBLIC(bool_t) _SSL_do_handshaking(_cc_SSL_t *ssl) {
-    return ssl->do_handshaking;
 }
 
 _CC_API_PUBLIC(uint16_t) _SSL_do_handshake(_cc_SSL_t *ssl) {
@@ -334,10 +321,8 @@ _CC_API_PUBLIC(uint16_t) _SSL_do_handshake(_cc_SSL_t *ssl) {
 
     rs = SSL_do_handshake(ssl->handle);
     if (rs == 1) {
-        ssl->do_handshaking = false;
         return _CC_SSL_HS_ESTABLISHED_;
     }
-    ssl->do_handshaking = true;
 
     switch (SSL_get_error(ssl->handle, rs)) {
     case SSL_ERROR_ZERO_RETURN:

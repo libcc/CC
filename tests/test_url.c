@@ -13,7 +13,7 @@
 /* Test cases for URL parsing */
 int test_parse_url_scheme() {
     _cc_url_t url;
-    const tchar_t *http_url = _T("http://example.com");
+    const tchar_t *http_url = _T("http://example.com/path/index.html?query=1");
     const tchar_t *https_url = _T("https://example.com");
     const tchar_t *ftp_url = _T("ftp://example.com");
     const tchar_t *invalid_url = _T("invalid://example.com");
@@ -22,6 +22,8 @@ int test_parse_url_scheme() {
     ASSERT(_cc_parse_url(&url, http_url), "HTTP URL parsing failed");
     ASSERT(url.scheme.ident == _CC_SCHEME_HTTP_, "HTTP scheme ident mismatch");
     ASSERT(_tcscmp(url.scheme.value, _T("HTTP")) == 0, "HTTP scheme value mismatch");
+    ASSERT(_tcscmp(url.request, _T("/path/index.html?query=1")) == 0, "HTTP request mismatch");
+    ASSERT(_tcscmp(url.path, _T("/path/index.html")) == 0, "HTTP path mismatch");
     _cc_free_url(&url);
 
     /* Test HTTPS scheme */
@@ -76,7 +78,7 @@ int test_url_encode() {
     const tchar_t *src = _T("Hello World!");
     int32_t result = _cc_url_encode(src, _tcslen(src), dst, 256);
 
-    ASSERT(result == _tcslen(src), "URL encode length mismatch");
+    ASSERT(result == _tcslen(_T("Hello+World%21")), "URL encode length mismatch");
     ASSERT(_tcscmp(dst, _T("Hello+World%21")) == 0, "URL encode result mismatch");
 
     return 0;

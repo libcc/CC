@@ -25,7 +25,7 @@
 _CC_API_PUBLIC(bool_t) _cc_url_response_body(_cc_url_request_t *request, byte_t *source, size_t length) {
     _cc_http_response_header_t *response = request->response;
     if (response->content_encoding == _CC_URL_CONTENT_ENCODING_GZIP_) {
-        return _gzip_inf(request->gzip, source, length, &request->buffer);
+        return _gzip(request->gzip, source, length, &request->buffer);
     }
 
     if (response->content_encoding == _CC_URL_CONTENT_ENCODING_PLAINTEXT_) {

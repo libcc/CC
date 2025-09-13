@@ -22,6 +22,7 @@
 #define _C_CC_WIDGETS_URL_REQUEST_H_INCLUDED_
 
 #include "http.h"
+#include "gzip.h"
 
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
@@ -102,7 +103,7 @@ struct _cc_url_request {
     _cc_http_response_header_t *response;
 
     _cc_SSL_t* ssl;
-    pvoid_t gzip;
+    _gzip_t* gzip;
 
     pvoid_t args;
 };

@@ -54,7 +54,7 @@ _CC_API_PUBLIC(void) _cc_free_url_request(_cc_url_request_t *request) {
 #endif
 
     if (request->gzip) {
-        _gzip_clean(request->gzip);
+        _gzip_free(request->gzip);
         request->gzip = nullptr;
     }
 
@@ -97,10 +97,8 @@ _CC_API_PUBLIC(bool_t) _cc_url_request_ssl_handshake(_cc_url_request_t *request,
         request->handshaking = false;
         break;
     case _CC_SSL_HS_WANT_READ_:
-        _CC_SET_BIT(_CC_EVENT_READABLE_, e->flags);
-        break;
     case _CC_SSL_HS_WANT_WRITE_:
-        _CC_SET_BIT(_CC_EVENT_WRITABLE_, e->flags);
+        _CC_MODIFY_BIT(_CC_EVENT_CONNECT_, _CC_EVENT_READABLE_, e->flags);
         break;
     default:
         return false;
@@ -154,7 +152,8 @@ _CC_API_PUBLIC(bool_t) _cc_url_request_response_header(_cc_url_request_t *reques
         if (request->gzip) {
             _gzip_reset(request->gzip);
         } else {
-            return _alloc_gzip_inf(&request->gzip);
+            request->gzip = _gzip_alloc(_GZIP_INF_);
+            return request->gzip != nullptr;
         }
     }
     return true;

@@ -72,8 +72,6 @@ _CC_WIDGETS_API(_cc_SSL_t*) _SSL_alloc(_cc_OpenSSL_t*);
 /**/
 _CC_WIDGETS_API(bool_t) _SSL_free(_cc_SSL_t*);
 /**/
-_CC_WIDGETS_API(bool_t) _SSL_do_handshaking(_cc_SSL_t *ssl);
-/**/
 _CC_WIDGETS_API(bool_t) _SSL_accept(_cc_SSL_t *ssl, _cc_socket_t fd);
 /**/
 _CC_WIDGETS_API(bool_t) _SSL_connect(_cc_SSL_t *ctx, _cc_socket_t fd);

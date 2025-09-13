@@ -22,6 +22,7 @@
 #define _C_CC_URL_H_INCLUDED_
 
 #include "rbtree.h"
+#include "sds.h"
 
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
@@ -100,7 +101,7 @@ typedef struct _cc_url {
     /* (eg: http,ftp,maito) */
     struct {
         uint32_t ident;
-        tchar_t *value;
+        _cc_sds_t value;
     } scheme;
     /* host IPv6*/
     bool_t ipv6;
@@ -108,19 +109,19 @@ typedef struct _cc_url {
     uint32_t port;
 
     /* (eg: localhost) */
-    tchar_t *host;
+    _cc_sds_t host;
     /* (eg: /v1/index.html) */
-    tchar_t *path;
+    _cc_sds_t path;
     /* (eg: /v1/index.html?id=1&tid=2#abc) */
-    tchar_t *request;
+    _cc_sds_t request;
     /* (eg: id=1&tid=2) */
-    tchar_t *query;
+    _cc_sds_t query;
     /* (eg: abc) */
-    tchar_t *fragment;
+    _cc_sds_t fragment;
     /* (eg: user_name) */
-    tchar_t *username;
+    _cc_sds_t username;
     /* (eg: user_password) */
-    tchar_t *password;
+    _cc_sds_t password;
 } _cc_url_t;
 
 #define _cc_parse_url _cc_alloc_url

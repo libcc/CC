@@ -19,6 +19,7 @@ _CC_API_PRIVATE(void) _WebSocketSecKey(const tchar_t *sec_websocket_key, _WebSoc
 
     length = _snprintf((char_t*)results, _cc_countof(results), "%s258EAFA5-E914-47DA-95CA-C5AB0DC85B11", sec_websocket_key);
 
+    _cc_logger_debug("Sec-WebSocket-Key: %s",sec_websocket_key);
     _cc_sha1_init(&ctx);
     _cc_sha1_update(&ctx, results, length);
     _cc_sha1_final(&ctx, sha1_results);
@@ -262,6 +263,7 @@ int main(int argc, char *const argv[]) {
     struct sockaddr_in sa;
     _cc_async_event_t async;
     _cc_event_t *e;
+    uint16_t port = 5500;
 
     _cc_install_socket();
 
@@ -276,8 +278,9 @@ int main(int argc, char *const argv[]) {
     e->callback = network_event_callback;
     e->timeout = 60000;
 
-    _cc_inet_ipv4_addr(&sa, nullptr, 5500);
+    _cc_inet_ipv4_addr(&sa, nullptr, port);
     _cc_tcp_listen(&async, e, (_cc_sockaddr_t *)&sa, sizeof(struct sockaddr_in));
+    _cc_logger_debug(_T("listen port: %d\n"), port);
 
     while (1) {
         // while((c = getchar()) != 'q') {

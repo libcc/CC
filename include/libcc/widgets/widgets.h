@@ -34,6 +34,7 @@
 #include "ini.h"
 #include "xml.h"
 #include "sql.h"
+#include "gzip.h"
 #endif
 
 /* Set up for C function definitions, even when using C++ */
