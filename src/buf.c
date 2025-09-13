@@ -81,7 +81,7 @@ _CC_API_PUBLIC(bool_t) _cc_alloc_buf(_cc_buf_t *ctx, size_t initial) {
     _cc_assert(ctx != nullptr);
 
     memset(ctx, 0, sizeof(_cc_buf_t));
-    ctx->limit = _cc_aligned_alloc_opt(initial, 64);
+    ctx->limit = initial;
     ctx->length = 0;
     ctx->bytes = (byte_t*)_cc_calloc(ctx->limit,sizeof(byte_t));
 
@@ -182,7 +182,7 @@ _CC_API_PUBLIC(bool_t) _cc_bufA_appendvf(_cc_buf_t *ctx, const char_t *fmt, va_l
 #endif
         if (fmt_length > 0) {
             /* SUCCESS */
-            if (fmt_length <= free_length) {
+            if (fmt_length < free_length) {
                 break;
             }
 
@@ -227,14 +227,14 @@ _CC_API_PUBLIC(bool_t) _cc_bufW_puts(_cc_buf_t *ctx, const wchar_t *s) {
 /**/
 _CC_API_PUBLIC(bool_t) _cc_bufW_appendvf(_cc_buf_t *ctx, const wchar_t *fmt, va_list arg) {
     size_t fmt_length, free_length;
-
+    
     /* If the first attempt to append fails, resize the buffer appropriately
      * and try again */
     while (1) {
         free_length = _cc_buf_remaining(ctx) / sizeof(wchar_t);
         /* Append the new formatted string */
         /* fmt_length is the length of the string required*/
-        fmt_length = _vsnwprintf((wchar_t *)(ctx->bytes + ctx->length), free_length, fmt, arg);
+        fmt_length = _vsnwprintf((wchar_t *)(ctx->bytes + ctx->length), free_length - 1, fmt, arg);
 
 #ifdef __CC_WINDOWS__
         if (fmt_length == -1) {
@@ -243,7 +243,7 @@ _CC_API_PUBLIC(bool_t) _cc_bufW_appendvf(_cc_buf_t *ctx, const wchar_t *fmt, va_
 #endif
         if (fmt_length > 0) {
             /* SUCCESS */
-            if (fmt_length <= free_length) {
+            if (fmt_length < free_length) {
                 break;
             }
 

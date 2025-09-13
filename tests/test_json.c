@@ -116,6 +116,18 @@ void test_json_from_file() {
     _cc_free_json(json);
     print_test_result(__func__, 1);
 }
+void test_json_to_file() {
+    _cc_json_t *json = _cc_json_from_file("test2.json");
+    _cc_buf_t dump;
+    _cc_json_dump(json,&dump);
+    FILE *fp = _tfopen("test.json", _T("wb"));
+    assert(fp != NULL);
+    fwrite(dump.bytes, 1, dump.length, fp);
+    fclose(fp);
+    _cc_free_buf(&dump);
+    _cc_free_json(json);
+    print_test_result(__func__, 1);
+}
 
 /* Main function */
 int main() {
@@ -130,6 +142,7 @@ int main() {
     test_json_array_remove();
     test_json_parse();
     test_json_from_file();
+    test_json_to_file();
     printf("All tests completed.\n");
     return 0;
 }

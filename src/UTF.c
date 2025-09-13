@@ -33,6 +33,7 @@ _cc_convert_utf16_literal_to_utf8(const tchar_t **input, const tchar_t *input_en
     if (first_code == 0) {
         return 0;
     }
+    
     /* check that the code is valid */
     if (((first_code >= 0xDC00) && (first_code <= 0xDFFF))) {
         return 0;

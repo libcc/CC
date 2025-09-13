@@ -17,8 +17,9 @@ void test_alloc_and_free_buf() {
 
 void test_buf_stringify() {
     _cc_buf_t buf;
-    assert(_cc_alloc_buf(&buf, 100) == true);
+    assert(_cc_alloc_buf(&buf, 18) == true);
     const char *str = "test string";
+    assert(_cc_buf_appendf(&buf, "%s-test-%d", str,strlen(str)) == true);
     assert(_cc_buf_append(&buf, str, strlen(str)) == true);
     size_t length;
     const tchar_t *result = _cc_buf_stringify(&buf, &length);
