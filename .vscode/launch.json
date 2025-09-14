@@ -23,7 +23,7 @@
             "type": "cppdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}/bin/aarch64/",
-            "program": "${workspaceFolder}/bin/aarch64/debug/buf",
+            "program": "${workspaceFolder}/bin/aarch64/debug/wss",
             "args": [],
             "stopAtEntry": false,
             "environment": [],

@@ -227,7 +227,8 @@ _CC_API_PUBLIC(_cc_SSL_t*) _SSL_alloc(_cc_OpenSSL_t* ctx) {
     ssl->handle = SSL_new(ctx->handle);
     _SSL_lock = 0;
 
-    if (ssl == nullptr) {
+    if (ssl->handle == nullptr) {
+        _cc_free(ssl);
         return nullptr;
     }
 
@@ -291,27 +292,38 @@ _CC_API_PUBLIC(void) _SSL_set_host_name(_cc_SSL_t *ssl, tchar_t *host, size_t le
 #endif
 }
 
-_CC_API_PUBLIC(bool_t) _SSL_accept(_cc_SSL_t *ssl, _cc_socket_t fd) {
+_CC_API_PUBLIC(_cc_SSL_t*) _SSL_accept(_cc_OpenSSL_t *ctx, _cc_socket_t fd) {
     int rs;
+    _cc_SSL_t *ssl = _SSL_alloc(ctx);
+
+    if (ssl == nullptr) {
+        return nullptr;
+    }
+
     SSL_set_fd(ssl->handle, (int)fd);
     rs = SSL_accept(ssl->handle);
     if (rs <= 0) {
         rs = SSL_get_error(ssl->handle, rs);
-        if (rs == SSL_ERROR_WANT_READ || rs == SSL_ERROR_WANT_WRITE) {
-            return true;
+        if (rs != SSL_ERROR_WANT_READ && rs != SSL_ERROR_WANT_WRITE) {
+            _cc_logger_error(_T("SSL_accept failed: %s\n"), ERR_reason_error_string(ERR_get_error()));
+            _SSL_free(ssl);
+            return nullptr;
         }
-        _cc_logger_error(_T("SSL_accept failed: %s\n"), ERR_reason_error_string(ERR_get_error()));
-        return false;
     }
-    return true;
+
+    return ssl;
 }
 
-_CC_API_PUBLIC(bool_t) _SSL_connect(_cc_SSL_t *ssl, _cc_socket_t fd) {
+_CC_API_PUBLIC(_cc_SSL_t*) _SSL_connect(_cc_OpenSSL_t *ctx, _cc_socket_t fd) {
+    _cc_SSL_t *ssl = _SSL_alloc(ctx);
     ERR_clear_error();
+    if (ssl == nullptr) {
+        return false;
+    }
     SSL_set_fd(ssl->handle, (int)fd);
     SSL_set_connect_state(ssl->handle);
 
-    return true;
+    return ssl;
 }
 
 _CC_API_PUBLIC(uint16_t) _SSL_do_handshake(_cc_SSL_t *ssl) {

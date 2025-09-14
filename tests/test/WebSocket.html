@@ -104,7 +104,7 @@
         };
         
         if ("WebSocket" in window) {
-            _.ws = new WebSocket("ws://127.0.0.1:5500/abc");
+            _.ws = new WebSocket("wss://ws.libcc.cn:5500/abc");
             addLog("WebSocket 正在连接中", 'success');
             _.ws.onopen = function() {
                 addLog("WebSocket 连接已建立", 'success');

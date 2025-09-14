@@ -72,9 +72,9 @@ _CC_WIDGETS_API(_cc_SSL_t*) _SSL_alloc(_cc_OpenSSL_t*);
 /**/
 _CC_WIDGETS_API(bool_t) _SSL_free(_cc_SSL_t*);
 /**/
-_CC_WIDGETS_API(bool_t) _SSL_accept(_cc_SSL_t *ssl, _cc_socket_t fd);
+_CC_WIDGETS_API(_cc_SSL_t*) _SSL_accept(_cc_OpenSSL_t *ctx, _cc_socket_t fd);
 /**/
-_CC_WIDGETS_API(bool_t) _SSL_connect(_cc_SSL_t *ctx, _cc_socket_t fd);
+_CC_WIDGETS_API(_cc_SSL_t*) _SSL_connect(_cc_OpenSSL_t *ctx, _cc_socket_t fd);
 /**/
 _CC_WIDGETS_API(void) _SSL_set_host_name(_cc_SSL_t*, tchar_t*, size_t);
 /**/

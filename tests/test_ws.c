@@ -130,7 +130,7 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
 
         fd = _cc_event_accept(async, e, (_cc_sockaddr_t*)&remote_addr, &remote_addr_len);
         if (fd == _CC_INVALID_SOCKET_) {
-            _cc_logger_error(_T("accept fail %s.\n"), _cc_last_error(_cc_last_errno()));
+            _cc_logger_error(_T("accept fail %s."), _cc_last_error(_cc_last_errno()));
             return true;
         }
 
@@ -171,7 +171,9 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
 
     if (which & _CC_EVENT_DISCONNECT_) {
         _cc_logger_debug(_T("%d disconnect to client."), e->fd);
-        _WebSocketFree((_WebSocket_t*)e->args);
+        if (e->args) {
+            _WebSocketFree((_WebSocket_t*)e->args);
+        }
         return false;
     }
 
@@ -239,7 +241,6 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
     if (which & _CC_EVENT_WRITABLE_) {
         if (e->buffer) {
             if (_cc_event_sendbuf(e) < 0) {
-                _WebSocketFree((_WebSocket_t*)e->args);
                 return false;
             }
         } else {
@@ -251,8 +252,7 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
         if (_Heartbeat(e, WS_OP_PONG)) {
             return true;
         }
-        _cc_logger_debug(_T("TCP timeout %d\n"), e->fd);
-        _WebSocketFree((_WebSocket_t*)e->args);
+        _cc_logger_debug(_T("TCP timeout %d"), e->fd);
         return false;
     }
 
@@ -280,7 +280,7 @@ int main(int argc, char *const argv[]) {
 
     _cc_inet_ipv4_addr(&sa, nullptr, port);
     _cc_tcp_listen(&async, e, (_cc_sockaddr_t *)&sa, sizeof(struct sockaddr_in));
-    _cc_logger_debug(_T("listen port: %d\n"), port);
+    _cc_logger_debug(_T("listen port: %d"), port);
 
     while (1) {
         // while((c = getchar()) != 'q') {

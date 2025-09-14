@@ -125,22 +125,17 @@ static bool_t _url_request_callback(_cc_async_event_t *async, _cc_event_t *e, co
     } else if (_CC_ISSET_BIT(_CC_EVENT_TIMEOUT_, which)) {
         //printf("timeout\n");
         return false;//url_request_header(request, e);
-    }else if (_CC_ISSET_BIT(_CC_EVENT_CONNECTED_, which)) {
+    } else if (_CC_ISSET_BIT(_CC_EVENT_CONNECTED_, which)) {
         if (request->url.scheme.ident != _CC_SCHEME_HTTPS_) {
             return url_request_header(request, e);
+        } else if (request->handshaking) {
+            if (!_cc_url_request_ssl_handshake(request, e)) {
+                return false;
+            }
+            if (request->handshaking == false) {
+                return url_request_header(request, e);
+            }
         }
-    } 
-
-    if (request->handshaking && request->url.scheme.ident == _CC_SCHEME_HTTPS_) {
-        if (!_cc_url_request_ssl_handshake(request, e)) {
-            return false;
-        }
-
-        //printf("ssl handshake\n");
-        if (request->handshaking == false) {
-            return url_request_header(request, e);
-        }
-
         return true;
     }
 
@@ -231,13 +226,12 @@ static bool_t url_request_connect(_cc_url_request_t *request) {
     _cc_reset_url_request(request);
 
     if (request->url.scheme.ident == _CC_SCHEME_HTTPS_) {
-        request->ssl = _SSL_alloc(openSSL);
+        request->ssl = _SSL_connect(openSSL, e->fd);
         if (request->ssl == nullptr) {
             _cc_free_event(async, e);
             return false;
         }
         _SSL_set_host_name(request->ssl, request->url.host, _tcslen(request->url.host));
-        _SSL_connect(request->ssl, e->fd);
     } 
 
     _cc_inet_ipv4_addr(&sa, request->url.host, request->url.port);
