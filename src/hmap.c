@@ -133,7 +133,7 @@ _CC_API_PRIVATE(int) _hmap_rehash(_cc_hmap_t *ctx, float32_t factor) {
     _cc_list_iterator_t list;
     _cc_list_iterator_t *it;
     _cc_hmap_element_t *slots = ctx->slots;
-    uint32_t limit = ctx->limit * factor;
+    uint32_t limit = (uint32_t)(ctx->limit * factor);
 
     /* Setup the new elements */
     _cc_hmap_element_t *elements = (_cc_hmap_element_t *)_cc_calloc(limit, sizeof(_cc_hmap_element_t));

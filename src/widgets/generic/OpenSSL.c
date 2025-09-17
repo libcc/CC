@@ -316,13 +316,10 @@ _CC_API_PUBLIC(_cc_SSL_t*) _SSL_accept(_cc_OpenSSL_t *ctx, _cc_socket_t fd) {
 _CC_API_PUBLIC(_cc_SSL_t*) _SSL_connect(_cc_OpenSSL_t *ctx, _cc_socket_t fd) {
     _cc_SSL_t *ssl = _SSL_alloc(ctx);
     ERR_clear_error();
-    if (ssl == nullptr) {
-        return false;
+    if (ssl) {
+        SSL_set_fd(ssl->handle, (int)fd);
+        SSL_set_connect_state(ssl->handle);
     }
-    
-    SSL_set_fd(ssl->handle, (int)fd);
-    SSL_set_connect_state(ssl->handle);
-
     return ssl;
 }
 

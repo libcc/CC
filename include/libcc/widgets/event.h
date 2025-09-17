@@ -102,6 +102,7 @@ struct _cc_event {
 
     //0xFFF(async index)FFFFF(self index)
     uint32_t ident;
+    
     _cc_socket_t fd;
     /* Linked list node */
     _cc_list_iterator_t lnk;

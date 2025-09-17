@@ -125,7 +125,7 @@ _CC_API_PRIVATE(bool_t) _buf_expand(_cc_buf_t *ctx, size_t size) {
 
 /**/
 _CC_API_PUBLIC(bool_t) _cc_buf_expand_factor(_cc_buf_t *ctx, float32_t factor) {
-    return _buf_expand(ctx, _cc_aligned_alloc_opt(ctx->limit + ctx->limit * factor, 64));
+    return _buf_expand(ctx, _cc_aligned_alloc_opt((size_t)(ctx->limit + ctx->limit * factor), 64));
 }
 
 /**/
