@@ -161,6 +161,8 @@ _CC_API_PUBLIC(const tchar_t*) _cc_buf_stringify(_cc_buf_t *ctx, size_t *length)
  * @return true if successful or false on error.
  */
 _CC_API_PUBLIC(bool_t) _cc_buf_expand(_cc_buf_t* ctx, size_t size);
+/**/
+_CC_API_PUBLIC(bool_t) _cc_buf_expand_factor(_cc_buf_t *ctx, float32_t factor);
 /**
  * @brief Written buf
  *

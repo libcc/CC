@@ -49,7 +49,7 @@
 <body>
     <h2>WebSocket 客户端</h2>
     <div>
-        <button class="button" id="connector">连接 WebSocket</button>
+        <button class="button" id="connector-test">连接 WebSocket</button>
         <button class="button button-disabled" id="connector-send" >发送测试数据</button>
         <button class="button button-disabled" id="connector-close">关闭连接</button>
     </div>
@@ -61,15 +61,12 @@
     var ws = null;
     var index = 0;
     var logContainer = document.getElementById('log-container');
-    var connector = document.getElementById('connector');
+    var connector = document.getElementById('connector-test');
     var connector_send = document.getElementById('connector-send');
     var connector_close = document.getElementById('connector-close');
 
     connector.addEventListener('click', function(event) {
         WebSocketTest()
-        connector.className = 'button button-disabled'
-        connector_send.className = 'button'
-        connector_close.className = 'button'
     });
 
     connector_send.addEventListener('click', function(event) {
@@ -77,10 +74,19 @@
     });
     connector_close.addEventListener('click', function(event) {
         WebSocketClose()
-        connector.className = ' button'
-        connector_send.className = 'button button-disabled'
-        connector_close.className = 'button button-disabled'
     });
+
+    function btnStatus(status) {
+        if (status) {
+            connector.className = 'button button-disabled'
+            connector_send.className = 'button'
+            connector_close.className = 'button'
+        } else {
+            connector.className = ' button'
+            connector_send.className = 'button button-disabled'
+            connector_close.className = 'button button-disabled'
+        }
+    }
 
     function addLog(message, type = 'info') {
         const logEntry = document.createElement('div');
@@ -104,11 +110,12 @@
         };
         
         if ("WebSocket" in window) {
-            _.ws = new WebSocket("wss://ws.libcc.cn:5500/abc");
+            _.ws = new WebSocket("wss://m.libcc.cn");
             addLog("WebSocket 正在连接中", 'success');
             _.ws.onopen = function() {
                 addLog("WebSocket 连接已建立", 'success');
                 _.is_connected = true;
+                btnStatus(1);
             };
             
             _.ws.onmessage = function(e) {
@@ -119,10 +126,11 @@
                 addLog("WebSocket 连接已关闭");
                 _.ws = null;
                 _.is_connected = false;
+                btnStatus(0);
             };
             
-            _.ws.onerror = function() {
-                addLog("WebSocket 发生错误", 'error');
+            _.ws.onerror = function(e) {
+                addLog("WebSocket 发生错误"+JSON.stringify(e), 'error');
                 _.ws = null;
                 _.is_connected = false;
             }

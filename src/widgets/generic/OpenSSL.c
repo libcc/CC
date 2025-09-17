@@ -310,7 +310,6 @@ _CC_API_PUBLIC(_cc_SSL_t*) _SSL_accept(_cc_OpenSSL_t *ctx, _cc_socket_t fd) {
             return nullptr;
         }
     }
-
     return ssl;
 }
 
@@ -320,6 +319,7 @@ _CC_API_PUBLIC(_cc_SSL_t*) _SSL_connect(_cc_OpenSSL_t *ctx, _cc_socket_t fd) {
     if (ssl == nullptr) {
         return false;
     }
+    
     SSL_set_fd(ssl->handle, (int)fd);
     SSL_set_connect_state(ssl->handle);
 
@@ -402,12 +402,15 @@ _CC_API_PUBLIC(int32_t) _SSL_sendbuf(_cc_SSL_t *ssl, _cc_event_t *e) {
     bw = _SSL_send(ssl, wbuf->bytes, wbuf->length);
     if (bw < 0) {
         _CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
-    } else if (bw != 0 && bw < wbuf->length) {
-        memmove(wbuf->bytes, wbuf->bytes + bw, wbuf->length - bw);
-        wbuf->length -= bw;
-    } else {
         wbuf->length = 0;
-        _CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
+    } else if (bw > 0) {
+        if (bw < wbuf->length) {
+            wbuf->length -= bw;
+            memmove(wbuf->bytes, wbuf->bytes + bw, wbuf->length);
+        } else {
+            _CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
+            wbuf->length = 0;
+        }
     }
     _cc_unlock(&wbuf->lock);
     return bw;
@@ -418,7 +421,7 @@ _CC_API_PUBLIC(int32_t) _SSL_send(_cc_SSL_t *ssl, const byte_t *buf, int32_t len
     int32_t rc = 0;
 
     if (buf == nullptr) {
-        return true;
+        return 0;
     }
     ERR_clear_error();
 
@@ -426,15 +429,8 @@ _CC_API_PUBLIC(int32_t) _SSL_send(_cc_SSL_t *ssl, const byte_t *buf, int32_t len
     if (rc <= 0) {
         switch (SSL_get_error(ssl->handle, rc)) {
         case SSL_ERROR_WANT_READ:
-            if (_SSL_do_handshake(ssl) == _CC_SSL_HS_ESTABLISHED_) {
-                return 0;
-            }
-            break;
         case SSL_ERROR_WANT_WRITE:
-            if (_SSL_do_handshake(ssl) == _CC_SSL_HS_ESTABLISHED_) {
-                return 0;
-            }
-            break;
+            return 0;
         case SSL_ERROR_ZERO_RETURN:
             _cc_logger_debug(_T("_SSL_send:The SSL connection is securely closed"));
             break;
@@ -460,18 +456,11 @@ _CC_API_PUBLIC(int32_t) _SSL_read(_cc_SSL_t *ssl, byte_t *buf, int32_t len) {
     if (rc == 0) {
         return -1;
     }
-    
     if (rc < 0) {
         switch (SSL_get_error(ssl->handle, rc)) {
         case SSL_ERROR_WANT_READ:
-            if (_SSL_do_handshake(ssl) == _CC_SSL_HS_ESTABLISHED_) {
-                return 0;
-            }
-            break;
         case SSL_ERROR_WANT_WRITE:
-            if (_SSL_do_handshake(ssl) == _CC_SSL_HS_ESTABLISHED_) {
-                return 0;
-            }
+            return 0;
             break;
         case SSL_ERROR_ZERO_RETURN:
             _cc_logger_debug(_T("_SSL_send:The SSL connection is securely closed"));

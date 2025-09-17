@@ -113,16 +113,19 @@ _CC_API_PUBLIC(const tchar_t*) _cc_buf_stringify(_cc_buf_t *ctx, size_t *length)
 
 /**/
 _CC_API_PRIVATE(bool_t) _buf_expand(_cc_buf_t *ctx, size_t size) {
-    size_t new_size = _cc_aligned_alloc_opt(ctx->length + size, 64);
-    byte_t *new_data = (byte_t *)_cc_realloc(ctx->bytes, new_size);
-
-    if (_cc_likely(new_data)) {
-        ctx->bytes = new_data;
-        ctx->limit = new_size;
+    byte_t *data = (byte_t *)_cc_realloc(ctx->bytes, size);
+    if (_cc_likely(data)) {
+        ctx->bytes = data;
+        ctx->limit = size;
         return true;
     }
 
     return false;
+}
+
+/**/
+_CC_API_PUBLIC(bool_t) _cc_buf_expand_factor(_cc_buf_t *ctx, float32_t factor) {
+    return _buf_expand(ctx, _cc_aligned_alloc_opt(ctx->limit + ctx->limit * factor, 64));
 }
 
 /**/
@@ -132,7 +135,7 @@ _CC_API_PUBLIC(bool_t) _cc_buf_expand(_cc_buf_t *ctx, size_t size) {
         return true;
     }
 
-    return _buf_expand(ctx, size);
+    return _buf_expand(ctx, (ctx->length + size));
 }
 
 /**/

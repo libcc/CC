@@ -36,7 +36,7 @@ _CC_API_PRIVATE(bool_t) _WebSocketResponseHeader(_cc_event_t *e, _WebSocket_t *w
                         "HTTP/1.1 101 Switching Protocols\r\n"
                         "Connection: Upgrade\r\n"
                         "Upgrade: websocket\r\n"
-                        "Sec-WebSocket-Protool: echo\r\n"
+                        "Sec-WebSocket-Protool: chat\r\n"
                         "Sec-WebSocket-Accept: %s\r\n\r\n",
                         ws->websocket_key);
 

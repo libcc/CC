@@ -129,11 +129,11 @@ _CC_API_PRIVATE(_cc_hmap_element_t*) _hmap_empty_element(_cc_hmap_element_t *slo
 /*
  * Doubles the size of the hmap, and rehashes all the elements
  */
-_CC_API_PRIVATE(int) _hmap_rehash(_cc_hmap_t *ctx, int times) {
+_CC_API_PRIVATE(int) _hmap_rehash(_cc_hmap_t *ctx, float32_t factor) {
     _cc_list_iterator_t list;
     _cc_list_iterator_t *it;
     _cc_hmap_element_t *slots = ctx->slots;
-    uint32_t limit = ctx->limit * times;
+    uint32_t limit = ctx->limit * factor;
 
     /* Setup the new elements */
     _cc_hmap_element_t *elements = (_cc_hmap_element_t *)_cc_calloc(limit, sizeof(_cc_hmap_element_t));
@@ -200,9 +200,9 @@ _CC_API_PUBLIC(bool_t) _cc_hmap_push(_cc_hmap_t *ctx, const uintptr_t keyword, c
         return false;
     }
 
-    while (flag == MAP_FULL && times < 10) {
+    while (flag == MAP_FULL && times++ < 10) {
 
-        if (_hmap_rehash(ctx, times++) == MAP_FULL) {
+        if (_hmap_rehash(ctx, 0.72f) == MAP_FULL) {
             continue;
         }
 

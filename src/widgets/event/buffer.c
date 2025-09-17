@@ -132,11 +132,15 @@ _CC_API_PUBLIC(int32_t) _cc_event_sendbuf(_cc_event_t *e) {
     bw = _cc_send(e->fd, wbuf->bytes, wbuf->length);
     if (bw < 0) {
         _CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
-    } else if (bw != 0 && bw < wbuf->length) {
-        memmove(wbuf->bytes, wbuf->bytes + bw, wbuf->length - bw);
-        wbuf->length -= bw;
-    } else {
-        _CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
+        wbuf->length = 0;
+    } else if (bw > 0) {
+        if (bw < wbuf->length) {
+            wbuf->length -= bw;
+            memmove(wbuf->bytes, wbuf->bytes + bw, wbuf->length);
+        } else {
+            _CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
+            wbuf->length = 0;
+        }
     }
     _cc_unlock(&wbuf->lock);
     return bw;

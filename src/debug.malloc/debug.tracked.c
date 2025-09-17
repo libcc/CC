@@ -21,6 +21,10 @@
 #include <libcc/atomic.h>
 #include <libcc/list.h>
 
+#ifdef __CC_ANDROID__
+#include <libcc/core/android.h>
+#endif
+
 #include "debug.tracked.c.h"
 
 
@@ -82,55 +86,31 @@ _CC_API_PRIVATE(void) _attach(void) {
     printf("debug.alloc attach\n");
 }
 
+#ifndef __CC_ANDROID__
 /**/
-_CC_API_PRIVATE(void) _dump_timestamp(FILE *wfp, time_t debug_time) {
+_CC_API_PRIVATE(void) _dump_timestamp(time_t debug_time) {
     debug_time += _START_TIMESTAMP_;
     struct tm *t = localtime(&debug_time);
 
-    _ftprintf(wfp, _T("[%4d-%02d-%02d %02d:%02d:%02d]"), 
-        t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour,t->tm_min, t->tm_sec);
+    _tprintf(_T("[%4d-%02d-%02d %02d:%02d:%02d]"), t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour,t->tm_min, t->tm_sec);
 }
+#endif
 
 /**/
 _CC_API_PRIVATE(void) _detach(void) {
     int32_t num_leaked;
     size_t tot_leaked;
-    FILE *wfp = nullptr;
-    size_t length;
-    tchar_t cwd[_CC_MAX_PATH_];
-    tchar_t cwd_debug_file[_CC_MAX_PATH_ * 4];
     static tchar_t *mem_types[4] = {"","_cc_malloc","_cc_calloc","_cc_realloc"};
 
-    printf("debug.alloc detach\n");
-
-#ifdef __CC_WINDOWS__
-    length = GetModuleFileName(nullptr, cwd, (DWORD)_cc_countof(cwd));
-#elif defined(__CC_APPLE__)
-    length = 0;
-#else
-    length = 0;
-#endif
-
-    if (length == 0) {
-        printf("Couldn't locate our .exe");
-        wfp = stderr;
-    } else {
-        _tcsncat(cwd + length - 3, _T(".debug.alloc.log"),sizeof(_T(".debug.alloc.log")) - 1);
-        wfp = _tfopen(cwd_debug_file, _T("wb"));
-        if (wfp == nullptr) {
-            wfp = stderr;
-            length = 0;
-        }
-    }
-    
     num_leaked = 0;
     tot_leaked = 0;
 
-    _ftprintf(wfp, _T("%d memory allocations, of which %d freed\r\n"), number_of_alloc, number_of_freed);
+    printf("debug.alloc detach\n");
+#ifdef __CC_ANDROID__
+    __android_log_print(ANDROID_LOG_DEBUG, _CC_ANDROID_TAG_, _T("%d memory allocations, of which %d freed\r\n"), number_of_alloc, number_of_freed);
     _cc_list_iterator_for_each(v, &tracked_list, {
         _cc_debug_alloc_t *debug = _cc_upcast(v, _cc_debug_alloc_t, lnk);
-        _dump_timestamp(wfp, debug->create_time);
-        _ftprintf(wfp, _T("%s (base: $%p, size: %ld) located at:%s(%d)\r\n"), mem_types[debug->type], debug, debug->size, debug->file,
+        __android_log_print(ANDROID_LOG_DEBUG, _CC_ANDROID_TAG_, _T("%s (base: $%p, size: %ld) located at:%s(%d)\r\n"), mem_types[debug->type], debug, debug->size, debug->file,
                   debug->line);
 
         num_leaked++;
@@ -138,14 +118,29 @@ _CC_API_PRIVATE(void) _detach(void) {
     });
 
     if (num_leaked > 0) {
-        _ftprintf(wfp, _T("There are %d leaked memory blocks, totalizing %ld bytes\r\n"), num_leaked, tot_leaked);
+        __android_log_print(ANDROID_LOG_DEBUG, _CC_ANDROID_TAG_, _T("There are %d leaked memory blocks, totalizing %ld bytes\r\n"), num_leaked, tot_leaked);
     } else {
-        _ftprintf(wfp, _T("No memory leaks !\r\n"));
-    }
-    if (length) {
-        fclose(wfp);
+        __android_log_print(ANDROID_LOG_DEBUG, _CC_ANDROID_TAG_, _T("No memory leaks !\r\n"));
     }
     number_of_alloc = number_of_freed = 0;
+#else
+    _tprintf(_T("%d memory allocations, of which %d freed\r\n"), number_of_alloc, number_of_freed);
+    _cc_list_iterator_for_each(v, &tracked_list, {
+        _cc_debug_alloc_t *debug = _cc_upcast(v, _cc_debug_alloc_t, lnk);
+        _dump_timestamp(debug->create_time);
+        _tprintf(_T("%s (base: $%p, size: %ld) located at:%s(%d)\r\n"), mem_types[debug->type], debug, debug->size, debug->file, debug->line);
+
+        num_leaked++;
+        tot_leaked += debug->size;
+    });
+
+    if (num_leaked > 0) {
+        _tprintf(_T("There are %d leaked memory blocks, totalizing %ld bytes\r\n"), num_leaked, tot_leaked);
+    } else {
+        _tprintf(_T("No memory leaks !\r\n"));
+    }
+    number_of_alloc = number_of_freed = 0;
+#endif
 }
 
 #ifdef __CC_WINDOWS__

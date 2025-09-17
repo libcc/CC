@@ -402,17 +402,17 @@ _CC_API_PUBLIC(bool_t) _event_callback(_cc_async_event_t *async, _cc_event_t *e,
     _cc_list_iterator_swap(&async->pending, &e->lnk);
     
     /**/
-    if (e->callback) {
-        if (e->callback(async, e, which)) {
+    if (e->callback && e->callback(async, e, which)) {
+        if ((e->flags & _CC_EVENT_DISCONNECT_) == 0) {
             return true;
         }
-
-        if ((which & _CC_EVENT_DISCONNECT_) == 0) {
-            e->callback(async, e, _CC_EVENT_DISCONNECT_);
-        }
+    }
+    /**/
+    if ((e->flags & _CC_EVENT_WRITABLE_) == 0 && (which & _CC_EVENT_DISCONNECT_) == 0) {
+        e->callback(async, e, _CC_EVENT_DISCONNECT_);
     }
 
-    /*force disconnect socket*/
+    /*force disconnect*/
     _CC_MODIFY_BIT(_CC_EVENT_DISCONNECT_, _CC_EVENT_READABLE_|_CC_EVENT_ACCEPT_, e->flags);
     return false;
 }

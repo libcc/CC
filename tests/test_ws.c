@@ -33,7 +33,7 @@ _CC_API_PRIVATE(bool_t) _WebSocketResponseHeader(_cc_event_t *e, _WebSocket_t *w
                         "HTTP/1.1 101 Switching Protocols\r\n"
                         "Connection: Upgrade\r\n"
                         "Upgrade: websocket\r\n"
-                        "Sec-WebSocket-Protool: echo\r\n"
+                        "Sec-WebSocket-Protool: chat\r\n"
                         "Sec-WebSocket-Accept: %s\r\n\r\n",
                         ws->websocket_key);
 
@@ -263,7 +263,7 @@ int main(int argc, char *const argv[]) {
     struct sockaddr_in sa;
     _cc_async_event_t async;
     _cc_event_t *e;
-    uint16_t port = 5500;
+    uint16_t port = 808;
 
     _cc_install_socket();
 
