@@ -73,6 +73,7 @@ _CC_API_PRIVATE(_cc_event_t*) _cc_reserve_event(uint16_t baseid) {
                 _cc_logger_error(_T("The maximum number of event supported by the RLIMIT_NOFILE is %d"), g.slot_limit);
                 return nullptr;
             }
+
             /*If the allocation fails, it directly aborts, so there is no need to check whether the application is successful, which is meaningless.*/
             g.slots = (_cc_event_t **)_cc_realloc(g.slots, sizeof(_cc_event_t*) * expand_length);
             data = (_cc_event_t *)_cc_calloc(sizeof(_cc_event_t), _CC_MAX_STEP_);
@@ -93,7 +94,6 @@ _CC_API_PRIVATE(_cc_event_t*) _cc_reserve_event(uint16_t baseid) {
 
     e->ident = (uint32_t)(baseid << 20) | (e->ident & 0x0FFFFF);
     return e;
-
 }
 
 /**/
@@ -283,6 +283,7 @@ _CC_API_PUBLIC(bool_t) _register_async_event(_cc_async_event_t *async) {
         }
     } else {
         async_limit = _cc_atomic32_inc(&g.async_limit);
+        g.async[async_limit] = async;
     }
 
     async->changes = _cc_alloc_array(_CC_MAX_CHANGE_EVENTS_);
@@ -312,8 +313,6 @@ _CC_API_PUBLIC(bool_t) _register_async_event(_cc_async_event_t *async) {
     _cc_list_iterator_cleanup(&async->no_timer);
 
     async->running = 1;
-
-    g.async[async_limit] = async;
     return true;
 }
 
@@ -373,7 +372,6 @@ _CC_API_PUBLIC(bool_t) _unregister_async_event(_cc_async_event_t *async) {
         g.slot_length = 0;
         g.slots = nullptr;
         g.async = nullptr;
-        
     } else {
         g.async[async->ident] = 0;
     }
@@ -399,8 +397,22 @@ _CC_API_PUBLIC(uint32_t) _valid_connected(_cc_event_t *e, uint32_t which) {
 _CC_API_PUBLIC(bool_t) _event_callback(_cc_async_event_t *async, _cc_event_t *e, uint32_t which) {
     /**/
     async->processed++;
-    _cc_list_iterator_swap(&async->pending, &e->lnk);
+#ifndef _CC_EVENT_USE_IOCP_
+    if (e->buffer && (e->flags & _CC_EVENT_BUFFER_)) {
+        if ( (which & _CC_EVENT_READABLE_) ) {
+            if (!_cc_event_recv(e)) {
+                which = _CC_EVENT_DISCONNECT_;
+            }
+        } else if ( (which & _CC_EVENT_WRITABLE_) ) {
+            if (_cc_event_sendbuf(e) < 0) {
+                which = _CC_EVENT_DISCONNECT_;
+            }
+        }
+    }
+#endif
     
+    _cc_list_iterator_swap(&async->pending, &e->lnk);
+
     /**/
     if (e->callback && e->callback(async, e, which)) {
         if ((e->flags & _CC_EVENT_DISCONNECT_) == 0) {

@@ -186,11 +186,7 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
     }
 
     if (which & _CC_EVENT_READABLE_) {
-        _cc_event_buffer_t *rw = e->buffer;
-        if (e->buffer == nullptr) {
-            return false;
-        }
-
+        _cc_event_rbuf_t *rbuf = e->buffer->r;
         if (!_SSL_event_read(ws->ssl,e)) {
             return false;
         }
@@ -204,7 +200,7 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
 
         if (ws->status == _CC_HTTP_STATUS_HEADER_) {
             const _cc_http_header_t *connection, *upgrade, *sec_websocket_key;
-            ws->status = _cc_http_header_parser((_cc_http_header_fn_t)_cc_http_alloc_request_header, (pvoid_t *)&ws->request, &rw->r);
+            ws->status = _cc_http_header_parser((_cc_http_header_fn_t)_cc_http_alloc_request_header, (pvoid_t *)&ws->request, rbuf);
             /**/
             if (ws->status != _CC_HTTP_STATUS_PAYLOAD_) {
                 return ws->status == _CC_HTTP_STATUS_HEADER_;
@@ -231,11 +227,11 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
         } 
 
         if (ws->status == _CC_HTTP_STATUS_PAYLOAD_) {
-            _cc_buf_append(&ws->buffer, rw->r.bytes, rw->r.length);
+            _cc_buf_append(&ws->buffer, rbuf->bytes, rbuf->length);
             if (ws->buffer.length >= ws->payload) {
                 ws->status = _CC_HTTP_STATUS_ESTABLISHED_;
             }
-            rw->r.length = 0;
+            rbuf->length = 0;
         }
 
         if (ws->status == _CC_HTTP_STATUS_ESTABLISHED_) {
@@ -246,13 +242,7 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
     }
 
     if (which & _CC_EVENT_WRITABLE_) {
-        if (e->buffer) {
-            if (_SSL_sendbuf(ws->ssl,e) < 0) {
-                return false;
-            }
-        } else {
-            _CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
-        }
+
     }
 
     if (which & _CC_EVENT_TIMEOUT_) {

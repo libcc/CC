@@ -28,12 +28,12 @@
 struct _cc_async_event_priv {
     int fd;
     int nchanges;
-    struct kevent changelist[_CC_KQUEUE_EVENTS_];
+    struct kevent changes[_CC_KQUEUE_EVENTS_];
 };
 
 _CC_API_PRIVATE(bool_t) _update_kevent(_cc_async_event_priv_t *priv) {
     /**/
-    int r = kevent(priv->fd, priv->changelist, priv->nchanges, nullptr, 0, nullptr);
+    int r = kevent(priv->fd, priv->changes, priv->nchanges, nullptr, 0, nullptr);
     if (_cc_unlikely(r)) {
         _cc_logger_error(_T("kevent error %d. events:%d, error:%s"), r, priv->nchanges, _cc_last_error(r));
         return false;
@@ -49,11 +49,11 @@ _CC_API_PRIVATE(bool_t) _kqueue_event_update(_cc_async_event_priv_t *priv, _cc_e
 
     if (rm) {
         if (_CC_ISSET_BIT(_CC_EVENT_READABLE_ | _CC_EVENT_ACCEPT_, e->marks)) {
-            EV_SET(&priv->changelist[priv->nchanges++], e->fd, EVFILT_READ, EV_DELETE, 0, 0, e);
+            EV_SET(&priv->changes[priv->nchanges++], e->fd, EVFILT_READ, EV_DELETE, 0, 0, e);
         }
 
         if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_ | _CC_EVENT_CONNECT_, e->marks)) {
-            EV_SET(&priv->changelist[priv->nchanges++], e->fd, EVFILT_WRITE, EV_DELETE, 0, 0, e);
+            EV_SET(&priv->changes[priv->nchanges++], e->fd, EVFILT_WRITE, EV_DELETE, 0, 0, e);
         }
 
         if (priv->nchanges >= (_CC_KQUEUE_EVENTS_ - 4)) {
@@ -66,16 +66,16 @@ _CC_API_PRIVATE(bool_t) _kqueue_event_update(_cc_async_event_priv_t *priv, _cc_e
 
     /*Setting the readable event flag*/
     if (_CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, addevents)) {
-        EV_SET(&priv->changelist[priv->nchanges++], e->fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, e);
+        EV_SET(&priv->changes[priv->nchanges++], e->fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, e);
     } else if (_CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, delevents)) {
-        EV_SET(&priv->changelist[priv->nchanges++], e->fd, EVFILT_READ, EV_DELETE, 0, 0, e);
+        EV_SET(&priv->changes[priv->nchanges++], e->fd, EVFILT_READ, EV_DELETE, 0, 0, e);
     }
 
     /*Setting the writable event flag*/
     if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_ | _CC_EVENT_CONNECT_, addevents)) {
-        EV_SET(&priv->changelist[priv->nchanges++], e->fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, e);
+        EV_SET(&priv->changes[priv->nchanges++], e->fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, e);
     } else if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_ | _CC_EVENT_CONNECT_, delevents)) {
-        EV_SET(&priv->changelist[priv->nchanges++], e->fd, EVFILT_WRITE, EV_DELETE, 0, 0, e);
+        EV_SET(&priv->changes[priv->nchanges++], e->fd, EVFILT_WRITE, EV_DELETE, 0, 0, e);
     }
 
     if (priv->nchanges >= (_CC_KQUEUE_EVENTS_ - 4)) {
@@ -164,7 +164,7 @@ _CC_API_PRIVATE(bool_t) _kqueue_event_wait(_cc_async_event_t *async, uint32_t ti
     tv.tv_sec = timeout / 1000;
     tv.tv_nsec = (timeout % 1000) * 1000 * 1000;
 
-    rc = kevent(priv->fd, priv->changelist, priv->nchanges, actives, _CC_KQUEUE_EVENTS_, &tv);
+    rc = kevent(priv->fd, priv->changes, priv->nchanges, actives, _CC_KQUEUE_EVENTS_, &tv);
     priv->nchanges = 0;
 
     if (_cc_unlikely(rc < 0)) {
@@ -207,7 +207,7 @@ _CC_API_PRIVATE(bool_t) _kqueue_event_wait(_cc_async_event_t *async, uint32_t ti
              * all the registered events are also removed.
              * Queuing EV_DELETE to a closed FD is wrong.
              * The event(s) should just be deleted from
-             * the pending changelist.
+             * the pending changes.
              */
             case ENOTCAPABLE:
                 continue;
@@ -285,10 +285,10 @@ _CC_API_PRIVATE(bool_t) _kqueue_event_free(_cc_async_event_t *async) {
 _CC_API_PRIVATE(bool_t) _kqueue_event_alloc(_cc_async_event_t *async) {
     int r = 0;
     _cc_async_event_priv_t *priv;
-
 #ifdef __CC_MACOSX__
     struct kevent changes[2];
 #endif
+    
     if (!_register_async_event(async)) {
         return false;
     }
@@ -306,18 +306,19 @@ _CC_API_PRIVATE(bool_t) _kqueue_event_alloc(_cc_async_event_t *async) {
 
 #ifdef __CC_MACOSX__
     /* Check for Mac OS X kqueue bug. */
-    bzero(&changes, sizeof changes);
+    bzero(&changes, sizeof(changes));
 
     changes[0].ident = -1;
     changes[0].filter = EVFILT_READ;
     changes[0].flags = EV_ADD;
+
     /*
      * If kqueue works, then kevent will succeed, and it will
      * stick an error in events[0].  If kqueue is broken, then
      * kevent will fail.
      */
-    if (kevent(priv->fd, changes, 1, changes, 2, nullptr) != 1 || (int)changes[0].ident != -1 ||
-        !(changes[0].flags & EV_ERROR)) {
+    if (kevent(priv->fd, changes, 1, changes, 2, nullptr) != 1 ||
+        (int)changes[0].ident != -1 || !(changes[0].flags & EV_ERROR)) {
         _cc_logger_error(_T("detected broken kqueue; not using."));
         _cc_close_socket(priv->fd);
         _cc_free(priv);

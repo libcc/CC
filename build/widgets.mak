@@ -103,6 +103,7 @@ endif
 
 ifeq ($(PLATFORM), linux)
 LOCAL_SRC_FILES += $(WIDGET_FILES)/event/linux/sys_epoll.o
+LOCAL_SRC_FILES += $(WIDGET_FILES)/event/linux/sys_io_uring.o
 endif
 
 ifeq ($(PLATFORM), windows)

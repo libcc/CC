@@ -313,7 +313,7 @@ int32_t _win_recv(_cc_socket_t fd, byte_t* buf, int32_t length) {
     WSABUF wsabuf;
 
     wsabuf.buf = (CHAR*)buf;
-    wsabuf.len = (ULONG) length;
+    wsabuf.len = (ULONG)length;
 
     if (WSARecv(fd, &wsabuf, 1, &count_received, &flags, NULL, NULL) != 0) {
         return -1;

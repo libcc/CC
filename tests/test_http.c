@@ -116,15 +116,11 @@ _CC_API_PRIVATE(int64_t) _get_content_length(_cc_rbtree_t *headers) {
 
 static bool_t onRead(_cc_async_event_t *async, _cc_event_t *e) {
     _http_t *http = (_http_t*)e->args;
-    _cc_event_buffer_t *rw = e->buffer;
-    if (!_cc_event_recv(e)) {
-        return false;
-    }
-
+    _cc_event_rbuf_t *rbuf = &e->buffer->r;
     if (http->status == _CC_HTTP_STATUS_ESTABLISHED_) {
         return false;
     } else  if (http->status == _CC_HTTP_STATUS_HEADER_) {
-        http->status = _cc_http_header_parser((_cc_http_header_fn_t)_cc_http_alloc_request_header, (pvoid_t *)&http->request, &rw->r);
+        http->status = _cc_http_header_parser((_cc_http_header_fn_t)_cc_http_alloc_request_header, (pvoid_t *)&http->request, rbuf);
         /**/
         if (http->status == _CC_HTTP_STATUS_HEADER_) {
             return true;
@@ -144,11 +140,11 @@ static bool_t onRead(_cc_async_event_t *async, _cc_event_t *e) {
     } 
 
     if (http->status == _CC_HTTP_STATUS_PAYLOAD_) {
-        _cc_buf_append(&http->buffer, rw->r.bytes, rw->r.length);
+        _cc_buf_append(&http->buffer, rbuf->bytes, rbuf->length);
         if (http->buffer.length >= http->payload) {
             http->status = _CC_HTTP_STATUS_ESTABLISHED_;
         }
-        rw->r.length = 0;
+        rbuf->length = 0;
     }
 
     if (http->status == _CC_HTTP_STATUS_ESTABLISHED_) {
@@ -169,7 +165,7 @@ static bool_t onRead(_cc_async_event_t *async, _cc_event_t *e) {
 
 static bool_t onWrite(_cc_async_event_t *async, _cc_event_t *e) {
     _cc_logger_debug(_T("%d onWrite."), e->ident);
-    return _cc_event_sendbuf(e) >= 0;
+    return true;
 }
 
 static bool_t onTimeout(_cc_async_event_t *async, _cc_event_t *e) {

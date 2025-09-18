@@ -24,7 +24,7 @@
 _CC_API_PUBLIC(void) _iocp_overlapped_init(_cc_async_event_priv_t *priv) {
     _cc_list_iterator_cleanup(&priv->overlapped_active);
     _cc_list_iterator_cleanup(&priv->overlapped_idle);
-    priv->idle_count = 0;
+    priv->frees = 0;
 }
 
 _CC_API_PUBLIC(void) _iocp_overlapped_quit(_cc_async_event_priv_t *priv) {
@@ -48,11 +48,12 @@ _CC_API_PUBLIC(_iocp_overlapped_t*) _iocp_overlapped_alloc(_cc_async_event_priv_
         lnk = &(iocp_overlapped->lnk);
     } else {
         iocp_overlapped = _cc_upcast(lnk, _iocp_overlapped_t, lnk);
-        priv->idle_count--;
+        priv->frees--;
     }
 
     iocp_overlapped->fd = _CC_INVALID_SOCKET_;
     iocp_overlapped->e = e;
+	iocp_overlapped->number_of_bytes = 0;
     iocp_overlapped->ident = e->ident;
     
     _cc_list_iterator_push(&priv->overlapped_active, &(iocp_overlapped->lnk));
@@ -67,13 +68,13 @@ _CC_API_PUBLIC(void) _iocp_overlapped_free(_cc_async_event_priv_t *priv, _iocp_o
         iocp_overlapped->fd = _CC_INVALID_SOCKET_;
     }
     
-    if (priv->idle_count >= 64) {
+    if (priv->frees >= 64) {
         _cc_list_iterator_remove(&iocp_overlapped->lnk);
         _cc_free(iocp_overlapped);
         return;
     }
 
     _cc_list_iterator_swap(&priv->overlapped_idle, &iocp_overlapped->lnk);
-    priv->idle_count++;
+    priv->frees++;
     return;
 }

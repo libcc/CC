@@ -269,10 +269,7 @@ _CC_API_PRIVATE(bool_t) _iocp_event_disconnect(_cc_async_event_t *async, _cc_eve
     _CC_SET_BIT(_CC_EVENT_DISCONNECT_, e->marks);
     _CC_MODIFY_BIT(_CC_EVENT_DISCONNECT_, _CC_EVENT_READABLE_, e->flags);
 
-    iocp_overlapped = _iocp_overlapped_alloc(async->priv)
-    iocp_overlapped->fd = 0;
-    iocp_overlapped->e = e;
-    iocp_overlapped->ident = e->ident;
+    iocp_overlapped = _iocp_overlapped_alloc(async->priv, e)
     iocp_overlapped->flag = _CC_EVENT_DISCONNECT_;
 
     if (disconnect_fn(e->fd, &iocp_overlapped->overlapped, dwFlags, reserved) == false) {
@@ -321,16 +318,56 @@ _CC_API_PRIVATE(void) _iocp_event_dispatch(_cc_async_event_t *async, _iocp_overl
 
     _CC_UNSET_BIT(iocp_overlapped->flag, e->marks);
     if (iocp_overlapped->flag == _CC_EVENT_ACCEPT_) {
-        e->accept_fd = iocp_overlapped->fd;
-        iocp_overlapped->fd = _CC_INVALID_SOCKET_;
+
     } else if (iocp_overlapped->flag == _CC_EVENT_CONNECT_) {
+
+    }
+	switch(iocp_overlapped->flag) {
+	case _CC_EVENT_ACCEPT_:{
+		e->accept_fd = iocp_overlapped->fd;
+		iocp_overlapped->fd = _CC_INVALID_SOCKET_;
+	}
+		break;
+	case _CC_EVENT_WRITABLE_:
+		if (e->buffer && (e->flags & _CC_EVENT_BUFFER_)) {
+			_cc_event_wbuf_t *wbuf;
+			_cc_assert(e->buffer != nullptr);
+
+			wbuf = &e->buffer->w;
+			if (wbuf->length == 0) {
+				_CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
+				break;
+			}
+			_cc_spin_lock(&wbuf->lock);
+			if (iocp_overlapped->number_of_bytes < 0) {
+				_CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
+				wbuf->length = 0;
+			} else if (iocp_overlapped->number_of_bytes > 0) {
+				if (iocp_overlapped->number_of_bytes < (DWORD)wbuf->length) {
+					wbuf->length -= iocp_overlapped->number_of_bytes;
+					memmove(wbuf->bytes, wbuf->bytes + iocp_overlapped->number_of_bytes, wbuf->length);
+				} else {
+					_CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
+					wbuf->length = 0;
+				}
+			}
+			_cc_unlock(&wbuf->lock);
+		}
+		break;
+	case _CC_EVENT_READABLE_:
+		if (e->buffer && (e->flags & _CC_EVENT_BUFFER_)) {
+			e->buffer->r.length += iocp_overlapped->number_of_bytes;
+		}
+		break;
+	case _CC_EVENT_CONNECT_:
         if (NT_SUCCESS(iocp_overlapped->overlapped.Internal) &&
             _cc_setsockopt(e->fd, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, nullptr, 0) == 0) {
             _CC_MODIFY_BIT(_CC_EVENT_READABLE_, _CC_EVENT_CONNECT_, e->flags);
         } else {
             which = _CC_EVENT_DISCONNECT_;
         }
-    }
+		break;
+	}
 
     if (which) {
         _event_callback(async, e, which);
@@ -387,15 +424,14 @@ _iocp_overlapped_t* _iocp_upcast(_cc_async_event_t *async, LPOVERLAPPED overlapp
 /**/
 _CC_API_PRIVATE(bool_t) _iocp_event_wait(_cc_async_event_t *async, uint32_t timeout) {
     ULONG_PTR key = 0;
-    DWORD transferred = 0;
     LPOVERLAPPED overlapped = nullptr;
+	DWORD number_of_bytes;
 
     _iocp_overlapped_t *iocp_overlapped = nullptr;
-    OVERLAPPED_ENTRY overlappeds[_CC_IOCP_EVENTS_] = {0};
-
-    LPFN_GETQUEUEDCOMPLETIONSTATUSEX get_queued_completion_status_fn = get_queued_completion_status_func_ptr();
-
-    ULONG results_count = 0, i;
+#if (_WIN32_WINNT >= 0x0600)
+    OVERLAPPED_ENTRY entries[_CC_IOCP_EVENTS_] = {0};
+    ULONG number_of_entries = 0,i;
+#endif
     BOOL result;
 
     int32_t last_error;
@@ -411,13 +447,13 @@ _CC_API_PRIVATE(bool_t) _iocp_event_wait(_cc_async_event_t *async, uint32_t time
 
     /**/
     _reset_event_pending(async, _reset);
-
-    if (get_queued_completion_status_fn) {
-        result = get_queued_completion_status_fn(IOCPPort, overlappeds, _cc_countof(overlappeds), &results_count, timeout, false);
+#if (_WIN32_WINNT >= 0x0600)
+        result = GetQueuedCompletionStatusEx(IOCPPort, entries, _cc_countof(entries), &number_of_entries, timeout, false);
         if (result) {
-            for (i = 0; i < results_count; i++) {
-                key = overlappeds[i].lpCompletionKey;
-                overlapped = overlappeds[i].lpOverlapped;
+            for (i = 0; i < number_of_entries; i++) {
+                key = entries[i].lpCompletionKey;
+                overlapped = entries[i].lpOverlapped;
+				number_of_bytes = entries[i].dwNumberOfBytesTransferred;
                 /*exist work thread*/
                 if (key == _CC_IOCP_EXIT_) {
                     return false;
@@ -425,6 +461,7 @@ _CC_API_PRIVATE(bool_t) _iocp_event_wait(_cc_async_event_t *async, uint32_t time
                 /**/
                 iocp_overlapped = _iocp_upcast(async,overlapped);
                 if (iocp_overlapped) {
+					iocp_overlapped->number_of_bytes = number_of_bytes;
                     if (key == _CC_IOCP_PENDING_) {
                         _reset(async, iocp_overlapped->e);
                     } else {
@@ -436,10 +473,10 @@ _CC_API_PRIVATE(bool_t) _iocp_event_wait(_cc_async_event_t *async, uint32_t time
         } else {
             last_error = _cc_last_errno();
             if (last_error != WAIT_TIMEOUT) {
-                _cc_logger_error(_T("GetQueuedCompletionStatusEx %d errorCode: %i, %s"), results_count, last_error, _cc_last_error(last_error));
-                for (i = 0; i < results_count; i++) {
-                    key = overlappeds[i].lpCompletionKey;
-                    iocp_overlapped = _iocp_upcast(async,overlappeds[i].lpOverlapped);
+                _cc_logger_error(_T("GetQueuedCompletionStatusEx %d errorCode: %i, %s"), number_of_entries, last_error, _cc_last_error(last_error));
+                for (i = 0; i < number_of_entries; i++) {
+                    key = entries[i].lpCompletionKey;
+                    iocp_overlapped = _iocp_upcast(async,entries[i].lpOverlapped);
                     if (iocp_overlapped) {
                         if (key == _CC_IOCP_PENDING_) {
                             _event_cleanup(async, iocp_overlapped->e);
@@ -450,8 +487,8 @@ _CC_API_PRIVATE(bool_t) _iocp_event_wait(_cc_async_event_t *async, uint32_t time
                 }
             }
         }
-    } else {
-        result = GetQueuedCompletionStatus(IOCPPort, &transferred, (PULONG_PTR)&key, &overlapped, timeout);
+#else
+        result = GetQueuedCompletionStatus(IOCPPort, &number_of_bytes, (PULONG_PTR)&key, &overlapped, timeout);
 
         /*exist work thread*/
         if (key == _CC_IOCP_EXIT_) {
@@ -462,6 +499,7 @@ _CC_API_PRIVATE(bool_t) _iocp_event_wait(_cc_async_event_t *async, uint32_t time
         if (result) {
             /**/
             if (iocp_overlapped) {
+				iocp_overlapped->number_of_bytes = number_of_bytes;
                 if (key == _CC_IOCP_PENDING_) {
                     _reset(async, iocp_overlapped->e);
                 } else {
@@ -482,7 +520,7 @@ _CC_API_PRIVATE(bool_t) _iocp_event_wait(_cc_async_event_t *async, uint32_t time
                 _cc_logger_error(_T("GetQueuedCompletionStatus errorCode: %i, %s"), last_error, _cc_last_error(last_error));
             }
         }
-    }
+#endif
 
     _update_event_timeout(async, timeout);
 

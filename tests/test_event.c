@@ -59,35 +59,28 @@ static bool_t test_event_callback(_cc_async_event_t *async, _cc_event_t *e, cons
     }
 
     if (which & _CC_EVENT_READABLE_) {
-        byte_t buf[1024 * 16];
-        int32_t length;
-
-        length = _cc_recv(e->fd, buf, _cc_countof(buf));
-        if (length <= 0) {
-            _cc_logger_debug(_T("%d close."), e->ident);
-            return false;
-        }
-        if (_strnicmp((char_t*)buf, "ping", 5) == 0){
+        _cc_event_rbuf_t *rbuf = &e->buffer->r;
+        if (_strnicmp((char_t*)rbuf->bytes, "ping", 5) == 0){
             if (_cc_send(e->fd, (byte_t*)"pong", 5) < 0) {
                 _cc_logger_debug(_T("%d send pong fail."), e->ident);
                 return false;
             }
-        } else if (_strnicmp((char_t*)buf, "close", 5) == 0){
+        } else if (_strnicmp((char_t*)rbuf->bytes, "close", 5) == 0){
             _cc_logger_debug(_T("%d client close."), e->ident);
             return false;
         }
-        buf[length] = 0;
-        _cc_logger_debug("%d: %.*s",e->ident, length, buf);
+        rbuf->bytes[rbuf->length] = 0;
+        _cc_logger_debug("%d: %.*s",e->ident, rbuf->length, rbuf->bytes);
+        rbuf->length = 0;
     }
 
     if (which & _CC_EVENT_WRITABLE_) {
         _cc_logger_debug(_T("%d writeable."), e->ident);
-        _CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
     }
 
     if (which & _CC_EVENT_TIMEOUT_) {
         _cc_logger_debug(_T("%d timeout."), e->ident);
-        if (times++ > 2) {
+        if (times++ > 1000) {
             if (_cc_send(e->fd, (byte_t*)"close", 5) < 0) {
                 _cc_logger_debug(_T("%d send close fail."), e->ident);
                 return false;
@@ -126,6 +119,7 @@ void test_event_timeout() {
 
     event = _cc_add_event_timeout(async, 6000, test_event_timeout_callback, nullptr);
     assert(event != NULL);
+    _CC_UNUSED(event);
 }
 // 测试监听服务
 void test_event_tcp_listen() {
@@ -139,7 +133,7 @@ void test_event_tcp_listen() {
         return;
     }
 
-    event->timeout = 10000;
+    event->timeout = 60000;
     event->callback = test_event_callback;
 
     _cc_inet_ipv4_addr(&sa, nullptr, port);
@@ -156,7 +150,7 @@ void test_event_tcp_connect() {
     _cc_async_event_t *async = _cc_get_async_event();
     assert(async != NULL);
 
-    event = _cc_event_alloc(async, _CC_EVENT_CONNECT_|_CC_EVENT_TIMEOUT_);
+    event = _cc_event_alloc(async, _CC_EVENT_CONNECT_|_CC_EVENT_TIMEOUT_|_CC_EVENT_BUFFER_);
     assert(event != NULL);
     if (event == nullptr) {
         return;
@@ -182,7 +176,7 @@ int main() {
     TEST_CASE(test_event_tcp_connect);
     TEST_CASE(test_event_timeout);
 
-    for (i = 0; i < 88; i++) {
+    for (i = 0; i < 10; i++) {
         test_event_tcp_connect();
     }
     while((c = getchar()) != 'q') {

@@ -39,7 +39,7 @@ struct _cc_async_event_priv {
 	HANDLE port;
     _cc_list_iterator_t overlapped_active;
     _cc_list_iterator_t overlapped_idle;
-    int32_t idle_count;
+    int32_t frees;
 };
 
 typedef struct _iocp_overlapped {
@@ -47,6 +47,7 @@ typedef struct _iocp_overlapped {
 	uint32_t flag;
 	_cc_socket_t fd;
     OVERLAPPED overlapped;
+	DWORD number_of_bytes;
     _cc_list_iterator_t lnk;
     _cc_event_t *e;
 } _iocp_overlapped_t;

@@ -179,14 +179,6 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
 
     if (which & _CC_EVENT_READABLE_) {
         _cc_event_buffer_t *rw = e->buffer;
-        if (e->buffer == nullptr) {
-            return false;
-        }
-
-        if (!_cc_event_recv(e)) {
-            return false;
-        }
-
         ws = (_WebSocket_t*)e->args;
         if (ws->status == _CC_HTTP_STATUS_ESTABLISHED_) {
             if(_WebSocketData(e)) {
@@ -239,13 +231,7 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
     }
 
     if (which & _CC_EVENT_WRITABLE_) {
-        if (e->buffer) {
-            if (_cc_event_sendbuf(e) < 0) {
-                return false;
-            }
-        } else {
-            _CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
-        }
+
     }
 
     if (which & _CC_EVENT_TIMEOUT_) {

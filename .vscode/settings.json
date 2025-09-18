@@ -57,7 +57,8 @@
         "stack": "c",
         "sds.h": "c",
         "variant": "c",
-        "istream": "c"
+        "istream": "c",
+        "unistd.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     //"C_Cpp.clang_format_style": "{ BasedOnStyle: Microsoft, UseTab: Never, IndentWidth: 4, TabWidth: 4, }",

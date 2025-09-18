@@ -344,6 +344,7 @@ _CC_WIDGETS_API(bool_t) _cc_register_select(_cc_async_event_t*);
 #elif defined(__CC_LINUX__)
     _CC_WIDGETS_API(bool_t) _cc_register_poll(_cc_async_event_t*);
     _CC_WIDGETS_API(bool_t) _cc_register_epoll(_cc_async_event_t*);
+    _CC_WIDGETS_API(bool_t) _cc_register_io_uring(_cc_async_event_t*);
     #define _cc_register_poller _cc_register_epoll
 #elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__) || \
     defined(__CC_FREEBSD__) || defined(__CC_OPENBSD__) ||   \
