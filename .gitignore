@@ -6,6 +6,8 @@
 .project
 .metadata
 bin/
+include/openssl/
+build/openssl*
 tmp/
 *.tmp
 *.bak
@@ -42,8 +44,10 @@ local.properties
 #################
 *.xcuserstate
 *.xcbkptlist
-*.xcuserdata
 *.xcshareddata
+*.xcworkspace
+xcuserdata/
+
 
 #################
 ## Visual Studio
