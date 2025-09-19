@@ -42,9 +42,9 @@ local.properties
 #################
 *.xcuserstate
 *.xcbkptlist
-*.xcuserdata
 *.xcshareddata
-
+*.xcworkspace
+xcuserdata/
 #################
 ## Visual Studio
 #################
@@ -66,11 +66,12 @@ local.properties
 [Bb]in/
 [Oo]bj/
 x64/
+[Bb]uild/openssl*
 [Bb]uild/intermediates/
 [Bb]uild/CMake/
 [Bb]uild/CMakeFiles/
 [Bb]uild/.cmake/
-
+include/openssl*
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*

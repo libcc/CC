@@ -40,37 +40,10 @@ ifdef shared
 		endif
 	endif
 endif
-# Windows 下载安装OpenSSL
-# https://slproweb.com/products/Win32OpenSSL.html
 
-#SQLite Download Page
-#https://www.sqlite.org/download.html
-# download：sqlite-amalgamation-3500100.zip sqlit3 header
-# MSYS2 build sqlite3
-# gcc -shared -o sqlite3.dll sqlite3.c -Wl,--out-implib,libsqlite3.a
-# gcc -DSQLITE_ENABLE_COLUMN_METADATA sqlite3.c -shared -o sqlite3.dll -Wl,--out-implib,libsqlite3.a
-
-# Linux Ubuntu/Debian
-# sudo apt-get install libsqlite3-dev
-# MySQL
-# sudo apt-get install libmysqlclient-dev
-
-#macOS Homebrew
-# brew install unixodbc
-# brew install sqlite
-# brew install mysql-client
-
-#下载ODBC驱动
-#https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver17&redirectedfrom=MSDN
-#brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
-#brew update
-#HOMEBREW_ACCEPT_EULA=Y brew install msodbcsql18 mssql-tools18
-
-# 安装 64 位版本的 MySQL 客户端库
-# pacman -S mingw-w64-x86_64-mysql
 ifdef db
 ifeq ($(PLATFORM), osx)
-	MACROS			+= _CC_ENABLE_UNIXODBC_=1
+	MACROS			+= _CC_USE_UNIXODBC_=1
 
 	LOCAL_SRC_FILES += $(SRCROOT)/src/widgets/db/sqlsvr.o
 

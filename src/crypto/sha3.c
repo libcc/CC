@@ -59,26 +59,27 @@
 _CC_API_PRIVATE(uint64_t) ROL64(uint64_t val, int offset) {
     if (offset == 0) {
         return val;
-    } else if (!BIT_INTERLEAVE) {
-        return (val << offset) | (val >> (64 - offset));
-    } else {
-        uint32_t hi = (uint32_t)(val >> 32);
-        uint32_t lo = (uint32_t)val;
-
-        if (offset & 1) {
-            uint32_t tmp = hi;
-
-            offset >>= 1;
-            hi = ROL32(lo, offset);
-            lo = ROL32(tmp, offset + 1);
-        } else {
-            offset >>= 1;
-            lo = ROL32(lo, offset);
-            hi = ROL32(hi, offset);
-        }
-
-        return ((uint64_t)hi << 32) | lo;
     }
+#if BIT_INTERLEAVE
+    return (val << offset) | (val >> (64 - offset));
+#else
+    uint32_t hi = (uint32_t)(val >> 32);
+    uint32_t lo = (uint32_t)val;
+
+    if (offset & 1) {
+        uint32_t tmp = hi;
+
+        offset >>= 1;
+        hi = ROL32(lo, offset);
+        lo = ROL32(tmp, offset + 1);
+    } else {
+        offset >>= 1;
+        lo = ROL32(lo, offset);
+        hi = ROL32(hi, offset);
+    }
+
+    return ((uint64_t)hi << 32) | lo;
+#endif
 }
 
 static const byte_t rhotates[5][5] = {{0, 1, 62, 28, 27}, 
@@ -966,63 +967,56 @@ _CC_API_PRIVATE(void) _keccak_f1600(uint64_t A[5][5]) {
         __four_rounds(A, i);
     }
 }
-
 #endif
-
+#if BIT_INTERLEAVE
 _CC_API_PRIVATE(uint64_t) _bit_interleave(uint64_t Ai) {
-    if (BIT_INTERLEAVE) {
-        uint32_t hi = (uint32_t)(Ai >> 32);
-        uint32_t lo = (uint32_t)Ai;
-        uint32_t t0, t1;
-        
-        const uint32_t mask0 = 0x55555555;
-        const uint32_t mask1 = 0x33333333;
-        const uint32_t mask2 = 0x0f0f0f0f;
+    uint32_t hi = (uint32_t)(Ai >> 32);
+    uint32_t lo = (uint32_t)Ai;
+    uint32_t t0, t1;
+    
+    const uint32_t mask0 = 0x55555555;
+    const uint32_t mask1 = 0x33333333;
+    const uint32_t mask2 = 0x0f0f0f0f;
 
-        t0 = lo & mask0;
-        t0 = (t0 | (t0 >> 1)) & mask1;
-        t0 = (t0 | (t0 >> 2)) & mask2;
-        t0 = (t0 | (t0 >> 4)) & 0x00ff00ff;
-        t0 = (t0 | (t0 >> 8)) & 0x0000ffff;
+    t0 = lo & mask0;
+    t0 = (t0 | (t0 >> 1)) & mask1;
+    t0 = (t0 | (t0 >> 2)) & mask2;
+    t0 = (t0 | (t0 >> 4)) & 0x00ff00ff;
+    t0 = (t0 | (t0 >> 8)) & 0x0000ffff;
 
-        t1 = hi & mask0;
-        t1 = (t1 | (t1 >> 1)) & mask1;
-        t1 = (t1 | (t1 >> 2)) & mask2;
-        t1 = (t1 | (t1 >> 4)) & 0x00ff00ff;
-        t1 = (t1 | (t1 >> 8)) << 16;
+    t1 = hi & mask0;
+    t1 = (t1 | (t1 >> 1)) & mask1;
+    t1 = (t1 | (t1 >> 2)) & mask2;
+    t1 = (t1 | (t1 >> 4)) & 0x00ff00ff;
+    t1 = (t1 | (t1 >> 8)) << 16;
 
-        return ((uint64_t)(hi | lo) << 32) | (t1 | t0);
-    }
-    return Ai;
+    return ((uint64_t)(hi | lo) << 32) | (t1 | t0);
 }
 
 _CC_API_PRIVATE(uint64_t) _bit_deinterleave(uint64_t Ai) {
-    if (BIT_INTERLEAVE) {
-        uint32_t hi = (uint32_t)(Ai >> 32);
-        uint32_t lo = (uint32_t)Ai;
-        uint32_t t0, t1;
+    uint32_t hi = (uint32_t)(Ai >> 32);
+    uint32_t lo = (uint32_t)Ai;
+    uint32_t t0, t1;
 
-        const uint32_t mask0 = 0x55555555;
-        const uint32_t mask1 = 0x33333333;
-        const uint32_t mask2 = 0x0f0f0f0f;
+    const uint32_t mask0 = 0x55555555;
+    const uint32_t mask1 = 0x33333333;
+    const uint32_t mask2 = 0x0f0f0f0f;
 
-        t0 = lo & 0x0000ffff;
-        t0 = (t0 | (t0 << 8)) & 0x00ff00ff;
-        t0 = (t0 | (t0 << 4)) & mask2;
-        t0 = (t0 | (t0 << 2)) & mask1;
-        t0 = (t0 | (t0 << 1)) & mask0;
+    t0 = lo & 0x0000ffff;
+    t0 = (t0 | (t0 << 8)) & 0x00ff00ff;
+    t0 = (t0 | (t0 << 4)) & mask2;
+    t0 = (t0 | (t0 << 2)) & mask1;
+    t0 = (t0 | (t0 << 1)) & mask0;
 
-        t1 = hi << 16;
-        t1 = (t1 | (t1 >> 8)) & 0xff00ff00;
-        t1 = (t1 | (t1 >> 4)) & mask2;
-        t1 = (t1 | (t1 >> 2)) & mask1;
-        t1 = (t1 | (t1 >> 1)) & mask0;
+    t1 = hi << 16;
+    t1 = (t1 | (t1 >> 8)) & 0xff00ff00;
+    t1 = (t1 | (t1 >> 4)) & mask2;
+    t1 = (t1 | (t1 >> 2)) & mask1;
+    t1 = (t1 | (t1 >> 1)) & mask0;
 
-        return ((uint64_t)(hi | lo) << 32) | (t1 | t0);
-    }
-    return Ai;
+    return ((uint64_t)(hi | lo) << 32) | (t1 | t0);
 }
-
+#endif
 /*
  * SHA3_absorb can be called multiple times, but at each invocation
  * largest multiple of |r| out of |len| bytes are processed. Then
@@ -1045,8 +1039,11 @@ _CC_API_PRIVATE(size_t) SHA3_absorb(uint64_t A[5][5], const byte_t *inp, size_t 
                           (uint64_t)inp[4] << 32 | (uint64_t)inp[5] << 40 | (uint64_t)inp[6] << 48 |
                           (uint64_t)inp[7] << 56;
             inp += 8;
-
+#if BIT_INTERLEAVE
             A_flat[i] ^= _bit_interleave(Ai);
+#else
+            A_flat[i] ^= Ai;
+#endif
         }
         _keccak_f1600(A);
         len -= r;
@@ -1067,8 +1064,11 @@ _CC_API_PRIVATE(void) SHA3_squeeze(uint64_t A[5][5], byte_t *out, size_t len, si
 
     while (len != 0) {
         for (i = 0; i < w && len != 0; i++) {
+#if BIT_INTERLEAVE
             uint64_t Ai = _bit_deinterleave(A_flat[i]);
-
+#else
+            uint64_t Ai = A_flat[i];
+#endif
             if (len < 8) {
                 for (i = 0; i < len; i++) {
                     *out++ = (byte_t)Ai;

@@ -63,15 +63,6 @@ _CC_API_PUBLIC(pvoid_t) _cc_debug_realloc(pvoid_t d, size_t n, const tchar_t *fi
 /**/
 _CC_API_PUBLIC(void) _cc_debug_free(pvoid_t p);
 /**/
-_CC_API_PUBLIC(wchar_t*) _cc_debug_strdupW(const wchar_t *str, const tchar_t *file, const int line);
-/**/
-_CC_API_PUBLIC(char_t*) _cc_debug_strdupA(const char_t *str, const tchar_t *file, const int line);
-/**/
-_CC_API_PUBLIC(wchar_t*) _cc_debug_strndupW(const wchar_t *str, size_t n, const tchar_t *file, const int line);
-/**/
-_CC_API_PUBLIC(char_t*) _cc_debug_strndupA(const char_t *str, size_t n, const tchar_t *file, const int line);
-
-/**/
 #define _cc_malloc(N) _cc_debug_malloc((N), _CC_FILE_, _CC_LINE_)
 /**/
 #define _cc_calloc(C, N) _cc_debug_calloc((C), (N), _CC_FILE_, _CC_LINE_)
@@ -79,15 +70,6 @@ _CC_API_PUBLIC(char_t*) _cc_debug_strndupA(const char_t *str, size_t n, const tc
 #define _cc_realloc(P, N) _cc_debug_realloc((P),(N), _CC_FILE_, _CC_LINE_)
 /**/
 #define _cc_free(P) _cc_debug_free(P)
-/**/
-#define _cc_strdupA(P) _cc_debug_strdupA((P), _CC_FILE_, _CC_LINE_)
-/**/
-#define _cc_strdupW(P) _cc_debug_strdupW((P), _CC_FILE_, _CC_LINE_)
-/**/
-#define _cc_strndupA(P,N) _cc_debug_strndupA((P), (N), _CC_FILE_, _CC_LINE_)
-/**/
-#define _cc_strndupW(P,N) _cc_debug_strndupW((P), (N), _CC_FILE_, _CC_LINE_)
-
 #else
 
 /**/
@@ -98,27 +80,8 @@ _CC_API_PUBLIC(pvoid_t) _cc_calloc(size_t, size_t);
 _CC_API_PUBLIC(pvoid_t) _cc_realloc(pvoid_t, size_t);
 /**/
 _CC_API_PUBLIC(void) _cc_free(pvoid_t);
-/**/
-_CC_API_PUBLIC(char_t*) _cc_strdupA(const char_t*);
-/**/
-_CC_API_PUBLIC(wchar_t*) _cc_strdupW(const wchar_t*);
-
-/**/
-_CC_API_PUBLIC(char_t*) _cc_strndupA(const char_t*,size_t);
-/**/
-_CC_API_PUBLIC(wchar_t*) _cc_strndupW(const wchar_t*,size_t);
 
 #endif /* _CC_USE_DEBUG_MALLOC_ */
-
-/**/
-#ifdef _CC_UNICODE_
-    #define _cc_tcsdup(d)       _cc_strdupW(d)
-    #define _cc_tcsndup(d,n)    _cc_strndupW(d,n)
-#else
-    #define _cc_tcsdup(d)       _cc_strdupA(d)
-    #define _cc_tcsndup(d,n)     _cc_strndupA(d,n)
-#endif
-
 /**/
 #define _cc_safe_free(d) do {\
     if ((d)) {\

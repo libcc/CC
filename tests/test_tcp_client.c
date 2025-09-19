@@ -60,7 +60,7 @@ static bool_t onRead(_cc_async_event_t *async, _cc_event_t *e) {
 
 static bool_t onWrite(_cc_async_event_t *async, _cc_event_t *e) {
     _cc_logger_debug(_T("%d onWrite."), e->ident);
-    return false;
+    return _cc_event_sendbuf(e) < 0;
 }
 
 static bool_t onTimeout(_cc_async_event_t *async, _cc_event_t *e) {

@@ -14,7 +14,7 @@ WidgetsSources = [
 	"src/widgets/db/sqlite.c",
 	"src/widgets/generic/WS.c",
 	"src/widgets/ini/ini.c",
-	"src/widgets/ini/ini.parser.c",,
+	"src/widgets/ini/ini.parser.c",
 	"src/widgets/xml/xml.c",
 	"src/widgets/xml/xml.parser.c",
 	"src/widgets/json/json.array.c",
@@ -30,7 +30,7 @@ WidgetsSources = [
 	"src/widgets/event/tcp.c",
 	"src/widgets/event/timeout.c",
 	"src/widgets/event/windows/sys_iocp.c",
-	"src/widgets/event/windows/sys_iocp_overlapped.c",
+	"src/widgets/event/windows/sys_io_context.c",
 	"src/widgets/event/windows/sys_WSA.c",
 	"src/widgets/widgets.c",
 	"src/widgets/main.c"
@@ -70,12 +70,12 @@ if __name__ == "__main__":
 	vcxproj.ImportLibrary = "..\\lib"
 
 	vcxproj.addIncludePath([
-		"C:\\240216\\third-party",
-		"C:\\240216\\01\\include"
+		"C:\\0216\\third-party",
+		"C:\\0216\\libcc\\include"
 		])
 	vcxproj.addLibraryPath([
-		"C:\\240216\\third-party\\lib\\$(Platform)\\$(Configuration)",
-		"C:\\240216\\01\\lib\\$(Platform)\\$(Configuration)"
+		"C:\\0216\\third-party\\lib\\$(Platform)\\$(Configuration)",
+		"C:\\0216\\libcc\\lib\\$(Platform)\\$(Configuration)"
 		])
 	vcxproj.addSource(WidgetsSources)
 	vcxproj.addHeader(WidgetsHeaders)

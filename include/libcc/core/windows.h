@@ -79,10 +79,43 @@
 #include "../string.h"
 #include "../buf.h"
 
-/* Set up for C function definitions, even when using C++ */
-#ifdef __cplusplus
-extern "C" {
+/* Protections */
+#define PROT_NONE           0x00            /* no permissions */
+#define PROT_READ           0x01            /* pages can be read */
+#define PROT_WRITE          0x02            /* pages can be written */
+#define PROT_EXEC           0x04            /* pages can be executed */
+
+/* Sharing type and options */
+#define MAP_SHARED          0x0001          /* share changes */
+#define MAP_PRIVATE         0x0002          /* changes are private */
+#define MAP_COPY            MAP_PRIVATE     /* Obsolete */
+#define MAP_FIXED           0x0010          /* map addr must be exactly as requested */
+#define MAP_RENAME          0x0020          /* Sun: rename private pages to file */
+#define MAP_NORESERVE       0x0040          /* Sun: don't reserve needed swap area */
+#define MAP_INHERIT         0x0080          /* region is retained after exec */
+#define MAP_NOEXTEND        0x0100          /* for MAP_FILE, don't change file size */
+#define MAP_HASSEMAPHORE    0x0200          /* region may contain semaphores */
+#define MAP_STACK           0x0400          /* region grows down, like a stack */
+
+/* Error returned from mmap() */
+#define MAP_FAILED          ((void *)-1)
+
+/* Flags to msync */
+#define MS_ASYNC            0x01            /* perform asynchronous writes */
+#define MS_SYNC             0x02            /* perform synchronous writes */
+#define MS_INVALIDATE       0x04            /* invalidate cached data */
+
+/* File modes for 'open' not defined in MinGW32  (not used by mmap) */
+#ifndef S_IWGRP
+#define S_IWGRP             0
+#define S_IRGRP             0
+#define S_IROTH             0
 #endif
+
+#define LOCK_SH             1
+#define LOCK_EX             2
+#define LOCK_NB             4
+#define LOCK_UN             8
 
 #if defined(_CC_MSVC_) && _CC_MSVC_ >= 1800
 #define strdup _strdup
@@ -101,6 +134,35 @@ extern "C" {
 #define snprintf    _snprintf
 #define fileno      _fileno
 #define rmdir       _rmdir
+
+/* Set up for C function definitions, even when using C++ */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * Map a file to a memory region
+ */
+_CC_API_PUBLIC(pvoid_t) mmap(pvoid_t addr, unsigned int len, int prot, int flags, int fd, unsigned int offset);
+/**
+ * Unmap a memory region
+ */
+_CC_API_PUBLIC(int) munmap(pvoid_t addr, int len);
+
+/**
+ * Synchronize a mapped region
+ */
+_CC_API_PUBLIC(int) msync(char *addr, int len, int flags);
+
+/**
+ * @brief Set the file lock
+ *
+ * @param 1 file handle
+ * @param 2 lock status:(LOCK_SH=1, LOCK_EX=2, LOCK_NB=4, LOCK_UN=8)
+ *
+ * @return true if successful or false on error.
+ */
+_CC_API_PUBLIC(bool_t) flock(int, int32_t);
 
 /**/
 _CC_API_PUBLIC(HMODULE) _cc_load_windows_kernel32(void);
@@ -137,6 +199,8 @@ _CC_API_PUBLIC(void) _cc_uninstall_dumper(void);
 _CC_API_PUBLIC(const _cc_String_t *) _cc_get_module_file_name(void);
 /**/
 _CC_API_PUBLIC(size_t) _cc_get_resolve_symbol(tchar_t *buf, size_t length);
+/**/
+_CC_API_PUBLIC(size_t) _cc_get_device_name(tchar_t *cname, size_t length);
 /**/
 _CC_API_PUBLIC(void) _cc_get_os_version(uint32_t *major, uint32_t *minor, uint32_t *build);
 /**

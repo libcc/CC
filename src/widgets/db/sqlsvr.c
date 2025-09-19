@@ -28,7 +28,7 @@
 #ifdef __CC_WINDOWS__
 #include <sqlext.h>
 #include <windows.h>
-#elif defined(_CC_ENABLE_UNIXODBC_)
+#elif defined(_CC_USE_UNIXODBC_)
 #include <sql.h>
 #include <sqlext.h>
 #include <sqltypes.h>

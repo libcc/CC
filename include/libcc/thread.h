@@ -23,6 +23,7 @@
 
 #include "atomic.h"
 #include "logger.h"
+#include "sds.h"
 
 #ifdef __CC_WINDOWS__
 #include "thread/windows/sys_thread.h"
@@ -54,7 +55,7 @@ struct _cc_thread {
     /* 0 for default, >0 for user-specified stack size. */
     size_t stack_size;
     _cc_thread_handle_t handle;
-    tchar_t *name;
+    _cc_sds_t name;
     _cc_thread_callback_t callback;
     pvoid_t user_args;
 };

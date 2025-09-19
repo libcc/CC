@@ -92,6 +92,8 @@ _CC_API_PUBLIC(size_t) _cc_get_resolve_symbol(tchar_t *buf, size_t length);
 /**/
 _CC_API_PUBLIC(const _cc_String_t *) _cc_get_module_file_name(void);
 /**/
+_CC_API_PUBLIC(size_t) _cc_get_device_name(tchar_t *cname, size_t length);
+/**/
 _CC_API_PUBLIC(void) _cc_get_os_version(uint32_t *major, uint32_t *minor, uint32_t *build);
 #ifndef _access
 #define _access access

@@ -52,6 +52,8 @@ LOCAL_SRC_FILES = \
 	src/logger.o \
 	src/syslog.o \
 	src/alloc.o \
+	src/cpu.o \
+	src/file.o \
 	src/socket/inet.o \
 	src/socket/socket.o \
 	src/thread/thread.o \
@@ -59,14 +61,11 @@ LOCAL_SRC_FILES = \
 	src/time/time.o \
 	src/atomic/atomic.o \
 	src/atomic/rwlock.o \
-	src/core/cpu_info.o \
 	src/core/generic.o \
-	src/core/file.o \
 	src/power/power.o
 
 ifneq ($(filter $(PLATFORM), freebsd unix),)
 	LOCAL_SRC_FILES += src/time/unix/sys_time.o \
-		src/core/file.o \
 		src/core/unix/sys_unix.o \
 		src/core/unix/sys_dirent.o \
 		src/core/unix/sys_locale.o \
@@ -110,7 +109,6 @@ endif
 
 ifeq ($(PLATFORM), linux)
 		LOCAL_SRC_FILES += src/time/linux/sys_time.o \
-		src/core/file.o \
 		src/core/unix/sys_unix.o \
 		src/core/unix/sys_dirent.o \
 		src/core/unix/sys_locale.o \
@@ -125,7 +123,6 @@ endif
 
 ifeq ($(PLATFORM), windows)
 		LOCAL_SRC_FILES += src/time/windows/sys_time.o \
-		src/core/file.o \
 		src/core/windows/sys_windows.o \
 		src/core/windows/sys_mmap.o \
 		src/core/windows/sys_dirent.o \

@@ -19,11 +19,11 @@ LIBCCSources = [
 	"src/rand.c",
 	"src/rbtree.c",
 	"src/ring.c",
+	"src/file.c",
+	"src/cpu.c",
 	"src/atomic/atomic.c",
 	"src/atomic/rwlock.c",
-	"src/core/file.c",
 	"src/core/generic.c",
-	"src/core/cpu_info.c",
 	"src/core/windows/sys_mmap.c",
 	"src/core/windows/sys_pipe.c",
 	"src/core/windows/sys_windows.c",
@@ -94,6 +94,10 @@ LIBCCHeaders = [
 	"include/libcc/url.h",
 	"include/libcc/UTF.h",
 	"include/libcc/uuid.h",
+	"include/libcc/cpu.h",
+	"include/libcc/file.h",
+	"include/libcc/compiler.h",
+	"include/libcc/platform.h",
 	"include/libcc/version.h",
 	"include/libcc.h",
 	"include/libcc/crypto/aes.h",
@@ -107,10 +111,6 @@ LIBCCHeaders = [
 	"include/libcc/crypto/hmac.h",
 	"include/libcc/crypto/sha.h",
 	"include/libcc/crypto/xxtea.h",
-	"include/libcc/core/compiler.h",
-	"include/libcc/core/platform.h",
-	"include/libcc/core/cpu_info.h",
-	"include/libcc/core/file.h",
 	"include/libcc/core/windows/sys_flock.h",
 	"include/libcc/core/windows.h",
 	"include/libcc/core/windows/sys_mmap.h"
@@ -120,8 +120,8 @@ if __name__ == "__main__":
 	vcxproj = VCXProj("libcc","StaticLibrary","../../proj.Win/")
 	vcxproj.OutDir = "..\\lib"
 
-	vcxproj.addIncludePath(["C:\\240216\\third-party","C:\\240216\\01\\include"])
-	vcxproj.addLibraryPath(["C:\\240216\\third-party\\lib\\$(Platform)\\$(Configuration)","C:\\240216\\01\\lib\\$(Platform)\\$(Configuration)"])
+	vcxproj.addIncludePath(["C:\\0216\\third-party","C:\\0216\\libcc\\include"])
+	vcxproj.addLibraryPath(["C:\\0216\\third-party\\lib\\$(Platform)\\$(Configuration)","C:\\0216\\libcc\\lib\\$(Platform)\\$(Configuration)"])
 	vcxproj.addSource(LIBCCSources)
 	vcxproj.addHeader(LIBCCHeaders)
 	vcxproj.addMacros("Debug",["_LIB"])

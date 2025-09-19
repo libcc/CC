@@ -493,7 +493,7 @@ _CC_API_PRIVATE(uint8_t*) dns_read_name(uint8_t *reader, uint8_t *buffer, int *c
     // now convert 3www6google3com0 to www.google.com
     name_length = _domain(name, name_length);
 
-    return (uint8_t *)_cc_strndupA((const char *)name, name_length);
+    return (uint8_t *)_cc_sds_alloc((const char *)name, name_length);
 }
 
 /*

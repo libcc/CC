@@ -54,8 +54,10 @@
     
     tchar_t path[_CC_MAX_PATH_];
     _cc_get_base_path(path, _cc_countof(path));
-    
     NSLog(@"%s", path);
+    _cc_get_device_name(path, _cc_countof(path));
+    NSLog(@"%s", path);
+    
 }
 //被自定义的WKScriptMessageHandler在回调方法里通过代理回调回来，绕了一圈就是为了解决内存不释放的问题
 //通过接收JS传出消息的name进行捕捉的回调方法
@@ -112,12 +114,12 @@
         config.userContentController = wkUController;
         //rewrite the method of console.log
         
-        NSBundle *mainBundle = [NSBundle mainBundle];
-        NSString *path = [mainBundle pathForResource:@"sensitive_words" ofType:@"js"];
+        //NSBundle *mainBundle = [NSBundle mainBundle];
+        //NSString *path = [mainBundle pathForResource:@"sensitive_words" ofType:@"js"];
         
-        [config.userContentController addUserScript:[self inject:path]];
-        path = [mainBundle pathForResource:@"data" ofType:@"js"];
-        [config.userContentController addUserScript:[self inject:path]];
+        //[config.userContentController addUserScript:[self inject:path]];
+        //path = [mainBundle pathForResource:@"data" ofType:@"js"];
+        //[config.userContentController addUserScript:[self inject:path]];
         
         _webView = [[WKWebView alloc] initWithFrame:self.view.bounds configuration:config];
         // UI代理
@@ -129,7 +131,7 @@
         //可返回的页面列表, 存储已打开过的网页
         //WKBackForwardList * backForwardList = [_webView backForwardList];
         
-        NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://lkvod.org/play/360-2-172.html"]];
+        NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://lkvod.org"]];
         [_webView loadRequest:request];
         
 //        NSString *path = [[NSBundle mainBundle] pathForResource:@"JStoOC.html" ofType:nil];
@@ -193,16 +195,11 @@
             
         }])];
         [alertController addAction:([UIAlertAction actionWithTitle:@"打开" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            //NSURL * url = [NSURL URLWithString:[urlStr stringByReplacingOccurrencesOfString:@"github://callName_?" withString:@""]];
-            //[[UIApplication sharedApplication] openURL:url];
             _cc_open_url([urlStr stringByReplacingOccurrencesOfString:@"github://callName_?" withString:@""].UTF8String);
-            
         }])];
         [self presentViewController:alertController animated:YES completion:nil];
-        
         decisionHandler(WKNavigationActionPolicyCancel);
-        
-    }else{
+    } else {
         decisionHandler(WKNavigationActionPolicyAllow);
     }
 }

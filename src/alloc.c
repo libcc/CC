@@ -74,48 +74,4 @@ _CC_API_PUBLIC(void) _cc_free(pvoid_t p) {
     free(p);
 }
 
-/**/
-_CC_API_PUBLIC(wchar_t*) _cc_strdupW(const wchar_t *str) {
-    return _cc_strndupW(str, wcslen(str));
-}
-
-/**/
-_CC_API_PUBLIC(char_t*) _cc_strdupA(const char_t *str) {
-    return _cc_strndupA(str, strlen(str));
-}
-
-/**/
-_CC_API_PUBLIC(wchar_t*) _cc_strndupW(const wchar_t *str, size_t n) {
-    wchar_t *p;
-
-    if (_cc_unlikely(n <= 0)) {
-        return nullptr;
-    }
-
-    p = (wchar_t *)_cc_malloc(sizeof(wchar_t) * (n + 1));
-    if (_cc_likely(p)) {
-        memcpy(p, str, n * sizeof(wchar_t));
-        p[n] = 0;
-    }
-
-    return p;
-}
-
-/**/
-_CC_API_PUBLIC(char_t*) _cc_strndupA(const char_t *str, size_t n) {
-    char_t *p;
-
-    if (_cc_unlikely(n <= 0)) {
-        return nullptr;
-    }
-
-    p = (char_t *)_cc_malloc(sizeof(char_t) * (n + 1));
-    if (_cc_likely(p)) {
-        memcpy(p, str, n * sizeof(char_t));
-        p[n] = 0;
-    }
-
-    return p;
-}
-
 #endif

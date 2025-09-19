@@ -37,7 +37,9 @@ _CC_API_PUBLIC(void) _cc_thread_running_function(void *args) {
     user_args = self->user_args;
 
     /* Perform any system-dependent setup - this function may not fail */
-    _cc_setup_sys_thread(self->name);
+    if (self->name) {
+        _cc_setup_sys_thread(self->name);
+    }
 
     /* Run the function */
     self->status = user_func(user_args);
@@ -46,7 +48,9 @@ _CC_API_PUBLIC(void) _cc_thread_running_function(void *args) {
     if (!_cc_atomic32_cas(&self->state, _CC_THREAD_STATE_ALIVE_, _CC_THREAD_STATE_COMPLETE_)) {
         /* Clean up if something already detached us. */
         if (_cc_atomic32_load(&self->state) == _CC_THREAD_STATE_DETACHED_) {
-            _cc_safe_free(self->name);
+            if (self->name) {
+                _cc_sds_free(self->name);
+            }
             _cc_free(self);
         }
     }
@@ -70,7 +74,7 @@ _CC_API_PUBLIC(_cc_thread_t*) _cc_thread_with_stacksize(_cc_thread_callback_t ca
     _cc_atomic32_set(&self->state, _CC_THREAD_STATE_ALIVE_);
 
     if (name != nullptr) {
-        self->name = _cc_tcsdup(name);
+        self->name = _cc_sds_alloc(name,0);
     }
 
     /* Set up the arguments for the thread */
@@ -111,7 +115,9 @@ _CC_API_PUBLIC(void) _cc_wait_thread(_cc_thread_t *self, int32_t *status) {
     if (status) {
         *status = self->status;
     }
-    _cc_safe_free(self->name);
+    if (self->name) {
+        _cc_sds_free(self->name);
+    }
     _cc_free(self);
 }
 

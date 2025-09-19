@@ -46,8 +46,8 @@
     #include "core/unix.h"
 #endif
 
-#include "core/file.h"
-#include "core/cpu_info.h"
+#include "file.h"
+#include "cpu.h"
 #include "rand.h"
 
 #if (defined(DEBUG) | defined(_DEBUG) | defined(NDK_DEBUG)) 

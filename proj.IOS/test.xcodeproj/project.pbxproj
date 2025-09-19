@@ -7,9 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		415247DE2A41E0D300FF5E8C /* sensitive_words.js in Resources */ = {isa = PBXBuildFile; fileRef = 415247DD2A41E0D300FF5E8C /* sensitive_words.js */; };
 		416D42B129DAC4CF00205B24 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 416D42AF29DAC4CF00205B24 /* WebKit.framework */; };
-		41B769F52A41C60A00C71D05 /* data.js in Resources */ = {isa = PBXBuildFile; fileRef = 41B769F32A41C60A00C71D05 /* data.js */; };
 		41CDDE1729A3857B008F372C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 41CDDE1629A3857B008F372C /* AppDelegate.m */; };
 		41CDDE1A29A3857B008F372C /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 41CDDE1929A3857B008F372C /* SceneDelegate.m */; };
 		41CDDE1D29A3857B008F372C /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 41CDDE1C29A3857B008F372C /* ViewController.m */; };
@@ -28,12 +26,24 @@
 			remoteGlobalIDString = 414E4AF21F6CB6A20085AF50;
 			remoteInfo = cc;
 		};
+		42AC37182E7D6CF300B44396 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 41CDDE2F29A385AB008F372C /* cc.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 42FA02772E7D154E007B18F6;
+			remoteInfo = libcc.widgets;
+		};
+		42AC371A2E7D6CF300B44396 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 41CDDE2F29A385AB008F372C /* cc.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 42E140132E7D6B4E0045A73C;
+			remoteInfo = sqlite3;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		415247DD2A41E0D300FF5E8C /* sensitive_words.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = sensitive_words.js; sourceTree = "<group>"; };
 		416D42AF29DAC4CF00205B24 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
-		41B769F32A41C60A00C71D05 /* data.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = data.js; sourceTree = "<group>"; };
 		41CDDE1229A3857B008F372C /* test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = test.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41CDDE1529A3857B008F372C /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		41CDDE1629A3857B008F372C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -83,8 +93,6 @@
 		41CDDE1429A3857B008F372C /* test */ = {
 			isa = PBXGroup;
 			children = (
-				415247DD2A41E0D300FF5E8C /* sensitive_words.js */,
-				41B769F32A41C60A00C71D05 /* data.js */,
 				41CDDE1529A3857B008F372C /* AppDelegate.h */,
 				41CDDE1629A3857B008F372C /* AppDelegate.m */,
 				41CDDE1829A3857B008F372C /* SceneDelegate.h */,
@@ -104,6 +112,8 @@
 			isa = PBXGroup;
 			children = (
 				41CDDE3429A385AB008F372C /* libcc.a */,
+				42AC37192E7D6CF300B44396 /* libcc.widgets.framework */,
+				42AC371B2E7D6CF300B44396 /* sqlite3.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -181,6 +191,20 @@
 			remoteRef = 41CDDE3329A385AB008F372C /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		42AC37192E7D6CF300B44396 /* libcc.widgets.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = libcc.widgets.framework;
+			remoteRef = 42AC37182E7D6CF300B44396 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		42AC371B2E7D6CF300B44396 /* sqlite3.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = sqlite3.framework;
+			remoteRef = 42AC371A2E7D6CF300B44396 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -188,9 +212,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				41B769F52A41C60A00C71D05 /* data.js in Resources */,
 				41CDDE2529A3857C008F372C /* LaunchScreen.storyboard in Resources */,
-				415247DE2A41E0D300FF5E8C /* sensitive_words.js in Resources */,
 				41CDDE2229A3857C008F372C /* Assets.xcassets in Resources */,
 				41CDDE2029A3857B008F372C /* Main.storyboard in Resources */,
 			);
@@ -352,14 +374,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 7JGVR86J5Y;
+				DEVELOPMENT_TEAM = 8X9J3P3289;
 				INFOPLIST_FILE = test/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.libcc.test;
+				PRODUCT_BUNDLE_IDENTIFIER = cn.libcc.test;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -371,14 +393,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 7JGVR86J5Y;
+				DEVELOPMENT_TEAM = 8X9J3P3289;
 				INFOPLIST_FILE = test/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.libcc.test;
+				PRODUCT_BUNDLE_IDENTIFIER = cn.libcc.test;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = 1;
 			};

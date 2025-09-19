@@ -60,6 +60,9 @@ static bool_t test_event_callback(_cc_async_event_t *async, _cc_event_t *e, cons
 
     if (which & _CC_EVENT_READABLE_) {
         _cc_event_rbuf_t *rbuf = &e->buffer->r;
+        if (!_cc_event_recv(e)) {
+            return false;
+        }
         if (_strnicmp((char_t*)rbuf->bytes, "ping", 5) == 0){
             if (_cc_send(e->fd, (byte_t*)"pong", 5) < 0) {
                 _cc_logger_debug(_T("%d send pong fail."), e->ident);
@@ -76,6 +79,7 @@ static bool_t test_event_callback(_cc_async_event_t *async, _cc_event_t *e, cons
 
     if (which & _CC_EVENT_WRITABLE_) {
         _cc_logger_debug(_T("%d writeable."), e->ident);
+        return _cc_event_sendbuf(e) < 0;
     }
 
     if (which & _CC_EVENT_TIMEOUT_) {

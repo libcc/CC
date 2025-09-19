@@ -37,82 +37,82 @@ extern "C" {
 
 struct _cc_async_event_priv {
 	HANDLE port;
-    _cc_list_iterator_t overlapped_active;
-    _cc_list_iterator_t overlapped_idle;
+    _cc_list_iterator_t io_active;
+    _cc_list_iterator_t io_idle;
     int32_t frees;
 };
 
-typedef struct _iocp_overlapped {
+typedef struct _io_context {
     uint32_t ident;
 	uint32_t flag;
 	_cc_socket_t fd;
-    OVERLAPPED overlapped;
+    OVERLAPPED io_context;
 	DWORD number_of_bytes;
     _cc_list_iterator_t lnk;
     _cc_event_t *e;
-} _iocp_overlapped_t;
+} _io_context_t;
 
 /**
  * @brief IOCP Socket TCP Accept
  *
- * @param overlapped IOCP OVERLAPPED structure
+ * @param io_context IOCP OVERLAPPED structure
  * @param fd Socket handle
  *
  * @return 0 if successful or socket on error.
  */
-int _WSA_socket_accept(_iocp_overlapped_t* overlapped);
+int _WSA_socket_accept(_io_context_t* io_context);
 /**
  * @brief IOCP Socket TCP Send
  *
  * @param e event structure
- * @param overlapped IOCP OVERLAPPED structure
+ * @param io_context IOCP OVERLAPPED structure
  *
  * @return 0 if successful or socket on error.
  */
-int _WSA_socket_send(_iocp_overlapped_t *overlapped);
+int _WSA_socket_send(_io_context_t *io_context);
 /**
  * @brief IOCP Socket TCP Read
  *
- * @param overlapped IOCP OVERLAPPED structure
+ * @param io_context IOCP OVERLAPPED structure
  *
  * @return 0 if successful or socket on error.
  */
-int _WSA_socket_receive(_iocp_overlapped_t *overlapped);
+int _WSA_socket_receive(_io_context_t *io_context);
 /**
  * @brief IOCP Socket UDP Send
  *
- * @param overlapped IOCP OVERLAPPED structure
+ * @param io_context IOCP OVERLAPPED structure
  * @param sa _cc_sockaddr_t structure
  * @param sa_len Length of send byte buffer
  *
  * @return 0 if successful or socket on error.
  */
-int _WSA_socket_sendto(_iocp_overlapped_t *overlapped, _cc_sockaddr_t *sa, _cc_socklen_t sa_len);
+int _WSA_socket_sendto(_io_context_t *io_context, _cc_sockaddr_t *sa, _cc_socklen_t sa_len);
 /**
  * @brief IOCP Socket UDP Read
  *
  * @param e event structure
- * @param overlapped IOCP OVERLAPPED structure
+ * @param io_context IOCP OVERLAPPED structure
  * @param sa _cc_sockaddr_t structure
  * @param sa_len Length of receive byte buffer
  *
  * @return 0 if successful or socket on error.
  */
-int _WSA_socket_receivefrom(_iocp_overlapped_t *overlapped, _cc_sockaddr_t *sa, _cc_socklen_t *sa_len);
+int _WSA_socket_receivefrom(_io_context_t *io_context, _cc_sockaddr_t *sa, _cc_socklen_t *sa_len);
 
 /**
  * @brief IOCP Initialize Overlapped 
  *
  * @param priv _cc_async_event_priv_t
  */
-void _iocp_overlapped_init(_cc_async_event_priv_t* priv);
+void _io_context_init(_cc_async_event_priv_t* priv);
 
 /**
  * @brief IOCP Uninitialize Overlapped
  * 
  * @param priv _cc_async_event_priv_t
  */
-void _iocp_overlapped_quit(_cc_async_event_priv_t *priv);
+void _io_context_quit(_cc_async_event_priv_t *priv);
 
 /**
  * @brief IOCP Create Overlapped
@@ -121,15 +121,15 @@ void _iocp_overlapped_quit(_cc_async_event_priv_t *priv);
  *
  * @return 
  */
-_iocp_overlapped_t* _iocp_overlapped_alloc(_cc_async_event_priv_t *priv, _cc_event_t *e);
+_io_context_t* _io_context_alloc(_cc_async_event_priv_t *priv, _cc_event_t *e);
 /**
  * @brief IOCP Free Overlapped
  *
  * @param priv _cc_async_event_priv_t
- * @param iocp_overlapped _iocp_overlapped_t
+ * @param io_context _io_context_t
  *
  */
-void _iocp_overlapped_free(_cc_async_event_priv_t *priv, _iocp_overlapped_t *overlapped);
+void _io_context_free(_cc_async_event_priv_t *priv, _io_context_t *io_context);
 
 #endif
 

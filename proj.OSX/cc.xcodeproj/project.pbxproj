@@ -12,11 +12,14 @@
 		426BE25F2E5DD17800CE8D50 /* libsqlite3.0.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE25E2E5DD17800CE8D50 /* libsqlite3.0.tbd */; };
 		426BE2612E5DD18400CE8D50 /* libiodbc.2.1.18.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE2602E5DD18400CE8D50 /* libiodbc.2.1.18.tbd */; };
 		426BE2632E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE2622E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd */; };
-		426BE2652E5DD1BA00CE8D50 /* libmysqlclient.24.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE2642E5DD1BA00CE8D50 /* libmysqlclient.24.dylib */; };
-		426BE26E2E5DD2EC00CE8D50 /* libssl.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE26C2E5DD2EC00CE8D50 /* libssl.3.dylib */; };
-		426BE26F2E5DD2EC00CE8D50 /* libcrypto.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE26D2E5DD2EC00CE8D50 /* libcrypto.3.dylib */; };
 		427234322E684B53005FD969 /* sds.c in Sources */ = {isa = PBXBuildFile; fileRef = 427234312E684B53005FD969 /* sds.c */; };
 		427234382E684EB2005FD969 /* sys_unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 427234372E684EB2005FD969 /* sys_unix.c */; };
+		42AC371F2E7D746500B44396 /* file.c in Sources */ = {isa = PBXBuildFile; fileRef = 42AC371E2E7D746500B44396 /* file.c */; };
+		42AC37202E7D746500B44396 /* cpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 42AC371D2E7D746500B44396 /* cpu.c */; };
+		42AC37262E7D768C00B44396 /* libcrypto.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 42AC37252E7D768C00B44396 /* libcrypto.3.dylib */; };
+		42AC37282E7D76A200B44396 /* libssl.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 42AC37272E7D76A200B44396 /* libssl.3.dylib */; };
+		42AC372A2E7D76E200B44396 /* libmysqlclient.24.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 42AC37292E7D76E200B44396 /* libmysqlclient.24.dylib */; };
+		42AC372C2E7D774C00B44396 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 42AC372B2E7D774C00B44396 /* main.c */; };
 		42C8179C2E50EEE200359415 /* sys_power.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C817012E50EEE200359415 /* sys_power.c */; };
 		42C8179D2E50EEE200359415 /* alloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C817842E50EEE200359415 /* alloc.c */; };
 		42C8179F2E50EEE200359415 /* sys_time.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C8172A2E50EEE200359415 /* sys_time.c */; };
@@ -25,7 +28,6 @@
 		42C817A42E50EEE200359415 /* sys_locale.m in Sources */ = {isa = PBXBuildFile; fileRef = 42C816D12E50EEE200359415 /* sys_locale.m */; };
 		42C817A72E50EEE200359415 /* xxtea.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C816F22E50EEE200359415 /* xxtea.c */; };
 		42C817A82E50EEE200359415 /* md4.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C816EC2E50EEE200359415 /* md4.c */; };
-		42C817AA2E50EEE200359415 /* file.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C816E22E50EEE200359415 /* file.c */; };
 		42C817AB2E50EEE200359415 /* socket.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C817132E50EEE200359415 /* socket.c */; };
 		42C817B12E50EEE200359415 /* sys_file.m in Sources */ = {isa = PBXBuildFile; fileRef = 42C816D02E50EEE200359415 /* sys_file.m */; };
 		42C817B32E50EEE200359415 /* sys_thread.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C8171C2E50EEE200359415 /* sys_thread.c */; };
@@ -38,7 +40,6 @@
 		42C817C42E50EEE200359415 /* aes.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C816E52E50EEE200359415 /* aes.c */; };
 		42C817D32E50EEE200359415 /* md2.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C816EB2E50EEE200359415 /* md2.c */; };
 		42C817D62E50EEE200359415 /* inet.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C817122E50EEE200359415 /* inet.c */; };
-		42C817D72E50EEE200359415 /* cpu_info.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C816E12E50EEE200359415 /* cpu_info.c */; };
 		42C817DD2E50EEE200359415 /* logger.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C8178B2E50EEE200359415 /* logger.c */; };
 		42C817E22E50EEE200359415 /* rand.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C8178D2E50EEE200359415 /* rand.c */; };
 		42C817E62E50EEE200359415 /* time.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C8172F2E50EEE200359415 /* time.c */; };
@@ -137,11 +138,14 @@
 		426BE25E2E5DD17800CE8D50 /* libsqlite3.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.0.tbd; path = usr/lib/libsqlite3.0.tbd; sourceTree = SDKROOT; };
 		426BE2602E5DD18400CE8D50 /* libiodbc.2.1.18.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiodbc.2.1.18.tbd; path = usr/lib/libiodbc.2.1.18.tbd; sourceTree = SDKROOT; };
 		426BE2622E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiodbcinst.2.1.18.tbd; path = usr/lib/libiodbcinst.2.1.18.tbd; sourceTree = SDKROOT; };
-		426BE2642E5DD1BA00CE8D50 /* libmysqlclient.24.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmysqlclient.24.dylib; path = "../../../homebrew/Cellar/mysql-client/9.4.0/lib/libmysqlclient.24.dylib"; sourceTree = "<group>"; };
-		426BE26C2E5DD2EC00CE8D50 /* libssl.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.3.dylib; path = "../../../homebrew/Cellar/openssl@3/3.5.2/lib/libssl.3.dylib"; sourceTree = "<group>"; };
-		426BE26D2E5DD2EC00CE8D50 /* libcrypto.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.3.dylib; path = "../../../homebrew/Cellar/openssl@3/3.5.2/lib/libcrypto.3.dylib"; sourceTree = "<group>"; };
 		427234312E684B53005FD969 /* sds.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sds.c; sourceTree = "<group>"; };
 		427234372E684EB2005FD969 /* sys_unix.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = sys_unix.c; path = unix/sys_unix.c; sourceTree = "<group>"; };
+		42AC371D2E7D746500B44396 /* cpu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = cpu.c; sourceTree = "<group>"; };
+		42AC371E2E7D746500B44396 /* file.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = file.c; sourceTree = "<group>"; };
+		42AC37252E7D768C00B44396 /* libcrypto.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.3.dylib; path = "../../homebrew/Cellar/openssl@3/3.5.2/lib/libcrypto.3.dylib"; sourceTree = "<group>"; };
+		42AC37272E7D76A200B44396 /* libssl.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.3.dylib; path = "../../homebrew/Cellar/openssl@3/3.5.2/lib/libssl.3.dylib"; sourceTree = "<group>"; };
+		42AC37292E7D76E200B44396 /* libmysqlclient.24.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmysqlclient.24.dylib; path = "../../homebrew/Cellar/mysql-client/9.4.0/lib/libmysqlclient.24.dylib"; sourceTree = "<group>"; };
+		42AC372B2E7D774C00B44396 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		42C816C02E50EEE200359415 /* atomic.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = atomic.c; sourceTree = "<group>"; };
 		42C816C12E50EEE200359415 /* rwlock.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = rwlock.c; sourceTree = "<group>"; };
 		42C816CE2E50EEE200359415 /* sys_clipboard.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = sys_clipboard.m; sourceTree = "<group>"; };
@@ -149,8 +153,6 @@
 		42C816D02E50EEE200359415 /* sys_file.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = sys_file.m; sourceTree = "<group>"; };
 		42C816D12E50EEE200359415 /* sys_locale.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = sys_locale.m; sourceTree = "<group>"; };
 		42C816D22E50EEE200359415 /* sys_osx.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = sys_osx.m; sourceTree = "<group>"; };
-		42C816E12E50EEE200359415 /* cpu_info.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = cpu_info.c; sourceTree = "<group>"; };
-		42C816E22E50EEE200359415 /* file.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = file.c; sourceTree = "<group>"; };
 		42C816E32E50EEE200359415 /* generic.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = generic.c; sourceTree = "<group>"; };
 		42C816E52E50EEE200359415 /* aes.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = aes.c; sourceTree = "<group>"; };
 		42C816E62E50EEE200359415 /* base16.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = base16.c; sourceTree = "<group>"; };
@@ -254,9 +256,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				426BE26E2E5DD2EC00CE8D50 /* libssl.3.dylib in Frameworks */,
-				426BE26F2E5DD2EC00CE8D50 /* libcrypto.3.dylib in Frameworks */,
-				426BE2652E5DD1BA00CE8D50 /* libmysqlclient.24.dylib in Frameworks */,
+				42AC372A2E7D76E200B44396 /* libmysqlclient.24.dylib in Frameworks */,
+				42AC37282E7D76A200B44396 /* libssl.3.dylib in Frameworks */,
+				42AC37262E7D768C00B44396 /* libcrypto.3.dylib in Frameworks */,
 				426BE2632E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd in Frameworks */,
 				426BE2612E5DD18400CE8D50 /* libiodbc.2.1.18.tbd in Frameworks */,
 				426BE25F2E5DD17800CE8D50 /* libsqlite3.0.tbd in Frameworks */,
@@ -289,9 +291,9 @@
 		41E3A69729FE430400BEFBD6 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				426BE26D2E5DD2EC00CE8D50 /* libcrypto.3.dylib */,
-				426BE26C2E5DD2EC00CE8D50 /* libssl.3.dylib */,
-				426BE2642E5DD1BA00CE8D50 /* libmysqlclient.24.dylib */,
+				42AC37292E7D76E200B44396 /* libmysqlclient.24.dylib */,
+				42AC37272E7D76A200B44396 /* libssl.3.dylib */,
+				42AC37252E7D768C00B44396 /* libcrypto.3.dylib */,
 				426BE2622E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd */,
 				426BE2602E5DD18400CE8D50 /* libiodbc.2.1.18.tbd */,
 				426BE25E2E5DD17800CE8D50 /* libsqlite3.0.tbd */,
@@ -326,8 +328,6 @@
 			children = (
 				427234372E684EB2005FD969 /* sys_unix.c */,
 				42C816D32E50EEE200359415 /* OSX */,
-				42C816E12E50EEE200359415 /* cpu_info.c */,
-				42C816E22E50EEE200359415 /* file.c */,
 				42C816E32E50EEE200359415 /* generic.c */,
 			);
 			path = core;
@@ -458,6 +458,8 @@
 		42C817952E50EEE200359415 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				42AC371D2E7D746500B44396 /* cpu.c */,
+				42AC371E2E7D746500B44396 /* file.c */,
 				42DA6DC72E515EC8005A3D8B /* widgets */,
 				42C816C22E50EEE200359415 /* atomic */,
 				42C816E42E50EEE200359415 /* core */,
@@ -611,6 +613,7 @@
 		42DA6DC72E515EC8005A3D8B /* widgets */ = {
 			isa = PBXGroup;
 			children = (
+				42AC372B2E7D774C00B44396 /* main.c */,
 				42DA6D792E515EC8005A3D8B /* db */,
 				42DA6D7D2E515EC8005A3D8B /* dns */,
 				42DA6D902E515EC8005A3D8B /* event */,
@@ -737,7 +740,6 @@
 				427234382E684EB2005FD969 /* sys_unix.c in Sources */,
 				42C817A72E50EEE200359415 /* xxtea.c in Sources */,
 				42C817A82E50EEE200359415 /* md4.c in Sources */,
-				42C817AA2E50EEE200359415 /* file.c in Sources */,
 				42C817AB2E50EEE200359415 /* socket.c in Sources */,
 				42C817B12E50EEE200359415 /* sys_file.m in Sources */,
 				42C817B32E50EEE200359415 /* sys_thread.c in Sources */,
@@ -750,7 +752,6 @@
 				42C817C42E50EEE200359415 /* aes.c in Sources */,
 				42C817D32E50EEE200359415 /* md2.c in Sources */,
 				42C817D62E50EEE200359415 /* inet.c in Sources */,
-				42C817D72E50EEE200359415 /* cpu_info.c in Sources */,
 				42C817DD2E50EEE200359415 /* logger.c in Sources */,
 				42C817E22E50EEE200359415 /* rand.c in Sources */,
 				42C817E62E50EEE200359415 /* time.c in Sources */,
@@ -767,6 +768,8 @@
 				42C818032E50EEE200359415 /* hmac.c in Sources */,
 				42C818062E50EEE200359415 /* sys_mutex.c in Sources */,
 				42C818072E50EEE200359415 /* base58.c in Sources */,
+				42AC371F2E7D746500B44396 /* file.c in Sources */,
+				42AC37202E7D746500B44396 /* cpu.c in Sources */,
 				42C8180A2E50EEE200359415 /* base16.c in Sources */,
 				42C8180B2E50EEE200359415 /* strptime.c in Sources */,
 				42C8180C2E50EEE200359415 /* GBK.c in Sources */,
@@ -802,6 +805,7 @@
 				42DA6DD02E515EC8005A3D8B /* buffer.c in Sources */,
 				42DA6DD12E515EC8005A3D8B /* generic.c in Sources */,
 				42DA6DD22E515EC8005A3D8B /* oci8.c in Sources */,
+				42AC372C2E7D774C00B44396 /* main.c in Sources */,
 				42DA6DD32E515EC8005A3D8B /* url_request.c in Sources */,
 				42DA6DD72E515EC8005A3D8B /* json.parser.c in Sources */,
 				42DA6DD82E515EC8005A3D8B /* WS.c in Sources */,
@@ -963,7 +967,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				HEADER_SEARCH_PATHS = (
 					../include,
-					/usr/local/Cellar/unixodbc/2.3.9_1/include/,
+					/opt/homebrew/include,
 					"../../third-party",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
@@ -983,7 +987,7 @@
 				GCC_C_LANGUAGE_STANDARD = c99;
 				HEADER_SEARCH_PATHS = (
 					../include,
-					/usr/local/Cellar/unixodbc/2.3.9_1/include/,
+					/opt/homebrew/include,
 					"../../third-party",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
@@ -1005,8 +1009,9 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
-					"_CC_USE_OPENSSL_=1",
-					"_CC_WIDGETS_API_USE_DYNAMIC_=1",
+					_CC_USE_UNIXODBC_,
+					_CC_USE_OPENSSL_,
+					_CC_WIDGETS_API_USE_DYNAMIC_,
 				);
 				HEADER_SEARCH_PATHS = (
 					../include,

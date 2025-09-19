@@ -61,6 +61,15 @@ static void init_get_version(void) {
 	_call_get_version = (RTLGETVERSION_PTR)GetProcAddress(ntdll_module, "RtlGetVersion");
 }
 
+/**/
+_CC_API_PUBLIC(size_t) _cc_get_device_name(tchar_t *cname, size_t length) {
+    if (GetComputerName(cname, (DWORD*)&length)) {
+        return length;
+    }
+    return 0;
+}
+
+/**/
 _CC_API_PUBLIC(void) _cc_get_os_version(uint32_t *major, uint32_t *minor, uint32_t *build) {
     static _cc_once_t once_get_version = _CC_ONCE_INIT_;
     OSVERSIONINFOW os_info;
