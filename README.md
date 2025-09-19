@@ -66,8 +66,8 @@ sudo apt-get install libpng-dev
 
 ```shell
 # 下载编译
-git clone https://github.com/huai2001/CC.git
-cd CC/build
+git clone https://github.com/libcc/libcc.git
+cd libcc/build
 make path
 ./build.sh
 ```
