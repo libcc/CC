@@ -7,7 +7,7 @@
 `libcc`是跨平台，多线程，轻量级的C语言库，提供了更简单的接口和更丰富的协议。提供的函数功能包括：字符串、日志、双向/单向链表、哈希表、网络通信、JSON、XML、INI配置文件读取、AES、DES、MD2、MD4、MD5、base16/base58/base64编码/解码、url编码/解码、时间轮计时器等等。详细信息请参阅C文件
 
 针对各个平台，封装了统一的接口，简化了各类开发过程中常用操作，使你在开发过程中，更加关注实际应用的开发，而不是把时间浪费在琐碎的接口兼容性上面，并且充分利用了各个平台独有的一些特性进行优化。
-这个项目的目的，是为了使C开发更加的简单高效。
+这个项目的目的是为了使C开发更加的灵活高效。
 
 
 ```C
@@ -26,20 +26,18 @@ CALL(printf, "Hello World!\n");
 ## ✨ 特征
 
 - 跨平台（Linux, Windows, MacOS, FreeBSD, Android, iOS）
-
-- TCP/UDP服务端/客户端/代理
-- TCP支持心跳、转发、拆包、多线程安全write和close等特性
-- 提供file、directory、socket、thread、time等常用系统接口
-- 提供atomic、atomic64接口
 - 提供高性能事件循环（网络IO事件、定时器事件）
 - 提供io轮询器，针对epoll, poll, select, kqueue进行跨平台封装
 - 提供高精度、低精度定时器
+- TCP支持心跳、转发、拆包、多线程安全write和close等特性
+- 提供file、directory、socket、thread、time等常用系统接口
+- 提供atomic、atomic64接口
 - 提供mutex、semaphore、spinlock等事件、互斥、信号量、自旋锁操作
 - 提供获取函数堆栈信息的接口，方便调试和错误定位
 - 提供跨平台动态库加载接口（如果系统支持的话）
 - 提供 base16/base58/base64 编解码
-- 提供 AES、DES、MD2、MD4、MD5 等常用hash算法
-- 提供 日志输出、断言等辅助调试工具
+- 提供 AES、DES、MD2、MD4、MD5、SHA 等常用hash算法
+- 提供 Syslog 日志输出、断言等辅助调试工具
 - 提供 URL 编解码
 - 提供 JSON、XML、INI配置文件读取
 - [简单实现 HTTPS 服务端/客户端模块](https://github.com/libcc/libcc/blob/2.0/tests/test_url_request.c)
@@ -86,10 +84,11 @@ proj.IOS/cc.xcodeproj
     * rpm -ivh mysql80-community-release-el7-7.noarch.rpm
     * yum -y install mysql-devel
 
-# OpenSSL Download Page for Windows
+# OpenSSL Download Page
   * https://slproweb.com/products/Win32OpenSSL.html
 
   * iOS
+    * https://www.openssl.org/source/openssl-3.2.5.tar.gz
     * sudo ./Configure ios64-cross --prefix=/opt/libcc/include/openssl
     * make && make install
 
