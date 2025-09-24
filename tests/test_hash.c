@@ -80,5 +80,6 @@ int main (int argc, tchar_t * const argv[]) {
     }
     end = clock();
     printf("_cc_md5 : time span: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
+
     return 0;
 }

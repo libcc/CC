@@ -47,7 +47,7 @@
 extern "C" {
 #endif
 
-#if _CC_STDC_VERSION_ >= 11
+#if _CC_STDC_VERSION_ >= 2011
     typedef volatile _Atomic(int32_t) _cc_atomic32_t;
     typedef volatile _Atomic(int64_t) _cc_atomic64_t;
 #elif defined(__GNUC__)
@@ -59,7 +59,7 @@ extern "C" {
 #else
     typedef volatile _cc_alignas(4) int _cc_atomic32_t;
     typedef volatile _cc_alignas(8) long long int _cc_atomic64_t;
-#endif/*_CC_STDC_VERSION_ >= 11*/
+#endif/*_CC_STDC_VERSION_ >= 2011*/
 /*/////////////////////////////////////////////////////////////////////////*/
 #define _cc_atomic32_inc(a) _cc_atomic32_add(a, 1)
 #define _cc_atomic32_dec(a) _cc_atomic32_sub(a, 1)

@@ -34,7 +34,7 @@ _CC_API_PUBLIC(bool_t) _cc_tcp_listen(_cc_async_event_t *async, _cc_event_t *e, 
     _cc_set_socket_reuseaddr(e->fd);
     /* required to get parallel v4 + v6 working */
     if (sockaddr->sa_family == AF_INET6) {
-        e->flags |= _CC_EVENT_DESC_IPV6_;
+        e->flags |= _CC_EVENT_SOCKET_IPV6_;
 #if defined(IPV6_V6ONLY)
         _cc_socket_ipv6only(e->fd);
 #endif
@@ -64,7 +64,7 @@ _CC_API_PUBLIC(bool_t) _cc_tcp_connect(_cc_async_event_t *async, _cc_event_t *e,
     _cc_set_socket_reuseaddr(e->fd);
     /* required to get parallel v4 + v6 working */
     if (sockaddr->sa_family == AF_INET6) {
-        e->flags |= _CC_EVENT_DESC_IPV6_;
+        e->flags |= _CC_EVENT_SOCKET_IPV6_;
 #if defined(IPV6_V6ONLY)
         _cc_socket_ipv6only(e->fd);
 #endif

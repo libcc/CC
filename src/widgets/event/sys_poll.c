@@ -96,12 +96,15 @@ _CC_API_PRIVATE(bool_t) _set_fd_event(_cc_event_t *e, struct pollfd *p) {
         return false;
     }
     p->events = POLLERR;
-    if (_CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, e->flags)) {
-        p->events |= POLLIN;
-    }
-
-    if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_ | _CC_EVENT_CONNECT_, e->flags)) {
+    if (_CC_ISSET_BIT(_CC_EVENT_CONNECT_, e->flags)) {
         p->events |= POLLOUT;
+    } else {
+        if (_CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, e->flags)) {
+            p->events |= POLLIN;
+        }
+        if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags)) {
+            p->events |= POLLOUT;
+        }
     }
 
     if (p->events != POLLERR) {
@@ -114,18 +117,17 @@ _CC_API_PRIVATE(bool_t) _set_fd_event(_cc_event_t *e, struct pollfd *p) {
 
 /**/
 _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
-    if (_CC_ISSET_BIT(_CC_EVENT_DISCONNECT_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags) == 0) {
+    if (_CC_ISSET_BIT(_CC_EVENT_CLOSED_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags) == 0) {
         /*delete*/
         _event_cleanup(async, e);
         return;
     }
 
-    if (_CC_ISSET_BIT(_CC_EVENT_PENDING_, e->flags)) {
+    if (_CC_ISSET_BIT(_CC_EVENT_PENDING_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_TIMEOUT_, e->flags) == 0) {
         _cc_list_iterator_swap(&async->pending, &e->lnk);
-        return;
-    }
-
-    _reset_event_timeout(async, e);
+    } else {
+		_reset_event_timeout(async, e);
+	}
 }
 
 /**/
@@ -179,8 +181,12 @@ _CC_API_PRIVATE(bool_t) _poll_event_wait(_cc_async_event_t *async, uint32_t time
 
             if (what & POLLOUT) {
                 which |= _CC_ISSET_BIT(_CC_EVENT_CONNECT_ | _CC_EVENT_WRITABLE_, e->flags);
-                if (_CC_ISSET_BIT(_CC_EVENT_CONNECT_, which)) {
-                    which = _valid_connected(e, which);
+                if (which & _CC_EVENT_CONNECT_) {
+                    if (_valid_fd(e->fd)) {
+                        _CC_UNSET_BIT(_CC_EVENT_CONNECT_, e->flags);
+                    } else {
+                        which = _CC_EVENT_CLOSED_;
+                    }
                 }
             }
 

@@ -98,13 +98,13 @@ typedef struct _CCWSHeader {
 } _CCWSHeader_t;
 
 /**/
-_CC_WIDGETS_API(void) _CCWSMask(byte_t *data, int64_t length, byte_t *mask);
+_CC_API_WIDGETS(void) _CCWSMask(byte_t *data, int64_t length, byte_t *mask);
 /**/
-_CC_WIDGETS_API(int32_t) _CCWSHeader(byte_t *header, byte_t operation, int64_t length, byte_t *mask);
+_CC_API_WIDGETS(int32_t) _CCWSHeader(byte_t *header, byte_t operation, int64_t length, byte_t *mask);
 /**/
-_CC_WIDGETS_API(int32_t) _CCWSReverseHeader(byte_t *header, byte_t operation, int64_t length, byte_t *mask);
+_CC_API_WIDGETS(int32_t) _CCWSReverseHeader(byte_t *header, byte_t operation, int64_t length, byte_t *mask);
 /**/
-_CC_WIDGETS_API(int) _CCWSRead(_CCWSHeader_t *header);
+_CC_API_WIDGETS(int) _CCWSRead(_CCWSHeader_t *header);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

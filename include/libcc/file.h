@@ -76,7 +76,13 @@ struct _cc_file {
      * 
      *  @return true if successful or false on write error when flushing data.
      */
-    bool_t (*flush) (_cc_file_t *context);
+    bool_t (*flush) (_cc_file_t *context);    
+    /**
+     *  @brief  Check if the stream has reached the end of file.
+     * 
+     *  @return true: indicates that the file pointer has reached the end (EOF). 
+     */
+    bool_t (*eof) (_cc_file_t *context);
     /**
      *  @brief Seek to \c offset relative to \c whence, one of stdio's whence values:
      *         _CC_FILE_SEEK_SET, _CC_FILE_SEEK_CUR, _CC_FILE_SEEK_END
@@ -110,6 +116,7 @@ struct _cc_file {
 
 #ifdef __CC_WINDOWS__
     bool_t append;
+    bool_t is_eof;
 #endif
     pvoid_t fp;
 };
@@ -123,9 +130,11 @@ struct _cc_file {
 #define _cc_file_read(ctx, ptr, size, n) (ctx)->read(ctx, ptr, size, n)
 #define _cc_file_write(ctx, ptr, size, n) (ctx)->write(ctx, ptr, size, n)
 #define _cc_file_close(ctx) (ctx)->close(ctx)
+#define _cc_file_eof(ctx) (ctx)->eof(ctx)
 
 #define _cc_fopen   _cc_open_file
 #define _cc_fseek   _cc_file_seek
+#define _cc_feof   _cc_file_eof
 #define _cc_fwrite  _cc_file_write
 #define _cc_fread   _cc_file_read
 #define _cc_fclose  _cc_file_close

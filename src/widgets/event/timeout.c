@@ -22,19 +22,20 @@
 #include <libcc/alloc.h>
 #include <libcc/widgets/timeout.h>
 
-_CC_API_PRIVATE(void) _timeout_move_list(_cc_async_event_t *async, int level, int n) {
+/**/
+_CC_API_PRIVATE(void) _timeout_move_slot(_cc_async_event_t *async, int level, int n) {
     _cc_list_iterator_t *head = &async->level[level][n];
     _cc_list_iterator_for_each(it, head, { 
         _add_event_timeout(async, _cc_upcast(it, _cc_event_t, lnk)); 
     });
     _cc_list_iterator_cleanup(head);
-    //_cc_list_iterator_cleanup(&async->level[level][n]);
 }
 
+/**/
 _CC_API_PRIVATE(void) _timeout_shift(_cc_async_event_t *async) {
     uint32_t t = ++async->timer;
     if (_cc_likely(t == 0)) {
-        _timeout_move_list(async, 3, 0);
+        _timeout_move_slot(async, 3, 0);
     } else {
         int i;
         int m = _CC_TIMEOUT_NEAR_;
@@ -42,7 +43,7 @@ _CC_API_PRIVATE(void) _timeout_shift(_cc_async_event_t *async) {
         for (i = 0; (t & (m - 1)) == 0; i++) {
             int n = v & _CC_TIMEOUT_LEVEL_MASK_;
             if (n != 0) {
-                _timeout_move_list(async, i, n);
+                _timeout_move_slot(async, i, n);
                 break;
             }
             m <<= _CC_TIMEOUT_LEVEL_SHIFT_;
@@ -51,6 +52,7 @@ _CC_API_PRIVATE(void) _timeout_shift(_cc_async_event_t *async) {
     }
 }
 
+/**/
 _CC_API_PRIVATE(void) _timeout_execute(_cc_async_event_t *async) {
     int i = async->timer & _CC_TIMEOUT_NEAR_MASK_;
 
@@ -58,7 +60,7 @@ _CC_API_PRIVATE(void) _timeout_execute(_cc_async_event_t *async) {
         _cc_list_iterator_for_each(it, &async->nears[i], {
             _cc_event_t *e = _cc_upcast(it, _cc_event_t, lnk);
             /**/
-            if ((e->flags & _CC_EVENT_DISCONNECT_) == 0) {
+            if ((e->flags & _CC_EVENT_CLOSED_) == 0) {
                 _event_callback(async, e, _CC_EVENT_TIMEOUT_);
             } else {
                 _cc_free_event(async, e);
@@ -92,6 +94,7 @@ _CC_API_PUBLIC(void) _add_event_timeout(_cc_async_event_t *async, _cc_event_t *e
     _cc_list_iterator_swap(&async->level[i][mask], &e->lnk);
 }
 
+/**/
 _CC_API_PUBLIC(void) _update_event_timeout(_cc_async_event_t *async, uint32_t timeout) {
     uint64_t tick = _cc_get_ticks();
 
@@ -115,12 +118,11 @@ _CC_API_PUBLIC(void) _update_event_timeout(_cc_async_event_t *async, uint32_t ti
             async->diff = 0;
         }
     }
-    return;
 }
 
 /**/
 _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
-    if (_CC_ISSET_BIT(_CC_EVENT_DISCONNECT_, e->flags) == 0 && 
+    if (_CC_ISSET_BIT(_CC_EVENT_CLOSED_, e->flags) == 0 && 
         _CC_ISSET_BIT(_CC_EVENT_TIMEOUT_, e->flags)) {
         e->expire = async->timer + e->timeout;
         _add_event_timeout(async, e);
@@ -175,12 +177,12 @@ _CC_API_PUBLIC(bool_t) _cc_register_timeout(_cc_async_event_t *async) {
     return true;
 }
 
-_CC_API_PUBLIC(_cc_event_t*) _cc_add_event_timeout(_cc_async_event_t *async, uint32_t timeout, _cc_event_callback_t callback, pvoid_t args) {
+_CC_API_PUBLIC(_cc_event_t*) _cc_add_event_timeout(_cc_async_event_t *async, uint32_t timeout, _cc_event_callback_t callback, uintptr_t data) {
     _cc_event_t *e = _cc_event_alloc(async, _CC_EVENT_TIMEOUT_);
     if (e) {
         e->timeout = timeout;
         e->callback = callback;
-        e->args = args;
+        e->data = data;
 
         if (async->attach(async, e)) {
             return e;
@@ -193,6 +195,6 @@ _CC_API_PUBLIC(_cc_event_t*) _cc_add_event_timeout(_cc_async_event_t *async, uin
 /**/
 _CC_API_PUBLIC(bool_t) _cc_kill_event_timeout(_cc_async_event_t *async, _cc_event_t *timer) {
     _cc_assert(async != nullptr && timer != nullptr);
-    _CC_SET_BIT(_CC_EVENT_DISCONNECT_,timer->flags);
+    _CC_SET_BIT(_CC_EVENT_CLOSED_,timer->flags);
     return async->reset(async, timer);
 }

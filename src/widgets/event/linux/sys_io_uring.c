@@ -120,7 +120,7 @@ static struct io_uring_sqe *get_sqe_from_ring(struct io_uring *uring) {
 
 /**/
 _CC_API_PRIVATE(bool_t) _io_uring_event_update(_cc_async_event_t *async, _cc_event_t *e, bool_t rm) {
-    uint16_t marks = 0;
+    uint16_t filter = 0;
     struct io_uring_sqe *sqe;
     _cc_async_event_priv_t *priv = (_cc_async_event_priv_t *)async->priv;
     unsigned to_submit = 0;
@@ -134,7 +134,7 @@ _CC_API_PRIVATE(bool_t) _io_uring_event_update(_cc_async_event_t *async, _cc_eve
         }
         sqe->opcode = IORING_OP_NOP;
         sqe->user_data = (uintptr_t)e;
-        e->marks = 0;
+        e->filter = 0;
         if (io_uring_enter(priv->fd, 1, 0, 0, NULL) < 0) {
             _cc_logger_error(_T("io_uring_enter failed: %s"), _cc_last_error(_cc_last_errno()));
             return false;
@@ -159,7 +159,7 @@ _CC_API_PRIVATE(bool_t) _io_uring_event_update(_cc_async_event_t *async, _cc_eve
             sqe->len = 0;
         }
         sqe->user_data = (uintptr_t)e;
-        marks = _CC_EVENT_IS_SOCKET(e->flags);
+        filter = _CC_EVENT_IS_SOCKET(e->flags);
         to_submit++;
     }
 
@@ -180,7 +180,7 @@ _CC_API_PRIVATE(bool_t) _io_uring_event_update(_cc_async_event_t *async, _cc_eve
             sqe->len = 0;
         }
         sqe->user_data = (uintptr_t)e;
-        marks = _CC_EVENT_IS_SOCKET(e->flags);
+        filter = _CC_EVENT_IS_SOCKET(e->flags);
         to_submit++;
     }
 
@@ -188,7 +188,7 @@ _CC_API_PRIVATE(bool_t) _io_uring_event_update(_cc_async_event_t *async, _cc_eve
         _cc_logger_error(_T("io_uring_enter failed: %s"), _cc_last_error(_cc_last_errno()));
         return false;
     }
-    e->marks = marks;
+    e->filter = filter;
     return true;
 }
 
@@ -224,8 +224,8 @@ _CC_API_PRIVATE(_cc_socket_t) _io_uring_event_accept(_cc_async_event_t *async, _
 
 /**/
 _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
-    uint16_t m = _CC_EVENT_IS_SOCKET(e->marks), u;
-    if (_CC_ISSET_BIT(_CC_EVENT_DISCONNECT_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags) == 0) {
+    uint16_t m = _CC_EVENT_IS_SOCKET(e->filter), u;
+    if (_CC_ISSET_BIT(_CC_EVENT_CLOSED_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags) == 0) {
         if (m) {
             _io_uring_event_update(async, e, true);
         }
@@ -284,7 +284,7 @@ _CC_API_PRIVATE(bool_t) _io_uring_event_wait(_cc_async_event_t *async, uint32_t 
             uint32_t which = _CC_EVENT_UNKNOWN_;
 
             if (cqe->res < 0) {
-                which = _CC_EVENT_DISCONNECT_;
+                which = _CC_EVENT_CLOSED_;
             } else {
                 switch (cqe->opcode) {
                 case IORING_OP_RECV:

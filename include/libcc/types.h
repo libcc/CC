@@ -46,7 +46,7 @@ extern "C" {
     #endif
 #endif /* NULL */
 
-#if _CC_STDC_VERSION_ >= 9
+#if _CC_STDC_VERSION_ >= 98
     #define _cc_thread_local_t _Thread_local
 #elif defined(_CC_GNUC_)
     #define _cc_thread_local_t __thread

@@ -56,7 +56,7 @@ static bool_t url_request_header(_cc_url_request_t *request, _cc_event_t *e) {
         _cc_buf_appendf(buf, _T("Host: %s:%d\r\n"), u->host, u->port);
     }
     //
-    _cc_buf_puts(buf, _T("Accept-Encoding: gzip\r\n"));
+    _cc_buf_puts(buf, _T("Connection: Keep-Alive\r\nAccept-Encoding: gzip\r\n"));
     _cc_buf_appendf(buf, _T("User-Agent: %s\r\nAccept: */*\r\n\r\n"),
                    _user_agent[rand() % _cc_countof(_user_agent)]);
     return _cc_url_request_header(request, e);
@@ -72,9 +72,16 @@ static bool_t url_request_success(_cc_url_request_t *request) {
     }
     switch (response->status) {
     case HTTP_STATUS_OK:
-    case HTTP_STATUS_PARTIAL_CONTENTS:
+    case HTTP_STATUS_PARTIAL_CONTENTS:{
+        _cc_json_t *root = _cc_json_parse((tchar_t*)request->buffer.bytes, request->buffer.length);
+        if (root) {
+            _cc_logger_warin(_T("url_request success,%s"), request->url.host);
+            _cc_free_json(root);
+        } else {
+            _cc_logger_alert(_T("json parse fail,%s\n\n"), _cc_json_error());
+        }
         _cc_buf_cleanup(&request->buffer);
-        _cc_logger_debug(_T("url_request success,%s\n\n"), request->url.host);
+    }
         return true;
     case HTTP_STATUS_MOVED_TEMPORARILY: // 目标跳转
     case HTTP_STATUS_MOVED_PERMANENTLY: // 目标跳转
@@ -93,85 +100,91 @@ static bool_t url_request_success(_cc_url_request_t *request) {
 }
 
 static bool_t url_request_read(_cc_url_request_t *request) {
-    _cc_buf_cleanup(&request->buffer);
+    //_cc_buf_cleanup(&request->buffer);
     return true;
 }
 
 static bool_t _url_timeout_callback(_cc_async_event_t *timer, _cc_event_t *e, const uint32_t which) {
-    _cc_url_request_t *request = (_cc_url_request_t *)e->args;
+    _cc_url_request_t *request = (_cc_url_request_t *)e->data;
     if (request == nullptr || !_cc_async_event_is_running()) {
         return false;
     }
-    if (which == _CC_EVENT_DISCONNECT_) {
+    if (which == _CC_EVENT_CLOSED_) {
         return false;
     }
     _cc_logger_warin(_T("url-timout reset connect,%d"),e->ident);
     return (url_request_connect(request))?false:true;
 }
 
-
 static bool_t _url_request_callback(_cc_async_event_t *async, _cc_event_t *e, const uint32_t which) {
-    _cc_url_request_t *request = (_cc_url_request_t *)e->args;
+    _cc_url_request_t *request = (_cc_url_request_t *)e->data;
 
-    if (_CC_ISSET_BIT(_CC_EVENT_DISCONNECT_, which)) {
+    if (_CC_ISSET_BIT(_CC_EVENT_CLOSED_, which)) {
         //printf("disconnect\n");
-        _cc_logger_warin("_cc_url_request_ _CC_EVENT_DISCONNECT_ %d",e->ident);
+        _cc_logger_warin("_cc_url_request_ _CC_EVENT_CLOSED_ %d",e->ident);
         if (_cc_async_event_is_running()) {
-            _cc_add_event_timeout(_cc_get_async_event(), 10000, _url_timeout_callback, request);
+            _cc_add_event_timeout(_cc_get_async_event(), 10000, _url_timeout_callback, (uintptr_t)request);
         } else {
             _cc_free_url_request(request);
         }
         return false;
-    } else if (_CC_ISSET_BIT(_CC_EVENT_TIMEOUT_, which)) {
-        //printf("timeout\n");
-        return false;//url_request_header(request, e);
-    } else if (_CC_ISSET_BIT(_CC_EVENT_CONNECTED_, which)) {
-        if (request->url.scheme.ident != _CC_SCHEME_HTTPS_) {
-            return url_request_header(request, e);
-        } else if (request->handshaking) {
-            if (!_cc_url_request_ssl_handshake(request, e)) {
-                return false;
-            }
-            if (request->handshaking == false) {
-                return url_request_header(request, e);
-            }
+    } else if (_CC_ISSET_BIT(_CC_EVENT_TIMEOUT_, which)) {    
+#ifdef _CC_USE_OPENSSL_
+        if (request->handshake != _CC_SSL_HS_ESTABLISHED_) {
+			request->handshake = _SSL_do_handshake(request->io->ssl);
+			if (request->handshake == _CC_SSL_HS_ESTABLISHED_) {
+				e->timeout = 10000;
+				_CC_UNSET_BIT(_CC_EVENT_PENDING_, e->flags);
+				return url_request_header(request, e);
+			}
+            //wait SSL handshake complete
+			return true;
         }
-        return true;
+#endif
+        if (request->response && request->response->keep_alive && request->status == _CC_HTTP_STATUS_ESTABLISHED_) {
+            return url_request_header(request, e);;
+        }
+        return false;
+    } else if (_CC_ISSET_BIT(_CC_EVENT_CONNECT_, which)) {
+        _cc_logger_info(_T("url_request connected,%s"), request->url.host);
+    #ifdef _CC_USE_OPENSSL_
+		request->handshake = _SSL_do_handshake(request->io->ssl);
+		if (request->handshake != _CC_SSL_HS_ESTABLISHED_) {
+			//wait SSL handshake complete
+			e->timeout = 2000;
+			_CC_SET_BIT(_CC_EVENT_PENDING_, e->flags);
+			return true;
+		}
+    #endif
+        return url_request_header(request, e);
     }
 
     if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_, which)) {
         //printf("send buffer\n");
-        if (!_cc_url_request_sendbuf(request, e)) {
-            return false;
-        }
+        return _cc_io_buffer_flush(e,request->io) >= 0;
     }
 
     if (_CC_ISSET_BIT(_CC_EVENT_READABLE_, which)) {
-        _cc_event_buffer_t *rw = e->buffer;
-        if (e->buffer == nullptr) {
+        int32_t off = _cc_io_buffer_read(e, request->io);
+        if (off < 0) {
             return false;
+        } else if (off == 0) {
+            return true;
         }
-
-        if (!_cc_url_request_read(request, e)) {
-            return false;
-        }
-
-        if (rw->r.length > 0) {
-            if (request->status == _CC_HTTP_STATUS_HEADER_) {
-                //printf("response header\n");
-                if (!_cc_url_request_response_header(request, &rw->r)) {
-                    return false;
-                }
-                //Response header completed.
-                if (request->status == _CC_HTTP_STATUS_PAYLOAD_) {
-                    url_response_header(request);
-                }
+        if (request->status == _CC_HTTP_STATUS_HEADER_) {
+            //printf("response header\n");
+            if (!_cc_url_request_response_header(request)) {
+                return false;
+            }
+            //Response header completed.
+            if (request->status == _CC_HTTP_STATUS_PAYLOAD_) {
+                url_response_header(request);
             }
         }
 
         if (request->status == _CC_HTTP_STATUS_PAYLOAD_) {
             //printf("response body\n");
-            if (!_cc_url_request_response_body(request, &rw->r)) {
+            if (!_cc_url_request_response_body(request)) {
                 return false;
             }
 
@@ -186,6 +199,7 @@ static bool_t _url_request_callback(_cc_async_event_t *async, _cc_event_t *e, co
     }
     return true;
 }
+
 static bool_t url_request(const tchar_t *url, pvoid_t args) {
     _cc_url_request_t *request = _cc_url_request(url, args);
 
@@ -214,7 +228,7 @@ static bool_t url_request_connect(_cc_url_request_t *request) {
     /* if we can't terminate nicely, at least allow the socket to be reused*/
     _cc_set_socket_reuseaddr(fd);
 
-    e = _cc_event_alloc(async, _CC_EVENT_BUFFER_|_CC_EVENT_CONNECT_|_CC_EVENT_TIMEOUT_);
+    e = _cc_event_alloc(async, _CC_EVENT_CONNECT_|_CC_EVENT_TIMEOUT_|_CC_EVENT_READABLE_);
     if (e == nullptr) {
         return false;
     }
@@ -222,23 +236,19 @@ static bool_t url_request_connect(_cc_url_request_t *request) {
     e->fd = fd;
     e->callback = _url_request_callback;
     e->timeout = 10000;
-    e->args = request;
+    e->data = (uintptr_t)request;
+
     _cc_reset_url_request(request);
-
+#ifdef _CC_USE_OPENSSL_
     if (request->url.scheme.ident == _CC_SCHEME_HTTPS_) {
-        request->ssl = _SSL_connect(openSSL, e->fd);
-        if (request->ssl == nullptr) {
-            _cc_free_event(async, e);
-            return false;
-        }
-        _SSL_set_host_name(request->ssl, request->url.host, _tcslen(request->url.host));
-    } 
-
+        _cc_url_request_ssl(openSSL, request, e);
+    }
+#endif
     _cc_inet_ipv4_addr(&sa, request->url.host, request->url.port);
 
     /* required to get parallel v4 + v6 working */
     if (sa.sin_family == AF_INET6) {
-        e->flags |= _CC_EVENT_DESC_IPV6_;
+        e->flags |= _CC_EVENT_SOCKET_IPV6_;
 #if defined(IPV6_V6ONLY)
         _cc_socket_ipv6only(e->fd);
 #endif
@@ -256,6 +266,8 @@ int main(int argc, char *const argv[]) {
     openSSL = _SSL_init(true);
 
     _cc_alloc_async_event(0, nullptr);
+
+    _cc_logger_alert("_cc_event_t %ld",sizeof(_cc_event_t));
 
     url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);
     //url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);

@@ -72,15 +72,15 @@
     #endif
 
     #if CXX_STD > 202002L
-        #define _CC_STDC_VERSION_ 23
+        #define _CC_STDC_VERSION_ 2023
     #elif CXX_STD > 201703L
-        #define _CC_STDC_VERSION_ 20
+        #define _CC_STDC_VERSION_ 2017
     #elif CXX_STD >= 201703L
-        #define _CC_STDC_VERSION_ 17
+        #define _CC_STDC_VERSION_ 2017
     #elif CXX_STD >= 201402L
-        #define _CC_STDC_VERSION_ 14
+        #define _CC_STDC_VERSION_ 2014
     #elif CXX_STD >= 201103L
-        #define _CC_STDC_VERSION_ 11
+        #define _CC_STDC_VERSION_ 2011
     #else
         #define _CC_STDC_VERSION_ 98
     #endif
@@ -96,15 +96,15 @@
         #define _CC_STDC_VERSION_ 0
     #endif
 #elif __STDC_VERSION__ > 201710L
-    #define _CC_STDC_VERSION_ 23
+    #define _CC_STDC_VERSION_ 2023
 #elif __STDC_VERSION__ >= 201710L
-    #define _CC_STDC_VERSION_ 17
+    #define _CC_STDC_VERSION_ 2017
 #elif __STDC_VERSION__ >= 201000L
-    #define _CC_STDC_VERSION_ 11
+    #define _CC_STDC_VERSION_ 2011
 #elif __STDC_VERSION__ >= 199901L
-    #define _CC_STDC_VERSION_ 9
+    #define _CC_STDC_VERSION_ 98
 #else
-    #define _CC_STDC_VERSION_ 8
+    #define _CC_STDC_VERSION_ 89
 #endif
 
 /** 

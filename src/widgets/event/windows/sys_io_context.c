@@ -21,6 +21,8 @@
 #include <libcc/alloc.h>
 #include "sys_socket_c.h"
 
+#ifdef _CC_EVENT_USE_IOCP_
+
 _CC_API_PUBLIC(void) _io_context_init(_cc_async_event_priv_t *priv) {
     _cc_list_iterator_cleanup(&priv->io_active);
     _cc_list_iterator_cleanup(&priv->io_idle);
@@ -44,13 +46,13 @@ _CC_API_PUBLIC(_io_context_t*) _io_context_alloc(_cc_async_event_priv_t *priv, _
 
     if (lnk == &priv->io_idle) {
         io_context = (_io_context_t *)_cc_malloc(sizeof(_io_context_t));
-        bzero(io_context, sizeof(_io_context_t));
         lnk = &(io_context->lnk);
     } else {
         io_context = _cc_upcast(lnk, _io_context_t, lnk);
         priv->frees--;
     }
-
+	
+    bzero(io_context, sizeof(_io_context_t));
     io_context->fd = _CC_INVALID_SOCKET_;
     io_context->e = e;
 	io_context->number_of_bytes = 0;
@@ -68,7 +70,7 @@ _CC_API_PUBLIC(void) _io_context_free(_cc_async_event_priv_t *priv, _io_context_
         io_context->fd = _CC_INVALID_SOCKET_;
     }
     
-    if (priv->frees >= 64) {
+    if (priv->frees >= _CC_MAX_CHANGE_EVENTS_) {
         _cc_list_iterator_remove(&io_context->lnk);
         _cc_free(io_context);
         return;
@@ -78,3 +80,5 @@ _CC_API_PUBLIC(void) _io_context_free(_cc_async_event_priv_t *priv, _io_context_
     priv->frees++;
     return;
 }
+
+#endif

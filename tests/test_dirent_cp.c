@@ -81,7 +81,6 @@ size_t OpenDeepDirectory(const tchar_t *sourceDirectory, const tchar_t *targetDi
         return 0;
     }
     
-    //¶ÁÈ¡Ä¿Â¼
     while ((d = readdir(dpath)) != nullptr) {
         //
         if (isFillerList(d->d_name, d->d_reclen)) continue;

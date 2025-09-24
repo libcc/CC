@@ -72,7 +72,7 @@ struct _cc_json {
  *
  * @return  JSON object
  */
-_CC_WIDGETS_API(_cc_json_t *)
+_CC_API_WIDGETS(_cc_json_t *)
 _cc_json_alloc_object(byte_t type, const tchar_t *keyword);
 /**
  * @brief Create a JSON object
@@ -82,7 +82,7 @@ _cc_json_alloc_object(byte_t type, const tchar_t *keyword);
  *
  * @return  JSON Array
  */
-_CC_WIDGETS_API(_cc_json_t*) 
+_CC_API_WIDGETS(_cc_json_t*) 
 _cc_json_alloc_array(const tchar_t *keyword, size_t size);
 /**
  * @brief Add an object to JSON
@@ -92,7 +92,7 @@ _cc_json_alloc_array(const tchar_t *keyword, size_t size);
  *
  * @return true if successful or false on error.
  */
-_CC_WIDGETS_API(bool_t) _cc_json_array_push(_cc_json_t *ctx, _cc_json_t *j);
+_CC_API_WIDGETS(bool_t) _cc_json_array_push(_cc_json_t *ctx, _cc_json_t *j);
 /**
  * @brief Add an object to JSON
  *
@@ -102,7 +102,7 @@ _CC_WIDGETS_API(bool_t) _cc_json_array_push(_cc_json_t *ctx, _cc_json_t *j);
  *
  * @return true if successful or false on error.
  */
-_CC_WIDGETS_API(bool_t)
+_CC_API_WIDGETS(bool_t)
 _cc_json_object_push(_cc_json_t *ctx, _cc_json_t *j, bool_t replacement);
 
 /**
@@ -114,7 +114,7 @@ _cc_json_object_push(_cc_json_t *ctx, _cc_json_t *j, bool_t replacement);
  *
  * @return JSON object
  */
-_CC_WIDGETS_API(_cc_json_t *)
+_CC_API_WIDGETS(_cc_json_t *)
 _cc_json_add_boolean(_cc_json_t *ctx, const tchar_t *keyword, bool_t value);
 
 /**
@@ -126,7 +126,7 @@ _cc_json_add_boolean(_cc_json_t *ctx, const tchar_t *keyword, bool_t value);
  *
  * @return JSON object
  */
-_CC_WIDGETS_API(_cc_json_t *)
+_CC_API_WIDGETS(_cc_json_t *)
 _cc_json_add_number(_cc_json_t *ctx, const tchar_t *keyword, int64_t value);
 
 /**
@@ -139,7 +139,7 @@ _cc_json_add_number(_cc_json_t *ctx, const tchar_t *keyword, int64_t value);
  *
  * @return JSON object
  */
-_CC_WIDGETS_API(_cc_json_t *)
+_CC_API_WIDGETS(_cc_json_t *)
 _cc_json_add_float(_cc_json_t *ctx, const tchar_t *keyword, float64_t value);
 
 /**
@@ -152,10 +152,10 @@ _cc_json_add_float(_cc_json_t *ctx, const tchar_t *keyword, float64_t value);
  *
  * @return JSON object
  */
-_CC_WIDGETS_API(_cc_json_t *)
+_CC_API_WIDGETS(_cc_json_t *)
 _cc_json_add_string(_cc_json_t *ctx, const tchar_t *keyword, const tchar_t *value);
 /**/
-_CC_WIDGETS_API(_cc_json_t*)
+_CC_API_WIDGETS(_cc_json_t*)
 _cc_json_add_sds(_cc_json_t *ctx, const tchar_t *keyword, const _cc_sds_t value);
 /**
  * @brief remove  JSON
@@ -165,7 +165,7 @@ _cc_json_add_sds(_cc_json_t *ctx, const tchar_t *keyword, const _cc_sds_t value)
  *
  * @return true if successful or false on error.
  */
-_CC_WIDGETS_API(bool_t) _cc_json_array_remove(_cc_json_t *ctx, const uint32_t index);
+_CC_API_WIDGETS(bool_t) _cc_json_array_remove(_cc_json_t *ctx, const uint32_t index);
 /**
  * @brief remove  JSON
  *
@@ -174,14 +174,14 @@ _CC_WIDGETS_API(bool_t) _cc_json_array_remove(_cc_json_t *ctx, const uint32_t in
  *
  * @return true if successful or false on error.
  */
-_CC_WIDGETS_API(bool_t) _cc_json_object_remove(_cc_json_t *ctx, const tchar_t *keyword);
+_CC_API_WIDGETS(bool_t) _cc_json_object_remove(_cc_json_t *ctx, const tchar_t *keyword);
 /**
  * @brief Print JSON Object to buffer
  *
  * @param ctx JSON object
  *
  */
-_CC_WIDGETS_API(void) _cc_json_dump(_cc_json_t *jctx, _cc_buf_t* buf);
+_CC_API_WIDGETS(void) _cc_json_dump(_cc_json_t *jctx, _cc_buf_t* buf);
 
 /**
  * @brief Open JSON file
@@ -190,7 +190,7 @@ _CC_WIDGETS_API(void) _cc_json_dump(_cc_json_t *jctx, _cc_buf_t* buf);
  *
  * @return JSON object
  */
-_CC_WIDGETS_API(_cc_json_t *) _cc_json_from_file(const tchar_t *file_name);
+_CC_API_WIDGETS(_cc_json_t *) _cc_json_from_file(const tchar_t *file_name);
 
 /**
  * @brief Parse JSON string
@@ -199,26 +199,26 @@ _CC_WIDGETS_API(_cc_json_t *) _cc_json_from_file(const tchar_t *file_name);
  *
  * @return JSON object
  */
-_CC_WIDGETS_API(_cc_json_t *) _cc_json_parse(const tchar_t *src, size_t length);
+_CC_API_WIDGETS(_cc_json_t *) _cc_json_parse(const tchar_t *src, size_t length);
 /**
  * @brief Parse JSON
  *
  * @return JSON object
  */
-_CC_WIDGETS_API(_cc_json_t *) _cc_josn_parser(_cc_sbuf_t *const buffer);
+_CC_API_WIDGETS(_cc_json_t *) _cc_josn_parser(_cc_sbuf_t *const buffer);
 /**
  * @brief Destroy JSON object
  *
  * @param ctx _cc_json_t structure
  *
  */
-_CC_WIDGETS_API(void) _cc_free_json(_cc_json_t *ctx);
+_CC_API_WIDGETS(void) _cc_free_json(_cc_json_t *ctx);
 /**
  * @brief Get JSON Parse error message
  *
  * @return JSON error message string
  */
-_CC_WIDGETS_API(const tchar_t *) _cc_json_error(void);
+_CC_API_WIDGETS(const tchar_t *) _cc_json_error(void);
 /**
  * @brief Find JSON Object
  *
@@ -227,7 +227,7 @@ _CC_WIDGETS_API(const tchar_t *) _cc_json_error(void);
  *
  * @return _cc_json_t structure
  */
-_CC_WIDGETS_API(_cc_json_t *)
+_CC_API_WIDGETS(_cc_json_t *)
 _cc_json_object_find(const _cc_json_t *ctx, const tchar_t *keyword);
 /**
  * @brief Find JSON Array
@@ -237,7 +237,7 @@ _cc_json_object_find(const _cc_json_t *ctx, const tchar_t *keyword);
  *
  * @return _cc_json_t structure
  */
-_CC_WIDGETS_API(_cc_json_t *)
+_CC_API_WIDGETS(_cc_json_t *)
 _cc_json_array_find(const _cc_json_t *ctx, uint32_t index);
 /**
  * @brief Get JSON Number Value

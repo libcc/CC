@@ -101,18 +101,17 @@ _CC_API_PRIVATE(void) _event_cleanup(_cc_async_event_t *async, _cc_event_t *e) {
 
 /**/
 _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
-    if (_CC_ISSET_BIT(_CC_EVENT_DISCONNECT_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags) == 0) {
+    if (_CC_ISSET_BIT(_CC_EVENT_CLOSED_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags) == 0) {
         /*delete*/
         _event_cleanup(async, e);
         return;
     }
 
-    if (_CC_ISSET_BIT(_CC_EVENT_PENDING_, e->flags)) {
+    if (_CC_ISSET_BIT(_CC_EVENT_PENDING_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_TIMEOUT_, e->flags) == 0) {
         _cc_list_iterator_swap(&async->pending, &e->lnk);
-        return;
-    }
-
-    _reset_event_timeout(async, e);
+    } else {
+		_reset_event_timeout(async, e);
+	}
 }
 
 /**/
@@ -124,17 +123,22 @@ _CC_API_PRIVATE(bool_t) _set_fd_event(_cc_event_t *e, struct _fd_list *fds) {
     if (_CC_EVENT_IS_SOCKET(e->flags) == 0) {
         return false;
     }
-
-    if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_ | _CC_EVENT_CONNECT_, e->flags)) {
+    if (_CC_ISSET_BIT(_CC_EVENT_CONNECT_, e->flags)) {
         FD_SET(e->fd, &fds->wfds);
         fds->wc++;
-        e->marks |= _CC_EVENT_WRITABLE_;
-    }
+        e->filter |= _CC_EVENT_WRITABLE_;
+    } else {
+        if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags)) {
+            FD_SET(e->fd, &fds->wfds);
+            fds->wc++;
+            e->filter |= _CC_EVENT_WRITABLE_;
+        }
 
-    if (_CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, e->flags)) {
-        FD_SET(e->fd, &fds->rfds);
-        fds->rc++;
-        e->marks |= _CC_EVENT_READABLE_;
+        if (_CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, e->flags)) {
+            FD_SET(e->fd, &fds->rfds);
+            fds->rc++;
+            e->filter |= _CC_EVENT_READABLE_;
+        }
     }
 #ifndef _CC_WINDOWS
     if (fds->max_fd == _CC_INVALID_SOCKET_ || fds->max_fd < e->fd) {
@@ -193,8 +197,8 @@ _CC_API_PRIVATE(bool_t) _select_event_wait(_cc_async_event_t *async, uint32_t ti
             what = _CC_ISSET_BIT(_CC_EVENT_CONNECT_ | _CC_EVENT_WRITABLE_, e->flags);
             if (what && FD_ISSET(e->fd, &fds.wfds)) {
                 which |= what;
-                if (_CC_ISSET_BIT(_CC_EVENT_CONNECT_, which)) {
-                    which = _valid_connected(e, which);
+                if (which & _CC_EVENT_CONNECT_) {
+
                 }
             }
 

@@ -41,43 +41,18 @@
 #define CC_JAVA_INTERFACE(function)                     _CONCAT1(_CC_JAVA_PREFIX_, CCWidgets, function)
 
 // Java class CCWidgets
-JNIEXPORT jstring JNICALL CC_JAVA_INTERFACE(nativeGetVersion)(
-    JNIEnv *env, jclass cls);
-
-JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeSetupJNI)(
-    JNIEnv *env, jclass cls);
-
-JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeQuit)(
-    JNIEnv *env, jclass cls);
-
-JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativePause)(
-    JNIEnv *env, jclass cls);
-
-JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeResume)(
-    JNIEnv *env, jclass cls);
-
-JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativePermissionResult)(
-    JNIEnv *env, jclass cls,
-    jint requestCode, jboolean result);
-
-JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeFocusChanged)(
-    JNIEnv *env, jclass cls, jboolean hasFocus);
-
-JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeDropFile)(
-    JNIEnv *env, jclass jcls,
-    jstring filename);
-
-JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeLocaleChanged)(
-    JNIEnv *env, jclass cls);
-
-JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeDarkModeChanged)(
-    JNIEnv *env, jclass cls, jboolean enabled);
-
-JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeClipboardChanged)(
-    JNIEnv *env, jclass jcls);
-
-JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeSetPowerInfo)(
-    JNIEnv *env, jclass jcls, jint plugged, jint charged,jint battery, jint seconds, jint percent);
+JNIEXPORT jstring JNICALL CC_JAVA_INTERFACE(nativeGetVersion)(JNIEnv *env, jclass cls);
+JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeSetupJNI)(JNIEnv *env, jclass cls);
+JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeQuit)(JNIEnv *env, jclass cls);
+JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativePause)(JNIEnv *env, jclass cls);
+JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeResume)(JNIEnv *env, jclass cls);
+JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativePermissionResult)(JNIEnv *env, jclass cls,jint requestCode, jboolean result);
+JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeFocusChanged)(JNIEnv *env, jclass cls, jboolean hasFocus);
+JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeDropFile)(JNIEnv *env, jclass jcls,jstring filename);
+JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeLocaleChanged)(JNIEnv *env, jclass cls);
+JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeDarkModeChanged)(JNIEnv *env, jclass cls, jboolean enabled);
+JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeClipboardChanged)(JNIEnv *env, jclass jcls);
+JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeSetPowerInfo)(JNIEnv *env, jclass jcls, jint plugged, jint charged,jint battery, jint seconds, jint percent);
 
 static JNINativeMethod CCWidgets_tab[] = {
     { "nativeGetVersion", "()Ljava/lang/String;", CC_JAVA_INTERFACE(nativeGetVersion) },
@@ -111,9 +86,9 @@ static pthread_once_t key_once = PTHREAD_ONCE_INIT;
 static JavaVM *mJavaVM = nullptr;
 static _cc_mutex_t *Android_ActivityMutex = nullptr;
 
-static _cc_String_t s_AndroidInternalFilesPath = {0};
-static _cc_String_t s_AndroidExternalFilesPath = {0};
-static _cc_String_t s_AndroidCachePath = {0};
+static _cc_sds_t s_AndroidInternalFilesPath = nullptr;
+static _cc_sds_t s_AndroidExternalFilesPath = nullptr;
+static _cc_sds_t s_AndroidCachePath = nullptr;
 
 // Main activity
 static jclass mWidgetsClass;
@@ -134,6 +109,7 @@ static jmethodID midShowToast;
 static jmethodID midSetActivityTitle;
 static jmethodID midSetWindowStyle;
 static jmethodID midGetPreferredLocales;
+static jmethodID midGetNetworkType;
 static jmethodID midOpenFileDescriptor;
 static jmethodID midRegisterPowerInfo;
 
@@ -284,10 +260,6 @@ _CC_API_PRIVATE(void) register_methods(JNIEnv *env, const char *classname, JNINa
 _CC_API_PUBLIC(JNIEnv*) Android_JNI_OnLoad(JavaVM *vm, void *reserved, jint version) {
     JNIEnv *env = nullptr;
 
-    s_AndroidInternalFilesPath.length = 0;
-    s_AndroidExternalFilesPath.length = 0;
-    s_AndroidCachePath.length = 0;
-    
     _cc_logger_debug("Android_JNI_OnLoad");
 
     mJavaVM = vm;
@@ -357,6 +329,7 @@ JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeSetupJNI)(JNIEnv *env, jclass cls
     midSetWindowStyle = (*env)->GetStaticMethodID(env, mWidgetsClass, "setWindowStyle", "(Z)V");
     midSetActivityTitle = (*env)->GetStaticMethodID(env, mWidgetsClass, "setActivityTitle", "(Ljava/lang/String;)Z");
     midGetPreferredLocales = (*env)->GetStaticMethodID(env, mWidgetsClass, "getPreferredLocales", "()Ljava/lang/String;");
+    midGetNetworkType = (*env)->GetStaticMethodID(env, mWidgetsClass, "getNetworkType", "()I");
     midOpenFileDescriptor = (*env)->GetStaticMethodID(env, mWidgetsClass, "openFileDescriptor", "(Ljava/lang/String;Ljava/lang/String;)I");
 
     midRegisterPowerInfo = (*env)->GetStaticMethodID(env, mWidgetsClass, "registerPowerInfo", "()V");
@@ -365,6 +338,7 @@ JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeSetupJNI)(JNIEnv *env, jclass cls
         !midClipboardHasText ||
         !midClipboardSetText ||
         !midGetContext ||
+        !midGetNetworkType ||
         !midGetManifestEnvironmentVariables ||
         !midIsAndroidTV ||
         !midIsChromebook ||
@@ -426,13 +400,11 @@ JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativeQuit)(
     if (Android_ActivityMutex) {
         _cc_free_mutex(Android_ActivityMutex);
     }
-    _cc_safe_free(s_AndroidInternalFilesPath.data);
-    _cc_safe_free(s_AndroidExternalFilesPath.data);
-    _cc_safe_free(s_AndroidCachePath.data);
 
-    s_AndroidInternalFilesPath.length = 0;
-    s_AndroidExternalFilesPath.length = 0;
-    s_AndroidCachePath.length = 0;
+    _cc_sds_free(s_AndroidInternalFilesPath);
+    _cc_sds_free(s_AndroidExternalFilesPath);
+    _cc_sds_free(s_AndroidCachePath);
+
     Internal_Android_Destroy_AssetManager();
 
 
@@ -497,8 +469,6 @@ JNIEXPORT jboolean JNICALL CC_JAVA_INTERFACE(nativeGetHintBoolean)(
 /*******************************************************************************
              Functions called by CC into Java
 *******************************************************************************/
-
-static _cc_atomic32_t s_active;
 struct LocalReferenceHolder {
     JNIEnv *m_env;
     const char *m_func;
@@ -520,7 +490,6 @@ _CC_API_PRIVATE(bool_t) LocalReferenceHolder_Init(struct LocalReferenceHolder *r
         _cc_logger_error(_T("Failed to allocate enough JVM local references"));
         return false;
     }
-    _cc_atomic32_inc(&s_active);
     refholder->m_env = env;
     return true;
 }
@@ -532,7 +501,6 @@ _CC_API_PRIVATE(void) LocalReferenceHolder_Cleanup(struct LocalReferenceHolder *
     if (refholder->m_env) {
         JNIEnv *env = refholder->m_env;
         (*env)->PopLocalFrame(env, nullptr);
-        _cc_atomic32_dec(&s_active);
     }
 }
 
@@ -554,10 +522,6 @@ _CC_API_PUBLIC(void) Android_JNI_SetWindowStyle(bool_t fullscreen) {
 _CC_API_PRIVATE(bool_t) Android_JNI_ExceptionOccurred(bool_t silent) {
     JNIEnv *env = Android_JNI_GetEnv();
     jthrowable exception;
-
-    // Detect mismatch LocalReferenceHolder_Init/Cleanup
-    __sync_or_and_fetch(&s_active, 0);
-    //_cc_assert(GetAtomicInt(&s_active) > 0);
 
     exception = (*env)->ExceptionOccurred(env);
     if (exception != nullptr) {
@@ -764,7 +728,8 @@ _CC_API_PUBLIC(void) Android_JNI_GetPowerInfo(int *plugged, int *charged, int *b
         *percent = (byte_t)androidPowerInfo.percent;
     }
 }
-_CC_API_PUBLIC(int) GetAndroidSDKVersion(void) {
+
+_CC_API_PUBLIC(int) Android_JNI_GetSDKVersion(void) {
     static int sdk_version;
     if (!sdk_version) {
         char sdk[PROP_VALUE_MAX] = { 0 };
@@ -773,6 +738,11 @@ _CC_API_PUBLIC(int) GetAndroidSDKVersion(void) {
         }
     }
     return sdk_version;
+}
+
+_CC_API_PUBLIC(int) Android_JNI_GetNetworkType(void) {
+    JNIEnv *env = Android_JNI_GetEnv();
+    return (*env)->CallStaticIntMethod(env, mWidgetsClass, midGetNetworkType);
 }
 
 _CC_API_PUBLIC(bool_t) IsAndroidTablet(void) {
@@ -795,8 +765,8 @@ _CC_API_PUBLIC(bool_t) IsDeXMode(void) {
     return (*env)->CallStaticBooleanMethod(env, mWidgetsClass, midIsDeXMode);
 }
 
-_CC_API_PUBLIC(const _cc_String_t *) GetAndroidInternalStoragePath(void) {
-    if (s_AndroidInternalFilesPath.length == 0) {
+_CC_API_PUBLIC(_cc_sds_t) Android_JNI_GetInternalStoragePath(void) {
+    if (s_AndroidInternalFilesPath == nullptr) {
         struct LocalReferenceHolder refs = LocalReferenceHolder_Setup(__FUNCTION__);
         jmethodID mid;
         jobject context;
@@ -836,16 +806,15 @@ _CC_API_PUBLIC(const _cc_String_t *) GetAndroidInternalStoragePath(void) {
         }
 
         path = (*env)->GetStringUTFChars(env, pathString, nullptr);
-        s_AndroidInternalFilesPath.length = (*env)->GetStringUTFLength(env, pathString);
-        s_AndroidInternalFilesPath.data = _cc_tcsndup(path,s_AndroidInternalFilesPath.length);
+        s_AndroidInternalFilesPath = _cc_sds_alloc(path,(*env)->GetStringUTFLength(env, pathString));
         (*env)->ReleaseStringUTFChars(env, pathString, path);
 
         LocalReferenceHolder_Cleanup(&refs);
     }
-    return &s_AndroidInternalFilesPath;
+    return s_AndroidInternalFilesPath;
 }
 
-_CC_API_PUBLIC(uint32_t) GetAndroidExternalStorageState(void) {
+_CC_API_PUBLIC(uint32_t) Android_JNI_GetExternalStorageState(void) {
     struct LocalReferenceHolder refs = LocalReferenceHolder_Setup(__FUNCTION__);
     jmethodID mid;
     jclass cls;
@@ -869,8 +838,7 @@ _CC_API_PUBLIC(uint32_t) GetAndroidExternalStorageState(void) {
     __android_log_print(ANDROID_LOG_INFO, _CC_ANDROID_TAG_, "external storage state: %s", state_string);
 
     if (strcmp(state_string, "mounted") == 0) {
-        stateFlags = CC_ANDROID_EXTERNAL_STORAGE_READ |
-                     CC_ANDROID_EXTERNAL_STORAGE_WRITE;
+        stateFlags = CC_ANDROID_EXTERNAL_STORAGE_READ | CC_ANDROID_EXTERNAL_STORAGE_WRITE;
     } else if (strcmp(state_string, "mounted_ro") == 0) {
         stateFlags = CC_ANDROID_EXTERNAL_STORAGE_READ;
     } else {
@@ -883,9 +851,9 @@ _CC_API_PUBLIC(uint32_t) GetAndroidExternalStorageState(void) {
     return stateFlags;
 }
 
-_CC_API_PUBLIC(const _cc_String_t *) GetAndroidExternalStoragePath(void) {
+_CC_API_PUBLIC(_cc_sds_t) Android_JNI_GetExternalStoragePath(void) {
 
-    if (s_AndroidExternalFilesPath.length == 0) {
+    if (s_AndroidExternalFilesPath == nullptr) {
         struct LocalReferenceHolder refs = LocalReferenceHolder_Setup(__FUNCTION__);
         jmethodID mid;
         jobject context;
@@ -916,18 +884,17 @@ _CC_API_PUBLIC(const _cc_String_t *) GetAndroidExternalStoragePath(void) {
         pathString = (jstring)(*env)->CallObjectMethod(env, fileObject, mid);
 
         path = (*env)->GetStringUTFChars(env, pathString, nullptr);
-        s_AndroidExternalFilesPath.length = (*env)->GetStringUTFLength(env, pathString);
-        s_AndroidExternalFilesPath.data = _cc_tcsndup(path,s_AndroidExternalFilesPath.length);
+        s_AndroidExternalFilesPath = _cc_sds_alloc(path,(*env)->GetStringUTFLength(env, pathString));
         (*env)->ReleaseStringUTFChars(env, pathString, path);
 
         LocalReferenceHolder_Cleanup(&refs);
     }
-    return &s_AndroidExternalFilesPath;
+    return s_AndroidExternalFilesPath;
 }
 
-_CC_API_PUBLIC(const _cc_String_t *) GetAndroidCachePath(void) {
-    // !!! FIXME: lots of duplication with GetAndroidExternalStoragePath and GetAndroidInternalStoragePath; consolidate these functions!
-    if (s_AndroidCachePath.length == 0) {
+_CC_API_PUBLIC(_cc_sds_t) Android_JNI_GetCachePath(void) {
+    // !!! FIXME: lots of duplication with Android_JNI_GetExternalStoragePath and Android_JNI_GetInternalStoragePath; consolidate these functions!
+    if (s_AndroidCachePath == nullptr) {
         struct LocalReferenceHolder refs = LocalReferenceHolder_Setup(__FUNCTION__);
         jmethodID mid;
         jobject context;
@@ -958,8 +925,7 @@ _CC_API_PUBLIC(const _cc_String_t *) GetAndroidCachePath(void) {
         pathString = (jstring)(*env)->CallObjectMethod(env, fileObject, mid);
 
         path = (*env)->GetStringUTFChars(env, pathString, nullptr);
-        s_AndroidCachePath.length = (*env)->GetStringUTFLength(env, pathString);
-        s_AndroidCachePath.data = _cc_tcsndup(path,s_AndroidCachePath.length);
+        s_AndroidCachePath = _cc_sds_alloc(path,(*env)->GetStringUTFLength(env, pathString));
         (*env)->ReleaseStringUTFChars(env, pathString, path);
 
         LocalReferenceHolder_Cleanup(&refs);
@@ -988,7 +954,7 @@ _CC_API_PUBLIC(void) Android_JNI_GetManifestEnvironmentVariables(void) {
 
 typedef struct NativePermissionRequestInfo {
     int request_code;
-    tchar_t *permission;
+    _cc_sds_t permission;
     RequestAndroidPermissionCallback_t callback;
     pvoid_t userdata;
     struct NativePermissionRequestInfo *next;
@@ -1008,7 +974,7 @@ JNIEXPORT void JNICALL CC_JAVA_INTERFACE(nativePermissionResult)(
         if (info->request_code == (int) requestCode) {
             prev->next = info->next;
             info->callback(info->userdata, info->permission, result ? true : false);
-            _cc_free(info->permission);
+            _cc_sds_free(info->permission);
             _cc_free(info);
             break;
         }
@@ -1032,7 +998,7 @@ _CC_API_PUBLIC(bool_t) Android_JNI_RequestPermission(const tchar_t *permission, 
         return false;
     }
 
-    info->permission = _tcsdup(permission);
+    info->permission = _cc_sds_alloc(permission, 0);
     if (!info->permission) {
         _cc_free(info);
         return false;
@@ -1152,4 +1118,9 @@ _CC_API_PUBLIC(int) Android_JNI_OpenFileDescriptor(const tchar_t *uri, const tch
     // }
 
     return fd;
+}
+
+_CC_API_PUBLIC(size_t) _cc_get_device_name(tchar_t *cname, size_t length) {
+    cname[0] = 0;
+    return 0;
 }

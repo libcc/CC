@@ -20,164 +20,144 @@
 */
 #include <libcc/alloc.h>
 #include <libcc/math.h>
-#include <libcc/widgets/event.h>
+#include "event.c.h"
 
-/**/
-_CC_API_PUBLIC(_cc_event_buffer_t*) _cc_alloc_event_buffer(void) {
-    _cc_event_buffer_t *rw = (_cc_event_buffer_t *)_cc_malloc(sizeof(_cc_event_buffer_t));
-    //bzero(rw, sizeof(_cc_event_buffer_t));
-    rw->r.length = 0;
-    rw->r.limit = _CC_IO_BUFFER_SIZE_;
-    rw->w.length = 0;
-    rw->w.limit = _CC_IO_BUFFER_SIZE_;
+_CC_API_PUBLIC(_cc_io_buffer_t*) _cc_alloc_io_buffer(int32_t limit) {
+    _cc_io_buffer_t *io = (_cc_io_buffer_t *)_cc_malloc(sizeof(_cc_io_buffer_t));
+    io->r.limit = limit;
+    io->r.off = 0;
+    io->r.bytes = (byte_t*)_cc_calloc(limit,sizeof(byte_t));
 
-    rw->w.bytes = (byte_t *)_cc_malloc(_CC_IO_BUFFER_SIZE_);
-    rw->r.bytes = (byte_t *)_cc_malloc(_CC_IO_BUFFER_SIZE_);
+    io->w.limit = limit;
+    io->w.off = 0;
+    io->w.bytes = (byte_t*)_cc_calloc(limit,sizeof(byte_t));
 
-    _cc_lock_init(&(rw->w.lock));
-    return rw;
+#ifdef _CC_USE_OPENSSL_
+    io->ssl = nullptr;
+#endif
+
+    _cc_lock_init(&(io->lock_of_writable));
+    return io;
 }
 
 /**/
-_CC_API_PUBLIC(void) _cc_free_event_buffer(_cc_event_buffer_t *rw) {
+_CC_API_PUBLIC(void) _cc_free_io_buffer(_cc_io_buffer_t *io) {
     /**/
-    _cc_free(rw->w.bytes);
-    _cc_free(rw->r.bytes);
+    _cc_assert(io != nullptr);
+    _cc_assert(io->r.bytes != nullptr);
+    _cc_assert(io->w.bytes != nullptr);
 
-    rw->w.bytes = nullptr;
-    rw->r.bytes = nullptr;
+    _cc_free(io->w.bytes);
+    _cc_free(io->r.bytes);
 
-    _cc_free(rw);
-}
-
-_CC_API_PUBLIC(void) _cc_alloc_event_rbuf(_cc_event_rbuf_t *rbuf, int32_t length) {
-    rbuf->limit = (int32_t)_cc_aligned_alloc_opt(length, 64);
-    rbuf->bytes = (byte_t *)_cc_realloc(rbuf->bytes, rbuf->limit);
-}
-
-_CC_API_PUBLIC(void) _cc_alloc_event_wbuf(_cc_event_wbuf_t *wbuf, int32_t length) {
-    const int32_t free_length = wbuf->limit - wbuf->length;
-    if (free_length < length) {
-        wbuf->limit = (int32_t)_cc_aligned_alloc_opt(wbuf->length + length, 64);
-        wbuf->bytes = (byte_t *)_cc_realloc(wbuf->bytes, wbuf->limit);
+#ifdef _CC_USE_OPENSSL_
+    if (io->ssl) {
+        _SSL_free(io->ssl);
+        io->ssl = nullptr;
     }
+#endif
+    _cc_free(io);
+}
+
+_CC_API_PRIVATE(int32_t) _send(_cc_event_t *e, _cc_io_buffer_t *data, const byte_t *bytes, int32_t length) {
+#ifdef _CC_USE_OPENSSL_
+    if (data->ssl) {
+        return _SSL_send(data->ssl, bytes, length);
+    }
+#endif
+    return _cc_send(e->fd, bytes, length);
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _cc_copy_event_wbuf(_cc_event_wbuf_t *wbuf, const byte_t *data, int32_t length) {
-    if (_cc_unlikely(length <= 0 || data == nullptr)) {
-        return false;
-    }
-
-    _cc_spin_lock(&wbuf->lock);
-
-    _cc_alloc_event_wbuf(wbuf, length);
-
-    memcpy(wbuf->bytes + wbuf->length, data, length);
-    wbuf->length += length;
-
-    _cc_unlock(&wbuf->lock);
-
-    return true;
-}
-
-/**/
-_CC_API_PUBLIC(int32_t) _cc_event_send(_cc_event_t *e, const byte_t *data, int32_t length) {
-    int32_t bw = 0;
-    _cc_assert(e->buffer != nullptr);
-
-     // nothing queued? See if we can just send this without queueing.
-    if (e->buffer->w.length == 0) {
-        bw = _cc_send(e->fd, data, length);
-        if (bw < 0) {
-            return bw;
+_CC_API_PUBLIC(int32_t) _cc_io_buffer_send(_cc_event_t *e, _cc_io_buffer_t *data, const byte_t *bytes, int32_t length) {
+    int32_t off = 0, required_length;
+   
+    if (data->w.off == 0) {
+        // nothing queued? See if we can just send this without queueing.
+        off = _send(e, data, bytes, length);
+        if (off == length) {
+            return off;
+        } else if (off < 0) {
+            return off;
         }
-        // sent the whole thing? We're good to go here.
-        if (bw == length) {
-            return length;
-        }
-        // partial write? We'll queue the rest.
-        length -= bw;
-        data += bw;
+        bytes += off;
+        length -= off;
     }
 
     /*queue this up for sending later.*/
-    if (_cc_copy_event_wbuf(&e->buffer->w, data, length)) {
-        _cc_async_event_t *async = _cc_get_async_event_by_id(e->ident);
-        if (async) {
-            _CC_SET_BIT(_CC_EVENT_WRITABLE_, e->flags);
-            async->reset(async, e);
-        } else {
-            _CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
-        }
+    _cc_spin_lock(&data->lock_of_writable);
+    required_length = length + data->w.off;
 
-        return length;
+    if (required_length >= data->w.limit) {
+        data->w.limit = required_length + (int32_t)(data->w.limit * 0.72f);
+        data->w.off = 0;
+        data->w.bytes = (byte_t*)_cc_realloc(data->w.bytes, data->w.limit);
     }
-    return -1;
+
+    memcpy(data->w.bytes, bytes + off, length);
+    data->w.off += length;
+
+    _CC_SET_BIT(_CC_EVENT_WRITABLE_, e->flags);
+    _cc_unlock(&data->lock_of_writable);
+
+    return off;
 }
 
 /**/
-_CC_API_PUBLIC(int32_t) _cc_event_sendbuf(_cc_event_t *e) {
-    int32_t bw;
-    _cc_event_wbuf_t *wbuf;
-    _cc_assert(e->buffer != nullptr);
-
-    wbuf = &e->buffer->w;
-    if (wbuf->length == 0) {
+_CC_API_PUBLIC(int32_t) _cc_io_buffer_flush(_cc_event_t *e, _cc_io_buffer_t *data) {
+    int32_t off;
+    _cc_assert(data != 0);
+    if (data->w.off == 0) {
         _CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
         return 0;
     }
-    
-    _cc_spin_lock(&wbuf->lock);
-    bw = _cc_send(e->fd, wbuf->bytes, wbuf->length);
-    if (bw < 0) {
+
+    _cc_spin_lock(&data->lock_of_writable);
+    off = _send(e, data, data->w.bytes, data->w.off);
+    if (off == data->w.off) {
+        data->w.off = 0;
         _CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
-        wbuf->length = 0;
-    } else if (bw > 0) {
-        if (bw < wbuf->length) {
-            wbuf->length -= bw;
-            memmove(wbuf->bytes, wbuf->bytes + bw, wbuf->length);
-        } else {
-            _CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
-            wbuf->length = 0;
-        }
+    } else if (off < 0) {
+        data->w.off = 0;
+        _CC_UNSET_BIT(_CC_EVENT_WRITABLE_, e->flags);
+    } else {
+        data->w.off -= off;
+        memmove(data->w.bytes, data->w.bytes + off, data->w.off);
     }
-    _cc_unlock(&wbuf->lock);
-    return bw;
+    _cc_unlock(&data->lock_of_writable);
+    return off;
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _cc_event_recv(_cc_event_t *e) {
-    int32_t result = 0;
-    _cc_event_buffer_t *rw;
-    _cc_assert(e->buffer != nullptr);
+_CC_API_PUBLIC(int32_t) _cc_io_buffer_read(_cc_event_t *e, _cc_io_buffer_t *data) {
+    int32_t off = 0;
 
-    rw = e->buffer;
-    if (rw->r.length >= rw->r.limit) {
-        _cc_logger_error(_T("The space is insufficient.(length: %d >= %d)"), rw->r.length, rw->r.limit);
-        return false;
+#ifdef _CC_USE_OPENSSL_
+    if (data->ssl) {
+        off = _SSL_read(data->ssl, data->r.bytes + data->r.off, data->r.limit - data->r.off);
+        if (off > 0) {
+            data->r.off += off;
+        }
+        return off;
     }
-
-#ifdef __CC_ANDROID__
-    result = (int32_t)recv(e->fd, (char *)rw->r.bytes + rw->r.length, rw->r.limit - rw->r.length, MSG_NOSIGNAL);
-#elif defined(__CC_WINDOWS__)
-    result = (int32_t)_win_recv(e->fd, rw->r.bytes + rw->r.length, rw->r.limit - rw->r.length);
-#else
-    result = (int32_t)recv(e->fd, (char *)rw->r.bytes + rw->r.length, rw->r.limit - rw->r.length, 0);
 #endif
 
-    if (result < 0) {
-        int err = _cc_last_errno();
-        if (err == _CC_EINTR_ || err == _CC_EAGAIN_) {
-            return true;
+#ifdef __CC_ANDROID__
+    off = recv(e->fd, (char *)data->r.bytes + data->r.off, data->r.limit - data->r.off, MSG_NOSIGNAL);
+#elif defined(__CC_WINDOWS__)
+    off = _win_recv(e->fd, data->r.bytes + data->r.off, data->r.limit - data->r.off);
+#else
+    off = recv(e->fd, (char *)data->r.bytes + data->r.off, data->r.limit - data->r.off, 0);
+#endif
+    if (off > 0) {
+        data->r.off += off;
+    } else if (off < 0) {
+        int er = _cc_last_errno();
+        if (er == _CC_EINTR_ || er == _CC_EAGAIN_) {
+            return 0;
         }
-
-        _cc_logger_warin(_T("fd:%d fail to recv (%d): %s"), e->fd, err, _cc_last_error(err));
-        return false;
-    } else if (result == 0) {
-        return false;
+        _cc_logger_warin(_T("fd:%d fail to recv (%d): %s"), e->fd, er, _cc_last_error(er));
     }
-
-    rw->r.length += result;
-    return true;
+    return off;
 }
+

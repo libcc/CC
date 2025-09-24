@@ -145,74 +145,138 @@ public class CCWidgets  {
         return serial;
     }
 
-    public static String getModel() {
-        return android.os.Build.MODEL;
-    }
-
-    public static String getProductName() {
-        return android.os.Build.PRODUCT;
-    }
-
-    public static String getManufacturer() {
-        return android.os.Build.MANUFACTURER;
-    }
-
     /**
-     * Get the OS version.
-     */
-    public static String getOSVersion() {
-        return android.os.Build.VERSION.RELEASE;
-    }
-
-    public static String getSDKVersion() {
-        return android.os.Build.VERSION.SDK;
-    }
-
-    /**
-     * This method is called by CC using JNI.
+     * This method is called by libcc using JNI.
      */
     public static Context getContext() {
         return CCWidgets.mContext;
     }
+
     /**
-     * This method is called by CC using JNI.
+     * This method is called by libcc using JNI.
      */
-    public static boolean isSimulator() {
-        return android.os.Build.FINGERPRINT.contains("generic") || android.os.Build.PRODUCT.contains("sdk");
+    public static boolean setActivityTitle(String title) {
+    }
+
+    /**
+     * This method is called by libcc using JNI.
+     */
+    public static void setWindowStyle(boolean fullscreen) {
+    }
+
+    public static double getDiagonal() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        Activity activity = (Activity)getContext();
+        if (activity == null) {
+            return 0.0;
+        }
+        activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+        double dWidthInches = metrics.widthPixels / (double)metrics.xdpi;
+        double dHeightInches = metrics.heightPixels / (double)metrics.ydpi;
+
+        return Math.sqrt((dWidthInches * dWidthInches) + (dHeightInches * dHeightInches));
+    }
+
+    /**
+     * This method is called by libcc using JNI.
+     */
+    public static boolean isTablet() {
+        // If our diagonal size is seven inches or greater, we consider ourselves a tablet.
+        return (getDiagonal() >= 7.0);
+    }
+
+    /**
+     * This method is called by libcc using JNI.
+     */
+    public static boolean isChromebook() {
+        if (CCWidgets.mContext == null) {
+            return false;
+        }
+        return CCWidgets.mContext.getPackageManager().hasSystemFeature("org.chromium.arc.device_management");
+    }
+
+    /**
+     * This method is called by libcc using JNI.
+     */
+    public static boolean isDeXMode() {
+        if (Build.VERSION.SDK_INT < 24 /* Android 7.0 (N) */) {
+            return false;
+        }
+        try {
+            final Configuration config = getContext().getResources().getConfiguration();
+            final Class<?> configClass = config.getClass();
+            return configClass.getField("SEM_DESKTOP_MODE_ENABLED").getInt(configClass)
+                    == configClass.getField("semDesktopModeEnabled").getInt(config);
+        } catch(Exception ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * This method is called by libcc using JNI.
+     */
+    public static boolean getManifestEnvironmentVariables() {
+        try {
+            Context ctx = CCWidgets.mContext;
+            if (CCWidgets.mContext == null) {
+                return false;
+            }
+            String pkgName = ctx.getPackageName();
+            ApplicationInfo applicationInfo = ctx.getPackageManager().getApplicationInfo(pkgName, PackageManager.GET_META_DATA);
+            Bundle bundle = applicationInfo.metaData;
+            if (bundle == null) {
+                return false;
+            }
+            // String prefix = "LIBCC_ENV.";
+            // final int trimLength = prefix.length();
+            // for (String key : bundle.keySet()) {
+            //     if (key.startsWith(prefix)) {
+            //         String name = key.substring(trimLength);
+            //         String value = bundle.get(key).toString();
+            //         nativeSetenv(name, value);
+            //     }
+            // }
+            /* environment variables set! */
+            return true;
+        } catch (Exception e) {
+           Log.v(TAG, "exception " + e.toString());
+        }
+        return false;
     }
     /**
-     * This method is called by CC using JNI.
+     * This method is called by libcc using JNI.
      */
     public static void registerPowerInfo() {
         CCWidgets.mContext.registerReceiver(new BatteryBroadcastReceiver(), new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
     }
-   /**
-     * This method is called by CC using JNI.
+    /**
+     * This method is called by libcc using JNI.
      */
     public static void requestPermission(String permission, int requestCode) {
         PermissionHelper.requestPermissions((Activity)getContext(), new String[]{permission}, requestCode);
     }
     /**
-     * This method is called by CC using JNI.
+     * This method is called by libcc using JNI.
      */
     public static boolean clipboardHasText() {
         return mClipboardHandler.clipboardHasText();
     }
 
     /**
-     * This method is called by CC using JNI.
+     * This method is called by libcc using JNI.
      */
     public static String clipboardGetText() {
         return mClipboardHandler.clipboardGetText();
     }
 
     /**
-     * This method is called by CC using JNI.
+     * This method is called by libcc using JNI.
      */
     public static void clipboardSetText(String string) { mClipboardHandler.clipboardSetText(string); }
 
     /**
-     * This method is called by CC using JNI.
+     * This method is called by libcc using JNI.
      */
     public static int openFileDescriptor(String uri, String mode) throws Exception {
         if (CCWidgets.mContext == null) {
@@ -226,48 +290,6 @@ public class CCWidgets  {
             e.printStackTrace();
             return -1;
         }
-    }
-
-    /**
-     * This method is called by CC using JNI.
-     */
-    public static String getCachePath() {
-        return CCWidgets.mContext.getCacheDir().getPath();
-    }
-    /**
-     * This method is called by CC using JNI.
-     */
-    public static File getFilesDir() {
-        for (int a = 0; a < 10; a++) {
-            File path = CCWidgets.mContext.getFilesDir();
-            if (path != null) {
-                return path;
-            }
-        }
-        try {
-            ApplicationInfo info = CCWidgets.mContext.getApplicationInfo();
-            File path = new File(info.dataDir, "files");
-            path.mkdirs();
-            return path;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public static String getFilesPath() {
-        return getFilesDir().getAbsolutePath();
-    }
-
-    /**
-     * This method is called by CC using JNI.
-     */
-    public static String getPackageName() {
-        return CCWidgets.mContext.getPackageName();
-    }
-
-    public static Boolean isWifiConnected() {
-        return Boolean.valueOf(getNetworkType() == NetworkType_WIFI);
     }
 
     public static Boolean isBluetoothEnabled() {
@@ -397,9 +419,6 @@ public class CCWidgets  {
         return result;
     }
 
-    public static void showToast2(String msg) {
-        Utils.toast(CCWidgets.mContext, msg);
-    } 
     /**
      * This method is called by CC using JNI.
      */

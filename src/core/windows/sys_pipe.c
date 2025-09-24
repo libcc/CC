@@ -20,19 +20,19 @@
 */
 #include <libcc/socket/socket.h>
 
-_CC_API_PRIVATE(SOCKET) _tcp_socket(void) {
+_CC_API_PRIVATE(_cc_socket_t) _tcp_socket(void) {
 #if _CC_USE_WSASOCKET_
-    return WSASocket(AF_INET, SOCK_STREAM, 0, 0, 0, 0);
+    return (_cc_socket_t)WSASocket(AF_INET, SOCK_STREAM, 0, 0, 0, 0);
 #else
-    return socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    return (_cc_socket_t)socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 #endif
 }
 
 /* oh, the humanity! */
-_CC_API_PUBLIC(int) _cc_pipe(SOCKET filedes[2]) {
+_CC_API_PUBLIC(int) _cc_pipe(_cc_socket_t filedes[2]) {
     static int id = 0;
     FD_SET rs;
-    SOCKET ls;
+    _cc_socket_t ls;
     struct timeval socktm;
     struct sockaddr_in pa;
     struct sockaddr_in la;
@@ -44,8 +44,8 @@ _CC_API_PUBLIC(int) _cc_pipe(SOCKET filedes[2]) {
     int uid[2];
     int iid[2];
 
-    SOCKET *rd = (SOCKET*)&filedes[0];
-    SOCKET *wr = (SOCKET*)&filedes[1];
+    _cc_socket_t *rd = &filedes[0];
+    _cc_socket_t *wr = &filedes[1];
 
     /* Create the unique socket identifier
      * so that we know the connection originated
@@ -71,7 +71,7 @@ _CC_API_PUBLIC(int) _cc_pipe(SOCKET filedes[2]) {
         goto PIPE_FAIL;
     }
 
-    if ((*wr = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == INVALID_SOCKET) {
+    if ((*wr = (_cc_socket_t)socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == INVALID_SOCKET) {
         goto PIPE_FAIL;
     }
 
@@ -112,7 +112,7 @@ _CC_API_PUBLIC(int) _cc_pipe(SOCKET filedes[2]) {
             continue;
         }
 
-        if ((*rd = accept(ls, (SOCKADDR *)&ca, &lc)) == INVALID_SOCKET) {
+        if ((*rd = (_cc_socket_t)accept(ls, (SOCKADDR *)&ca, &lc)) == INVALID_SOCKET) {
             goto PIPE_FAIL;
         }
 

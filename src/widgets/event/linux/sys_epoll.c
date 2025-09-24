@@ -31,8 +31,8 @@ struct _cc_async_event_priv {
 };
 
 /**/
-_CC_API_PRIVATE(bool_t) _epoll_event_update(int efd, _cc_event_t *e, bool_t rm) {
-    uint16_t marks = 0;
+_CC_API_PRIVATE(bool_t) _emit_epoll_event(int efd, _cc_event_t *e, bool_t clean) {
+    uint16_t filter = _CC_EVENT_UNKNOWN_;
     int op = EPOLL_CTL_DEL;
     struct epoll_event ev;
 
@@ -41,20 +41,26 @@ _CC_API_PRIVATE(bool_t) _epoll_event_update(int efd, _cc_event_t *e, bool_t rm) 
     ev.data.ptr = e;
     ev.events = 0;
 
-    if (!rm) {
-        /*Setting the readable event flag*/
-        if (_CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, e->flags)) {
-            ev.events |= EPOLLIN;
-        }
-
-        /*Setting the writable event flag*/
-        if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_ | _CC_EVENT_CONNECT_, e->flags)) {
+    if (!clean) {
+        if (_CC_ISSET_BIT(_CC_EVENT_CONNECT_, e->flags)) {
             ev.events |= EPOLLOUT;
+            filter = _CC_EVENT_CONNECT_;
+        } else {
+            /*Setting the readable event flag*/
+            if (_CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, e->flags)) {
+                ev.events |= EPOLLIN;
+            }
+
+            /*Setting the writable event flag*/
+            if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags)) {
+                ev.events |= EPOLLOUT;
+            }
+            
+            filter = _CC_EVENT_IS_SOCKET(e->flags);
         }
 
         if (ev.events) {
-            marks = _CC_EVENT_IS_SOCKET(e->flags);
-            op = e->marks ? EPOLL_CTL_MOD : EPOLL_CTL_ADD;
+            op = e->filter ? EPOLL_CTL_MOD : EPOLL_CTL_ADD;
         }
     }
 
@@ -97,7 +103,7 @@ _CC_API_PRIVATE(bool_t) _epoll_event_update(int efd, _cc_event_t *e, bool_t rm) 
         }
     }
 
-    e->marks = marks;
+    e->filter = filter;
     return true;
 }
 
@@ -132,10 +138,10 @@ _CC_API_PRIVATE(_cc_socket_t) _epoll_event_accept(_cc_async_event_t *async, _cc_
 
 /**/
 _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
-    uint16_t m = _CC_EVENT_IS_SOCKET(e->marks), u;
-    if (_CC_ISSET_BIT(_CC_EVENT_DISCONNECT_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags) == 0) {
+    uint16_t m = _CC_EVENT_IS_SOCKET(e->filter), u;
+    if (_CC_ISSET_BIT(_CC_EVENT_CLOSED_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags) == 0) {
         if (m) {
-            _epoll_event_update(async->priv->fd, e, true);
+            _emit_epoll_event(async->priv->fd, e, true);
         }
         _cc_free_event(async, e);
         return;
@@ -143,17 +149,18 @@ _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
 
     if (_CC_ISSET_BIT(_CC_EVENT_PENDING_, e->flags)) {
         if (m) {
-            _epoll_event_update(async->priv->fd, e, true);
+            _emit_epoll_event(async->priv->fd, e, true);
         }
-
-        _cc_list_iterator_swap(&async->pending, &e->lnk);
-        return;
-    }
-
-    /*update event*/
-    u = _CC_EVENT_IS_SOCKET(e->flags);
-    if (u && u != m) {
-        _epoll_event_update(async->priv->fd, e, false);
+        if (_CC_ISSET_BIT(_CC_EVENT_TIMEOUT_, e->flags) == 0) {
+            _cc_list_iterator_swap(&async->pending, &e->lnk);
+            return;
+        }
+    } else {
+        /*update event*/
+        u = _CC_EVENT_IS_SOCKET(e->flags);
+        if (u && u != m) {
+            _emit_epoll_event(async->priv->fd, e, false);
+        }
     }
 
     _reset_event_timeout(async, e);
@@ -190,26 +197,30 @@ _CC_API_PRIVATE(bool_t) _epoll_event_wait(_cc_async_event_t *async, uint32_t tim
         _cc_event_t *e = (_cc_event_t *)actives[i].data.ptr;
 
         if (what & EPOLLERR) {
-            which = _CC_EVENT_DISCONNECT_;
+            which = _CC_EVENT_CLOSED_;
         } else if (what & EPOLLHUP) {
             /*
                 The EPOLLHUP event will be triggered on this end when the fd is closed on the other end.
                 the EPOLLHUP event as a readable event.
                 If the read 0 bytes, it indicates that the opposite end has closed.
             */
-            which = _CC_EVENT_READABLE_;//or _CC_EVENT_DISCONNECT_
+            which = _CC_EVENT_READABLE_;//or _CC_EVENT_CLOSED_
         } else {
             if (what & EPOLLIN) {
                 which |= _CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, e->flags);
             }
             if (what & EPOLLOUT) {
                 which |= _CC_ISSET_BIT(_CC_EVENT_CONNECT_ | _CC_EVENT_WRITABLE_, e->flags);
-                if (_CC_ISSET_BIT(_CC_EVENT_CONNECT_, which)) {
-                    which = _valid_connected(e, which);
+                if (which & _CC_EVENT_CONNECT_) {
+                    if (_valid_fd(e->fd)) {
+                        _CC_UNSET_BIT(_CC_EVENT_CONNECT_, e->flags);
+                    } else {
+                        which = _CC_EVENT_CLOSED_;
+                    }
                 }
             }
             if (what & EPOLLRDHUP) {
-                which = _CC_EVENT_DISCONNECT_;
+                which = _CC_EVENT_CLOSED_;
             }
         }
 

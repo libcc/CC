@@ -24,7 +24,7 @@
 #include <math.h>
 #include <wchar.h>
 #include "../sds.h"
-#include "OpenSSL.h"
+#include "event.h"
 
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
@@ -93,29 +93,29 @@ typedef struct _cc_http_response_header {
     _cc_rbtree_t headers;
 } _cc_http_response_header_t;
 
-typedef bool_t (*_cc_http_header_fn_t)(pvoid_t *arg, tchar_t *line, int length);
+typedef bool_t (*_cc_http_header_fn_t)(pvoid_t *arg, tchar_t *line, int32_t length);
 
-_CC_WIDGETS_API(_cc_http_header_t*) _cc_http_header_alloc(void);
+_CC_API_WIDGETS(_cc_http_header_t*) _cc_http_header_alloc(void);
 /**/
-_CC_WIDGETS_API(void) _cc_http_header_free(_cc_http_header_t *m);
+_CC_API_WIDGETS(void) _cc_http_header_free(_cc_http_header_t *m);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_http_header_push(_cc_rbtree_t *ctx, _cc_http_header_t *data);
+_CC_API_WIDGETS(bool_t) _cc_http_header_push(_cc_rbtree_t *ctx, _cc_http_header_t *data);
 /**/
-_CC_WIDGETS_API(const _cc_http_header_t*) _cc_http_header_find(_cc_rbtree_t *ctx, const tchar_t *keyword);
+_CC_API_WIDGETS(const _cc_http_header_t*) _cc_http_header_find(_cc_rbtree_t *ctx, const tchar_t *keyword);
 /**/
-_CC_WIDGETS_API(void) _cc_http_header_destroy(_cc_rbtree_t *ctx);
+_CC_API_WIDGETS(void) _cc_http_header_destroy(_cc_rbtree_t *ctx);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_http_header_line(_cc_rbtree_t *headers, tchar_t *line, int length);
+_CC_API_WIDGETS(bool_t) _cc_http_header_line(_cc_rbtree_t *headers, tchar_t *line, int32_t length);
 /**/
-_CC_WIDGETS_API(int) _cc_http_header_parser(_cc_http_header_fn_t fn, pvoid_t *arg, _cc_event_rbuf_t* r);
+_CC_API_WIDGETS(int) _cc_http_header_parser(_cc_http_header_fn_t fn, pvoid_t *arg, byte_t *bytes, int32_t *length);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_http_alloc_request_header(_cc_http_request_header_t **http_header, tchar_t *line, int length);
+_CC_API_WIDGETS(bool_t) _cc_http_alloc_request_header(_cc_http_request_header_t **http_header, tchar_t *line, int32_t length);
 /**/
-_CC_WIDGETS_API(void) _cc_http_free_request_header(_cc_http_request_header_t **http_header);
+_CC_API_WIDGETS(void) _cc_http_free_request_header(_cc_http_request_header_t **http_header);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_http_alloc_response_header(_cc_http_response_header_t **url_response, tchar_t *line, int length);
+_CC_API_WIDGETS(bool_t) _cc_http_alloc_response_header(_cc_http_response_header_t **url_response, tchar_t *line, int32_t length);
 /**/
-_CC_WIDGETS_API(void) _cc_http_free_response_header(_cc_http_response_header_t **response_header);
+_CC_API_WIDGETS(void) _cc_http_free_response_header(_cc_http_response_header_t **response_header);
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
 }

@@ -28,23 +28,26 @@ _CC_API_PUBLIC(size_t) _cc_get_executable_path(tchar_t *path, size_t length) {
 }
 
 _CC_API_PUBLIC(size_t) _cc_get_base_path(tchar_t *path, size_t length) {
-    const _cc_String_t * fpath = GetAndroidExternalStoragePath();
-    length = _min(fpath.length, length);
-    memcpy(path, fpath.data, length);
+    _cc_sds_t fpath = Android_JNI_GetExternalStoragePath();
+    size_t fpath_length = _cc_sds_length(fpath);
+    length = _min(fpath_length, length);
+    memcpy(path, fpath, length);
     path[length - 1] = 0;
     return length;
 }
 
 _CC_API_PUBLIC(size_t) _cc_get_folder(_cc_folder_t folder, tchar_t *path, size_t length) {
-    const _cc_String_t * fpath;
+    _cc_sds_t fpath;
+    size_t fpath_length;
     if (folder == _CC_FOLDER_TEMPLATES_) {
-        fpath = GetAndroidCachePath();
+        fpath = Android_JNI_GetCachePath();
     } else {
-        fpath = GetAndroidExternalStoragePath();
+        fpath = Android_JNI_GetExternalStoragePath();
     }
 
-    length = _min(fpath.length, length);
-    memcpy(path, fpath.data, length);
+    fpath_length = _cc_sds_length(fpath);
+    length = _min(fpath_length, length);
+    memcpy(path, fpath, length);
     path[length - 1] = 0;
     return length;
 }

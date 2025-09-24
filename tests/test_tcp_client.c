@@ -6,16 +6,16 @@
 //
 
 static bool_t onConnected(_cc_async_event_t *async, _cc_event_t *e);
-static bool_t onDisconnect(_cc_async_event_t *async, _cc_event_t *e);
+static bool_t onClose(_cc_async_event_t *async, _cc_event_t *e);
 static bool_t onRead(_cc_async_event_t *async, _cc_event_t *e);
 static bool_t onWrite(_cc_async_event_t *async, _cc_event_t *e);
 static bool_t onTimeout(_cc_async_event_t *async, _cc_event_t *e);
 
 static bool_t doEvent(_cc_async_event_t *async, _cc_event_t *e, const uint32_t which) {
-    if (which & _CC_EVENT_CONNECTED_) {
+    if (which & _CC_EVENT_CONNECT_) {
         return onConnected(async, e);
-    } else if (which & _CC_EVENT_DISCONNECT_) {
-        return onDisconnect(async, e);
+    } else if (which & _CC_EVENT_CLOSED_) {
+        return onClose(async, e);
     } else if (which & _CC_EVENT_READABLE_) {
         if (!onRead(async, e)) {
             return false;
@@ -39,7 +39,7 @@ static bool_t onConnected(_cc_async_event_t *async, _cc_event_t *e) {
     return true;
 }
 
-static bool_t onDisconnect(_cc_async_event_t *async, _cc_event_t *e) {
+static bool_t onClose(_cc_async_event_t *async, _cc_event_t *e) {
     _cc_logger_debug(_T("%d onDisconnect."), e->ident);
     return true;
 }
@@ -48,19 +48,19 @@ static bool_t onRead(_cc_async_event_t *async, _cc_event_t *e) {
     _cc_logger_debug(_T("%d onRead."), e->ident);
     //time_t ulTime = 0;
     byte_t buf[1024];
-    size_t length = _cc_recv(e->fd, (byte_t*)&buf, 1024);
-    if (length <= 0) {
+    int32_t off = _cc_recv(e->fd, (byte_t*)&buf, 1024);
+    if (off <= 0) {
         _tprintf(_T("TCP close %d\n"), e->fd);
         return false;
     }
-    buf[length] = 0;
-    _cc_logger_info(_T("%d,%s"), length, buf);
+    buf[off] = 0;
+    _cc_logger_info(_T("%d,%s"), off, buf);
     return true;
 }
 
 static bool_t onWrite(_cc_async_event_t *async, _cc_event_t *e) {
     _cc_logger_debug(_T("%d onWrite."), e->ident);
-    return _cc_event_sendbuf(e) < 0;
+    return false;
 }
 
 static bool_t onTimeout(_cc_async_event_t *async, _cc_event_t *e) {
@@ -74,7 +74,7 @@ bool_t addConnectListener(const tchar_t *host, uint16_t port) {
     _cc_async_event_t *async = _cc_get_async_event();
     _cc_assert(async != NULL);
 
-    event = _cc_event_alloc(async, _CC_EVENT_CONNECT_|_CC_EVENT_TIMEOUT_);
+    event = _cc_event_alloc(async, _CC_EVENT_CONNECT_|_CC_EVENT_TIMEOUT_|_CC_EVENT_READABLE_);
     _cc_assert(event != NULL);
     if (event == nullptr) {
         return false;

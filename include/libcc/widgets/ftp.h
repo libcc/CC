@@ -144,41 +144,41 @@ void libftp_setup(_cc_ftp_t *ftp, uint16_t flag, _cc_ftp_resp_callback_t fn, pvo
 void libftp_del_attach(_cc_ftp_t *ftp);
 
 /**/
-_CC_WIDGETS_API(int32_t) _ftp_send_command(_cc_event_t*, const pvoid_t, int32_t);
+_CC_API_WIDGETS(int32_t) _ftp_send_command(_cc_event_t*, const pvoid_t, int32_t);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_connected(_cc_ftp_t *ftp);
+_CC_API_WIDGETS(bool_t) _cc_ftp_connected(_cc_ftp_t *ftp);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_disconnected(_cc_ftp_t *ftp);
+_CC_API_WIDGETS(bool_t) _cc_ftp_disconnected(_cc_ftp_t *ftp);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_login(_cc_ftp_t *ftp, const char_t *user, const char_t *password);
+_CC_API_WIDGETS(bool_t) _cc_ftp_login(_cc_ftp_t *ftp, const char_t *user, const char_t *password);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_logout(_cc_ftp_t *ftp);
+_CC_API_WIDGETS(bool_t) _cc_ftp_logout(_cc_ftp_t *ftp);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_opts_utf8(_cc_ftp_t *ftp);
+_CC_API_WIDGETS(bool_t) _cc_ftp_opts_utf8(_cc_ftp_t *ftp);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_opts_datatype(_cc_ftp_t *ftp);
+_CC_API_WIDGETS(bool_t) _cc_ftp_opts_datatype(_cc_ftp_t *ftp);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_opts_port_passive(_cc_ftp_t *ftp);
+_CC_API_WIDGETS(bool_t) _cc_ftp_opts_port_passive(_cc_ftp_t *ftp);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_open_port(_cc_ftp_t *ftp);
+_CC_API_WIDGETS(bool_t) _cc_ftp_open_port(_cc_ftp_t *ftp);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_bind_accept(_cc_ftp_t* ftp, _cc_async_event_t *async, _cc_event_t *e);
+_CC_API_WIDGETS(bool_t) _cc_ftp_bind_accept(_cc_ftp_t* ftp, _cc_async_event_t *async, _cc_event_t *e);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_unbind_accept(_cc_ftp_t* ftp);
+_CC_API_WIDGETS(bool_t) _cc_ftp_unbind_accept(_cc_ftp_t* ftp);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_list(_cc_ftp_t *ftp, const char_t *path);
+_CC_API_WIDGETS(bool_t) _cc_ftp_list(_cc_ftp_t *ftp, const char_t *path);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_mkdir(_cc_ftp_t *ftp, const char_t* path);
+_CC_API_WIDGETS(bool_t) _cc_ftp_mkdir(_cc_ftp_t *ftp, const char_t* path);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_cwd(_cc_ftp_t *ftp, const char_t* path);
+_CC_API_WIDGETS(bool_t) _cc_ftp_cwd(_cc_ftp_t *ftp, const char_t* path);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_cdup(_cc_ftp_t *ftp);
+_CC_API_WIDGETS(bool_t) _cc_ftp_cdup(_cc_ftp_t *ftp);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_del_file(_cc_ftp_t *ftp, const char_t* file);
+_CC_API_WIDGETS(bool_t) _cc_ftp_del_file(_cc_ftp_t *ftp, const char_t* file);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_ftp_del_folder(_cc_ftp_t *ftp, const char_t* folder);
+_CC_API_WIDGETS(bool_t) _cc_ftp_del_folder(_cc_ftp_t *ftp, const char_t* folder);
 /**/
-_CC_WIDGETS_API(const char_t*) _cc_ftp_get_error(void);
+_CC_API_WIDGETS(const char_t*) _cc_ftp_get_error(void);
     
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

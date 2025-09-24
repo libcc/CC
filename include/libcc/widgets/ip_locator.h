@@ -47,7 +47,7 @@ struct _cc_ip_locator {
     void (*quit)(_cc_ip_locator_t* f);
 };
 
-_CC_WIDGETS_API(bool_t) _cc_init_ip_locator(_cc_ip_locator_t*, const char_t*);
+_CC_API_WIDGETS(bool_t) _cc_init_ip_locator(_cc_ip_locator_t*, const char_t*);
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
 }

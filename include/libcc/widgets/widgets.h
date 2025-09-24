@@ -23,7 +23,7 @@
 
 #include "dylib.h"
 #include "timeout.h"
-#ifndef _CC_WIDGETS_API_USE_DYNAMIC_
+#ifndef _CC_API_WIDGETS_USE_DYNAMIC_
 #include "dns.h"
 #include "ftp.h"
 #include "smtp.h"
@@ -42,22 +42,10 @@
 extern "C" {
 #endif
 
-/* Render seconds since 1970 as an RFC822 date string.  Return
-** a pointer to that string in a static buffer.
-*/
-tchar_t* get_rfc822_date(time_t t);
-/*
-** Parse an RFC822-formatted timestamp as we'd expect from HTTP and return
-** a Unix epoch time. <= zero is returned on failure.
-*/
-time_t get_rfc822_time(const tchar_t* rfc822_date);
-
 /**/
-_CC_WIDGETS_API(void) _widget_open_syslog(byte_t facility, const tchar_t *ip, const uint16_t port);
+_CC_API_WIDGETS(void) _widget_open_syslog(byte_t facility, const tchar_t *ip, const uint16_t port);
 /**/
-_CC_WIDGETS_API(void) _widget_close_syslog(void);
-/**/
-_CC_WIDGETS_API(bool_t) _cc_event_writef(_cc_event_t *e, const tchar_t *fmt, ...);
+_CC_API_WIDGETS(void) _widget_close_syslog(void);
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
 }

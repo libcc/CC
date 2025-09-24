@@ -22,6 +22,7 @@
 #define _C_CC_EVENT_C_H_INCLUDED_
 
 #include <libcc/widgets/event.h>
+#include <libcc/widgets/OpenSSL.h>
 
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
@@ -83,21 +84,11 @@ bool_t _event_callback(_cc_async_event_t *async, _cc_event_t *e, uint32_t which)
 /**
  * @brief Check the Socket is valid
  *
- * @param 1 _cc_event_t structure
+ * @param fd socket
  *
  * @return true if successful or false on error.
  */
-bool_t _valid_event_fd(_cc_event_t *);
-
-/**
- * @brief Check valid socket connected event
- *
- * @param async _cc_async_event_t structure
- * @param which current event flag
- *
- * @return Returns an updated event flag
- */
-uint32_t _valid_connected(_cc_event_t *e, uint32_t which);
+bool_t _valid_fd(_cc_socket_t fd);
 
 /**
  * @brief Socket disconnect event

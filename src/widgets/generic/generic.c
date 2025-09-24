@@ -19,6 +19,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
 */
 
+#include <libcc/time.h>
 #include <libcc/UTF.h>
 #include "generic.c.h"
 
@@ -126,4 +127,31 @@ _CC_API_PUBLIC(tchar_t *) _convert_text(_cc_sds_t sds, const tchar_t *input_ptr,
     _cc_sds_set_length(sds, (size_t)(output_ptr - (tchar_t*)sds));
 
     return output_ptr;
+}
+
+/* Render seconds since 1970 as an RFC822 date string.  Return
+** a pointer to that string in a static buffer.
+*/
+tchar_t* get_rfc822_date(time_t t) {
+    struct tm* ptm;
+    static tchar_t str_date[128];
+    ptm = gmtime(&t);
+    _tcsftime(str_date, _cc_countof(str_date), _T("%a, %d %b %Y %H:%M:%S GMT"), ptm);
+    return str_date;
+}
+/*
+** Parse an RFC822-formatted timestamp as we'd expect from HTTP and return
+** a Unix epoch time. <= zero is returned on failure.
+*/
+time_t get_rfc822_time(const tchar_t* rfc822_date) {
+    struct tm ptm;
+
+    if (rfc822_date == nullptr) {
+        return 0;
+    }
+
+    if (_cc_strptime(rfc822_date, _T("%a, %d %b %Y %H:%M:%S"), &ptm)) {
+        return mktime(&ptm);
+    }
+    return 0;
 }

@@ -114,7 +114,7 @@ struct _cc_sql_delegate {
  *
  * @return true if successful or false on error.
  */
-_CC_WIDGETS_API(bool_t) _cc_init_mysql(_cc_sql_delegate_t *delegator);
+_CC_API_WIDGETS(bool_t) _cc_init_mysql(_cc_sql_delegate_t *delegator);
 /**
  * @brief Initialize SQLServer _cc_sql_delegate structure
  *
@@ -122,7 +122,7 @@ _CC_WIDGETS_API(bool_t) _cc_init_mysql(_cc_sql_delegate_t *delegator);
  *
  * @return true if successful or false on error.
  */
-_CC_WIDGETS_API(bool_t) _cc_init_sqlsvr(_cc_sql_delegate_t *delegator);
+_CC_API_WIDGETS(bool_t) _cc_init_sqlsvr(_cc_sql_delegate_t *delegator);
 /**
  * @brief Initialize SQLite3 _cc_sql_delegate structure
  *
@@ -130,7 +130,7 @@ _CC_WIDGETS_API(bool_t) _cc_init_sqlsvr(_cc_sql_delegate_t *delegator);
  *
  * @return true if successful or false on error.
  */
-_CC_WIDGETS_API(bool_t) _cc_init_sqlite(_cc_sql_delegate_t *delegator);
+_CC_API_WIDGETS(bool_t) _cc_init_sqlite(_cc_sql_delegate_t *delegator);
 /**
  * @brief Initialize Oracle _cc_sql_delegate structure
  *
@@ -138,7 +138,7 @@ _CC_WIDGETS_API(bool_t) _cc_init_sqlite(_cc_sql_delegate_t *delegator);
  *
  * @return true if successful or false on error.
  */
-_CC_WIDGETS_API(bool_t) _cc_init_oci8(_cc_sql_delegate_t *delegator);
+_CC_API_WIDGETS(bool_t) _cc_init_oci8(_cc_sql_delegate_t *delegator);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

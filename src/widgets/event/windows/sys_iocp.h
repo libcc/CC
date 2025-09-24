@@ -33,6 +33,7 @@ extern "C" {
 
 #define _CC_IOCP_SOCKET_                  0xFFFFFFF0
 #define _CC_IOCP_PENDING_                 0xFFFFFFF1
+#define _CC_IOCP_SSL_HANDSHAKING_         0xFFFFFFF2
 #define _CC_IOCP_EXIT_                    0xFFFFFFFF
 
 struct _cc_async_event_priv {
@@ -46,7 +47,7 @@ typedef struct _io_context {
     uint32_t ident;
 	uint32_t flag;
 	_cc_socket_t fd;
-    OVERLAPPED io_context;
+    OVERLAPPED overlapped;
 	DWORD number_of_bytes;
     _cc_list_iterator_t lnk;
     _cc_event_t *e;

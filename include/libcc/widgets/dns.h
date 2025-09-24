@@ -122,22 +122,22 @@ typedef struct _cc_dns {
  * @param host domain string
  * @param type length of domain
  */
-_CC_WIDGETS_API(int) _cc_dns_lookup(_cc_dns_t* dns, const char_t* host, int type);
+_CC_API_WIDGETS(int) _cc_dns_lookup(_cc_dns_t* dns, const char_t* host, int type);
 /**
  * @brief free a dns structure
  *
  * @param dns _cc_dns_t
  */
-_CC_WIDGETS_API(void) _cc_dns_free(_cc_dns_t* dns);
+_CC_API_WIDGETS(void) _cc_dns_free(_cc_dns_t* dns);
 /**
  * @brief Set DNS Server
  *
  * @param servers NDS server address array
  * @param count The length of the  array
  */
-_CC_WIDGETS_API(void) _cc_dns_servers(const tchar_t* servers[], int count);
+_CC_API_WIDGETS(void) _cc_dns_servers(const tchar_t* servers[], int count);
 
-_CC_WIDGETS_API(bool_t) _cc_dns_listen(void);
+_CC_API_WIDGETS(bool_t) _cc_dns_listen(void);
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
 }

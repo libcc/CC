@@ -21,7 +21,7 @@
 #ifndef _C_CC_ANDROID_H_INCLUDED_
 #define _C_CC_ANDROID_H_INCLUDED_
 
-#include "../string.h"
+#include "../sds.h"
 
 #include <android/native_window_jni.h>
 
@@ -93,7 +93,8 @@ _CC_API_PUBLIC(bool_t) Android_JNI_ShowToast(const tchar_t *message, int duratio
 
 _CC_API_PUBLIC(bool_t) Android_JNI_OpenURL(const tchar_t *url);
 
-_CC_API_PUBLIC(int) GetAndroidSDKVersion(void);
+_CC_API_PUBLIC(int) Android_JNI_GetSDKVersion(void);
+_CC_API_PUBLIC(int) Android_JNI_GetNetworkType(void);
 /**
  * See the official Android developer guide for more information:
  * http://developer.android.com/guide/topics/data/data-storage.html
@@ -108,10 +109,10 @@ _CC_API_PUBLIC(int) GetAndroidSDKVersion(void);
  */
 #define CC_ANDROID_EXTERNAL_STORAGE_WRITE  0x02
 
-_CC_API_PUBLIC(uint32_t) GetAndroidExternalStorageState(void);
-_CC_API_PUBLIC(const _cc_String_t *) GetAndroidInternalStoragePath(void);
-_CC_API_PUBLIC(const _cc_String_t *) GetAndroidExternalStoragePath(void);
-_CC_API_PUBLIC(const _cc_String_t *) GetAndroidCachePath(void);
+_CC_API_PUBLIC(uint32_t) Android_JNI_GetExternalStorageState(void);
+_CC_API_PUBLIC(_cc_sds_t) Android_JNI_GetInternalStoragePath(void);
+_CC_API_PUBLIC(_cc_sds_t) Android_JNI_GetExternalStoragePath(void);
+_CC_API_PUBLIC(_cc_sds_t) Android_JNI_GetCachePath(void);
 
 _CC_API_PUBLIC(bool_t) ShowAndroidToast(const tchar_t *message, int duration, int gravity, int xOffset, int yOffset);
 

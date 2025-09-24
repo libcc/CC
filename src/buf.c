@@ -140,16 +140,16 @@ _CC_API_PUBLIC(bool_t) _cc_buf_expand(_cc_buf_t *ctx, size_t size) {
 
 /**/
 _CC_API_PUBLIC(bool_t) _cc_buf_append(_cc_buf_t *ctx, const void *data, size_t length) {
-    size_t len = 0;
+    size_t expand_length = 0;
     _cc_assert(ctx != nullptr && data != nullptr);
 
     if (_cc_unlikely(length <= 0 || ctx == nullptr)) {
         return false;
     }
 
-    len = length + ctx->length;
-    if (ctx->limit <= 0x80000000 && len > ctx->limit) {
-        if (_buf_expand(ctx, len) == false) {
+    expand_length = length + ctx->length;
+    if (ctx->limit <= 0x80000000 && expand_length > ctx->limit) {
+        if (_buf_expand(ctx, expand_length) == false) {
             return false;
         }
     }

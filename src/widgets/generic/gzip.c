@@ -80,7 +80,7 @@ _CC_API_PUBLIC(bool_t) _gzip(_gzip_t *gzip, byte_t *source, size_t length, _cc_b
         strm->avail_in = (have > CHUNK_SOURCE) ? CHUNK_SOURCE : (uInt)have;
 
         left += strm->avail_in;
-        flush = length == left ? Z_FINISH : Z_NO_FLUSH;
+        flush = Z_NO_FLUSH;//(length == left) ? Z_FINISH : Z_NO_FLUSH;
         /* run inflate() on input until output buffer not full */
         do {
             strm->avail_out = CHUNK_DEST;

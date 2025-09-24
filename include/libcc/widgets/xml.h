@@ -74,7 +74,7 @@ typedef struct _cc_xml {
  *
  * @return _cc_xml_t structure
  */
-_CC_WIDGETS_API(_cc_xml_t*) _cc_xml_from_file(const tchar_t* file_name);
+_CC_API_WIDGETS(_cc_xml_t*) _cc_xml_from_file(const tchar_t* file_name);
 
 /**
  * @brief Parse XML string
@@ -83,20 +83,20 @@ _CC_WIDGETS_API(_cc_xml_t*) _cc_xml_from_file(const tchar_t* file_name);
  *
  * @return _cc_xml_t structure
  */
-_CC_WIDGETS_API(_cc_xml_t*) _cc_xml_parse(const tchar_t* src, size_t length);
+_CC_API_WIDGETS(_cc_xml_t*) _cc_xml_parse(const tchar_t* src, size_t length);
 /**
  * @brief Parse XML string
  *
  * @return _cc_xml_t structure
  */
-_CC_WIDGETS_API(_cc_xml_t*) _cc_xml_parser(_cc_sbuf_t *const buffer);
+_CC_API_WIDGETS(_cc_xml_t*) _cc_xml_parser(_cc_sbuf_t *const buffer);
 /**
  * @brief Destroy XML object
  *
  * @param ctx _cc_xml_t structure
  *
  */
-_CC_WIDGETS_API(void) _cc_free_xml(_cc_xml_t* ctx);
+_CC_API_WIDGETS(void) _cc_free_xml(_cc_xml_t* ctx);
 
 /**
  * @brief Print XML Object to buffer
@@ -104,7 +104,7 @@ _CC_WIDGETS_API(void) _cc_free_xml(_cc_xml_t* ctx);
  * @param ctx _cc_xml_t structure
  *
  */
-_CC_WIDGETS_API(void) _cc_dump_xml(_cc_xml_t* ctx, _cc_buf_t* buf);
+_CC_API_WIDGETS(void) _cc_dump_xml(_cc_xml_t* ctx, _cc_buf_t* buf);
 
 /**
  * @brief new a XML object
@@ -113,7 +113,7 @@ _CC_WIDGETS_API(void) _cc_dump_xml(_cc_xml_t* ctx, _cc_buf_t* buf);
  *
  * @return _cc_xml_t structure
  */
-_CC_WIDGETS_API(_cc_xml_t*) _cc_new_xml_element(byte_t type);
+_CC_API_WIDGETS(_cc_xml_t*) _cc_new_xml_element(byte_t type);
 /**
  * @brief Append XML
  *
@@ -122,7 +122,7 @@ _CC_WIDGETS_API(_cc_xml_t*) _cc_new_xml_element(byte_t type);
  *
  * @return true if successful or false on error.
  */
-_CC_WIDGETS_API(bool_t) _cc_xml_element_append(_cc_xml_t* ctx, _cc_xml_t* child);
+_CC_API_WIDGETS(bool_t) _cc_xml_element_append(_cc_xml_t* ctx, _cc_xml_t* child);
 /**
  * @brief Get XML first Object
  *
@@ -130,7 +130,7 @@ _CC_WIDGETS_API(bool_t) _cc_xml_element_append(_cc_xml_t* ctx, _cc_xml_t* child)
  *
  * @return _cc_xml_t structure
  */
-_CC_WIDGETS_API(_cc_xml_t*) _cc_xml_element_first_child(_cc_xml_t* ctx);
+_CC_API_WIDGETS(_cc_xml_t*) _cc_xml_element_first_child(_cc_xml_t* ctx);
 /**
  * @brief Get XML next Object
  *
@@ -138,7 +138,7 @@ _CC_WIDGETS_API(_cc_xml_t*) _cc_xml_element_first_child(_cc_xml_t* ctx);
  *
  * @return _cc_xml_t structure
  */
-_CC_WIDGETS_API(_cc_xml_t*) _cc_xml_element_next_child(_cc_xml_t* ctx);
+_CC_API_WIDGETS(_cc_xml_t*) _cc_xml_element_next_child(_cc_xml_t* ctx);
 /**
  * @brief Find XML Object
  *
@@ -147,7 +147,7 @@ _CC_WIDGETS_API(_cc_xml_t*) _cc_xml_element_next_child(_cc_xml_t* ctx);
  *
  * @return _cc_xml_t structure
  */
-_CC_WIDGETS_API(_cc_xml_t*) _cc_xml_element_find(_cc_xml_t* ctx, tchar_t* item);
+_CC_API_WIDGETS(_cc_xml_t*) _cc_xml_element_find(_cc_xml_t* ctx, tchar_t* item);
 /**
  * @brief Get XML text
  *
@@ -155,7 +155,7 @@ _CC_WIDGETS_API(_cc_xml_t*) _cc_xml_element_find(_cc_xml_t* ctx, tchar_t* item);
  *
  * @return text
  */
-_CC_WIDGETS_API(const _cc_sds_t) _cc_xml_element_text(_cc_xml_t* ctx);
+_CC_API_WIDGETS(const _cc_sds_t) _cc_xml_element_text(_cc_xml_t* ctx);
 /**
  * @brief Get XML attribute value
  *
@@ -164,7 +164,7 @@ _CC_WIDGETS_API(const _cc_sds_t) _cc_xml_element_text(_cc_xml_t* ctx);
  *
  * @return attribute value
  */
-_CC_WIDGETS_API(const _cc_sds_t)
+_CC_API_WIDGETS(const _cc_sds_t)
 _cc_xml_element_attr(_cc_xml_t* ctx, const tchar_t* keyword);
 
 /**
@@ -176,14 +176,14 @@ _cc_xml_element_attr(_cc_xml_t* ctx, const tchar_t* keyword);
  *
  * @return true if successful or false on error.
  */
-_CC_WIDGETS_API(bool_t)
+_CC_API_WIDGETS(bool_t)
 _cc_xml_element_set_attr(_cc_xml_t* ctx, const tchar_t* keyword, const tchar_t* fmt, ...);
 /**
  * @brief Get XML Parse error message
  *
  * @return XML error message string
  */
-_CC_WIDGETS_API(const tchar_t*) _cc_xml_error(void);
+_CC_API_WIDGETS(const tchar_t*) _cc_xml_error(void);
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
 }

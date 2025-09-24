@@ -21,7 +21,7 @@
 #ifndef _C_CC_EVENT_H_INCLUDED_
 #define _C_CC_EVENT_H_INCLUDED_
 
-#include "dylib.h"
+#include "OpenSSL.h"
 
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
@@ -34,93 +34,89 @@ extern "C" {
     #endif
 #endif
 
-#define _CC_EVENT_UNKNOWN_                    0x0000
-#define _CC_EVENT_ACCEPT_                     0x0001
-#define _CC_EVENT_WRITABLE_                   0x0002
-#define _CC_EVENT_READABLE_                   0x0004
-#define _CC_EVENT_TIMEOUT_                    0x0008
-#define _CC_EVENT_CONNECT_                    0x0010
-#define _CC_EVENT_CONNECTED_                  _CC_EVENT_CONNECT_
-#define _CC_EVENT_DISCONNECT_                 0x0020
-#define _CC_EVENT_DELETED_                    0x0040
+#define _CC_EVENT_FAMILY_IO_BUFFER_             0x0001
+#define _CC_EVENT_FAMILY_TIMEOUT_ID_            0x0002
+#define _CC_EVENT_FAMILY_ACCEPT_                0x0003
 
+#define _CC_EVENT_UNKNOWN_                      0x0000
 
-#define _CC_EVENT_CHANGING_                   0x0100
-#define _CC_EVENT_PENDING_                    0x0200
-#define _CC_EVENT_BUFFER_                     0x0400
+#define _CC_EVENT_ACCEPT_                       0x0001
+#define _CC_EVENT_WRITABLE_                     0x0002
+#define _CC_EVENT_READABLE_                     0x0004
+#define _CC_EVENT_CONNECT_                      0x0008
 
-#define _CC_EVENT_NONBLOCKING_                0x1000
-#define _CC_EVENT_CLOEXEC_                    0x2000
+#define _CC_EVENT_CLOSED_                       0x0080
+
+#define _CC_EVENT_PENDING_                      0x0100
+#define _CC_EVENT_SOCKET_UDP_                   0x0200 /**< descriptor refers to a udp */
+#define _CC_EVENT_SOCKET_IPV6_                  0x0400
+
+#define _CC_EVENT_NONBLOCKING_                  0x1000
+#define _CC_EVENT_CLOEXEC_                      0x2000
 
 /** Used in _cc_event_t to determine what the fd is */
-#define _CC_EVENT_DESC_SOCKET_                0x010000 /**< descriptor refers to a socket */
-#define _CC_EVENT_DESC_UDP_                   0x020000 /**< descriptor refers to a udp */
-#define _CC_EVENT_DESC_IPV6_                  0x040000
-#define _CC_EVENT_DESC_FILE_                  0x080000 /**< descriptor refers to a file */
+#define _CC_EVENT_SOCKET_                       0x010000 /**< descriptor refers to a socket */
+#define _CC_EVENT_FILE_                         0x020000 /**< descriptor refers to a file */
+#define _CC_EVENT_TIMEOUT_                      0x040000
 
 
-#define _CC_TIMEOUT_MAX_LEVEL_                4
-#define _CC_TIMEOUT_NEAR_SHIFT_               8
-#define _CC_TIMEOUT_NEAR_                     (1 << _CC_TIMEOUT_NEAR_SHIFT_)
-#define _CC_TIMEOUT_LEVEL_SHIFT_              6
-#define _CC_TIMEOUT_LEVEL_                    (1 << _CC_TIMEOUT_LEVEL_SHIFT_)
-#define _CC_TIMEOUT_NEAR_MASK_                (_CC_TIMEOUT_NEAR_ - 1)
-#define _CC_TIMEOUT_LEVEL_MASK_               (_CC_TIMEOUT_LEVEL_ - 1)
+#define _CC_TIMEOUT_MAX_LEVEL_                  4
+#define _CC_TIMEOUT_NEAR_SHIFT_                 8
+#define _CC_TIMEOUT_NEAR_                       (1 << _CC_TIMEOUT_NEAR_SHIFT_)
+#define _CC_TIMEOUT_LEVEL_SHIFT_                6
+#define _CC_TIMEOUT_LEVEL_                      (1 << _CC_TIMEOUT_LEVEL_SHIFT_)
+#define _CC_TIMEOUT_NEAR_MASK_                  (_CC_TIMEOUT_NEAR_ - 1)
+#define _CC_TIMEOUT_LEVEL_MASK_                 (_CC_TIMEOUT_LEVEL_ - 1)
 
+typedef struct _cc_io_buffer _cc_io_buffer_t;
 typedef struct _cc_event _cc_event_t;
-typedef struct _cc_event_buffer _cc_event_buffer_t;
-typedef struct _cc_event_rbuf _cc_event_rbuf_t;
-typedef struct _cc_event_wbuf _cc_event_wbuf_t;
 typedef struct _cc_async_event_priv _cc_async_event_priv_t;
 typedef struct _cc_async_event _cc_async_event_t;
 
-typedef bool_t (*_cc_event_callback_t)(_cc_async_event_t *, _cc_event_t *, const uint32_t);
+typedef bool_t (*_cc_event_callback_t)(_cc_async_event_t*, _cc_event_t*, const uint32_t);
 
-struct _cc_event_rbuf {
-    int32_t length;
-    int32_t limit;
-    byte_t *bytes;
-};
+struct _cc_io_buffer {
+    struct {
+        int32_t limit;
+        int32_t off;
+        byte_t *bytes;
+    } r;
 
-struct _cc_event_wbuf {
-    int32_t length;
-    int32_t limit;
-    _cc_atomic_lock_t lock;
-    byte_t *bytes;
-};
+    struct {
+        int32_t limit;
+        int32_t off;
+        byte_t *bytes;
+    } w;
 
-struct _cc_event_buffer {
-    _cc_event_rbuf_t r;
-    _cc_event_wbuf_t w;
+    _cc_atomic_lock_t lock_of_writable;
+    _cc_SSL_t *ssl;
 };
 
 struct _cc_event {
     /* One or more _CC_EVENT_* flags */
     uint32_t flags;
     /* The system has delivered the event flag */
-    uint32_t marks;
+    uint32_t filter;
 
     //0xFFF(async index)FFFFF(self index)
     uint32_t ident;
-    
     _cc_socket_t fd;
+
     /* Linked list node */
     _cc_list_iterator_t lnk;
+
     /* A callback function for an event. */
     _cc_event_callback_t callback;
+
     /* A user-supplied argument. */
-    pvoid_t args;
+    uintptr_t data;
 
     /* The timer wheel */
     uint32_t timeout;
     uint32_t expire;
 
-    /* Read-write buffer */
-    _cc_event_buffer_t *buffer;
-
 #ifdef _CC_EVENT_USE_IOCP_
-    /* private */
-    _cc_socket_t accept_fd;
+	_cc_socket_t accept_fd;
 #endif
 };
 
@@ -174,196 +170,106 @@ struct _cc_async_event {
 /**
  * @brief Initializes an event class
  *
- * @param async _cc_async_event_t structure
+ * @param async _cc_async_event_t handle
  * @param flags current event flag
  *
  * @return true if successful or false on error.
  */
-_CC_WIDGETS_API(_cc_event_t*) _cc_event_alloc(_cc_async_event_t *async, const uint32_t flags);
+_CC_API_WIDGETS(_cc_event_t*) _cc_event_alloc(_cc_async_event_t *async, const uint32_t flags);
 
 /**
  * @brief Free event
  *
- * @param async _cc_async_event_t structure
- * @param e _cc_event_t structure
+ * @param async _cc_async_event_t handle
+ * @param e _cc_event_t handle
  */
-_CC_WIDGETS_API(void) _cc_free_event(_cc_async_event_t *async, _cc_event_t *e);
+_CC_API_WIDGETS(void) _cc_free_event(_cc_async_event_t *async, _cc_event_t *e);
 /**
  * @brief Get async event handle
  *
- * @return _cc_async_event_t structure
+ * @return _cc_async_event_t handle
  */
-_CC_WIDGETS_API(_cc_async_event_t *) _cc_get_async_event(void);
+_CC_API_WIDGETS(_cc_async_event_t *) _cc_get_async_event(void);
 
 /**
  * @brief Get event handle
  *
  * @param ident
  *
- * @return _cc_event_t structure
+ * @return _cc_event_t handle
  */
-_CC_WIDGETS_API(_cc_event_t *) _cc_get_event_by_id(uint32_t ident);
+_CC_API_WIDGETS(_cc_event_t *) _cc_get_event_by_id(uint32_t ident);
 
 /**
  * @brief Get async event handle
  *
  * @param ident
  *
- * @return _cc_async_event_t structure
+ * @return _cc_async_event_t handle
  */
-_CC_WIDGETS_API(_cc_async_event_t *) _cc_get_async_event_by_id(uint32_t ident);
+_CC_API_WIDGETS(_cc_async_event_t *) _cc_get_async_event_by_id(uint32_t ident);
 
 /**
- * @brief alloc a read/write socket buffer
+* @brief Allocate an I/O buffer and set its size limit
  *
- *
- * @return true if successful or false on error.
+ * @param limit buffer size limit
+ * 
  */
-_CC_WIDGETS_API(_cc_event_buffer_t*) _cc_alloc_event_buffer(void);
+_CC_API_WIDGETS(_cc_io_buffer_t *) _cc_alloc_io_buffer(int32_t limit);
 
 /**
  * @brief free a read/write socket buffer
  *
- * @param 1 _cc_event_buffer_t structure
+ * @param io _cc_io_buffer_t handle
  *
  */
-_CC_WIDGETS_API(void) _cc_free_event_buffer(_cc_event_buffer_t *);
-
-/**
- * @brief alloc a read buffer
- *
- * @param 1 _cc_event_t structure
- * @param 2 data length
- */
-_CC_WIDGETS_API(void) _cc_alloc_event_rbuf(_cc_event_rbuf_t *, int32_t);
-
-/**
- * @brief alloc a write buffer
- *
- * @param 1 _cc_event_t structure
- * @param 2 data length
- */
-_CC_WIDGETS_API(void) _cc_alloc_event_wbuf(_cc_event_wbuf_t *, int32_t);
-
-/**
- * @brief Copy to a write buffer
- *
- * @param 1 _cc_event_t structure
- * @param 2 Send data buffer
- * @param 3 Send data length
- *
- * @return true if successful or false on error.
- */
-_CC_WIDGETS_API(bool_t) _cc_copy_event_wbuf(_cc_event_wbuf_t *, const byte_t *, int32_t);
-
-/**
- * @brief Send socket buffer
- *
- * @param 1 _cc_event_t structure
- * @return true if successful or false on error.
- */
-_CC_WIDGETS_API(int32_t) _cc_event_sendbuf(_cc_event_t *);
-
-/**
- * @brief Send Socket data with write Buffer
- *
- * @param 1 _cc_event_t structure
- * @param 2 Send data buffer
- * @param 3 Send data length
- *
- * @return true if successful or false on error.
- */
-_CC_WIDGETS_API(int32_t) _cc_event_send(_cc_event_t *, const byte_t *, int32_t);
-
-/**
- * @brief Read Socket data to Buffer
- *
- * @param 1 _cc_event_t structure
- *
- * @return true if successful or false on error.
- */
-_CC_WIDGETS_API(bool_t) _cc_event_recv(_cc_event_t *);
-
-/**
- * @brief Socket connection event
- *
- * @param async _cc_async_event_t structure
- * @param e _cc_event_t structure
- *
- * @return true if successful or false on error.
- */
-_CC_WIDGETS_API(bool_t) _cc_event_attach(_cc_async_event_t *async, _cc_event_t *e);
-/**
- * @brief Socket accept event
- *
- * @param async _cc_async_event_t structure
- * @param e _cc_event_t structure
- * @param sa Remote client of _cc_sockaddr_t structure
- * @param sa_len Size of _cc_sockaddr_t structure
- *
- * @return Socket Handle
- */
-_CC_WIDGETS_API(_cc_socket_t) _cc_event_accept(_cc_async_event_t *async, _cc_event_t *e, _cc_sockaddr_t *sa, _cc_socklen_t *sa_len);
-
-/**
- * @brief Socket connection event
- *
- * @param async _cc_async_event_t
- * @param e _cc_event_t structure
- * @param sa Remote server of _cc_sockaddr_t structure
- * @param sa_len Size of _cc_sockaddr_t structure
- *
- * @return true if successful or false on error.
- */
-_CC_WIDGETS_API(bool_t) _cc_event_connect(_cc_async_event_t *async, _cc_event_t *e, const _cc_sockaddr_t *sa, const _cc_socklen_t sa_len);
-
-/**
- * @brief Wait events
- *
- * @param async _cc_async_event_t structure
- * @param timeout timeout in seconds
- *
- * @return true if successful or false on error.
- */
-_CC_WIDGETS_API(bool_t) _cc_event_wait(_cc_async_event_t *async, uint32_t timeout);
-/**/
-_CC_WIDGETS_API(bool_t) _cc_tcp_listen(_cc_async_event_t *async, _cc_event_t *e, _cc_sockaddr_t *sockaddr, _cc_socklen_t socklen);
-/**/
-_CC_WIDGETS_API(bool_t) _cc_tcp_connect(_cc_async_event_t *async, _cc_event_t *e, _cc_sockaddr_t *sockaddr, _cc_socklen_t socklen);
+_CC_API_WIDGETS(void) _cc_free_io_buffer(_cc_io_buffer_t *io);
 
 /**/
-_CC_WIDGETS_API(bool_t) _cc_register_select(_cc_async_event_t*);
+_CC_API_WIDGETS(int32_t) _cc_io_buffer_flush(_cc_event_t *e, _cc_io_buffer_t *data);
+/**/
+_CC_API_WIDGETS(int32_t) _cc_io_buffer_send(_cc_event_t *e, _cc_io_buffer_t *data, const byte_t *bytes, int32_t length);
+/**/
+_CC_API_WIDGETS(int32_t) _cc_io_buffer_read(_cc_event_t *e, _cc_io_buffer_t *data);
+
+/**/
+_CC_API_WIDGETS(bool_t) _cc_tcp_listen(_cc_async_event_t *async, _cc_event_t *e, _cc_sockaddr_t *sockaddr, _cc_socklen_t socklen);
+/**/
+_CC_API_WIDGETS(bool_t) _cc_tcp_connect(_cc_async_event_t *async, _cc_event_t *e, _cc_sockaddr_t *sockaddr, _cc_socklen_t socklen);
+
+/**/
+_CC_API_WIDGETS(bool_t) _cc_register_select(_cc_async_event_t*);
 
 #ifdef __CC_WINDOWS__
     #ifdef _CC_EVENT_USE_IOCP_
-    _CC_WIDGETS_API(bool_t) _cc_register_iocp(_cc_async_event_t*);
+    _CC_API_WIDGETS(bool_t) _cc_register_iocp(_cc_async_event_t*);
         #define _cc_register_poller _cc_register_iocp
     #else
         #define _cc_register_poller _cc_register_select
     #endif
 #elif defined(__CC_LINUX__)
-    _CC_WIDGETS_API(bool_t) _cc_register_poll(_cc_async_event_t*);
-    _CC_WIDGETS_API(bool_t) _cc_register_epoll(_cc_async_event_t*);
-    _CC_WIDGETS_API(bool_t) _cc_register_io_uring(_cc_async_event_t*);
+    _CC_API_WIDGETS(bool_t) _cc_register_poll(_cc_async_event_t*);
+    _CC_API_WIDGETS(bool_t) _cc_register_epoll(_cc_async_event_t*);
+    _CC_API_WIDGETS(bool_t) _cc_register_io_uring(_cc_async_event_t*);
     #define _cc_register_poller _cc_register_epoll
 #elif defined(__CC_MACOSX__) || defined(__CC_IPHONEOS__) || \
     defined(__CC_FREEBSD__) || defined(__CC_OPENBSD__) ||   \
     defined(__CC_NETBSD__)
-    _CC_WIDGETS_API(bool_t) _cc_register_poll(_cc_async_event_t*);
-    _CC_WIDGETS_API(bool_t) _cc_register_kqueue(_cc_async_event_t*);
+    _CC_API_WIDGETS(bool_t) _cc_register_poll(_cc_async_event_t*);
+    _CC_API_WIDGETS(bool_t) _cc_register_kqueue(_cc_async_event_t*);
     #define _cc_register_poller _cc_register_kqueue
 #else
     #define _cc_register_poller _cc_register_select
 #endif
 
 /**/
-_CC_WIDGETS_API(bool_t) _cc_alloc_async_event(int32_t cores, void (*cb)(_cc_async_event_t*, bool_t));
+_CC_API_WIDGETS(bool_t) _cc_alloc_async_event(int32_t cores, void (*cb)(_cc_async_event_t*, bool_t));
 /**/
-_CC_WIDGETS_API(bool_t) _cc_async_event_is_running(void);
+_CC_API_WIDGETS(bool_t) _cc_async_event_is_running(void);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_free_async_event(void);
+_CC_API_WIDGETS(bool_t) _cc_free_async_event(void);
 /**/
-_CC_WIDGETS_API(void) _cc_async_event_abort(void);
+_CC_API_WIDGETS(void) _cc_async_event_abort(void);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

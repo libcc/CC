@@ -135,6 +135,10 @@ _CC_API_PRIVATE(size_t) io_write(_cc_file_t *context, const pvoid_t ptr, size_t 
     return bytes;
 }
 
+_CC_API_PRIVATE(bool_t) io_eof(_cc_file_t *context) {
+    return feof(_GET_HANDLE(context)) == EOF;
+}
+
 _CC_API_PRIVATE(bool_t) io_close(_cc_file_t *context) {
     bool_t status = true;
 
@@ -181,6 +185,7 @@ _CC_API_PUBLIC(_cc_file_t*) _cc_open_file(const tchar_t *filename, const tchar_t
     f->write = io_write;
     f->size = io_size;
     f->seek = io_seek;
+    f->eof = io_eof;
     f->flush = io_flush;
     f->close = io_close;
 #endif

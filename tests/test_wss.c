@@ -5,12 +5,13 @@
 _cc_OpenSSL_t *openSSL;
 
 typedef struct _WebSocket {
-    byte_t status;
+    uint8_t status;
+    uint8_t handshake;
     _cc_http_request_header_t *request;
     _cc_buf_t buffer;
+    _cc_io_buffer_t *io;
     int64_t payload;
     char_t websocket_key[256];
-    _cc_SSL_t *ssl;
 } _WebSocket_t;
 
 /**/
@@ -31,8 +32,8 @@ _CC_API_PRIVATE(void) _WebSocketSecKey(const tchar_t *sec_websocket_key, _WebSoc
 
 /**/
 _CC_API_PRIVATE(bool_t) _WebSocketResponseHeader(_cc_event_t *e, _WebSocket_t *ws) {
-    char_t headers[1024];
-    size_t length = _snprintf(headers, _cc_countof(headers),
+    _cc_io_buffer_t *io = (_cc_io_buffer_t*)ws->io;
+    io->w.off = _snprintf((char*)io->w.bytes, io->w.limit,
                         "HTTP/1.1 101 Switching Protocols\r\n"
                         "Connection: Upgrade\r\n"
                         "Upgrade: websocket\r\n"
@@ -40,11 +41,8 @@ _CC_API_PRIVATE(bool_t) _WebSocketResponseHeader(_cc_event_t *e, _WebSocket_t *w
                         "Sec-WebSocket-Accept: %s\r\n\r\n",
                         ws->websocket_key);
 
-    if (_SSL_event_send(ws->ssl, e, (byte_t*)headers, sizeof(char_t) * length) == -1) {
-        return false;
-    }
-    //printf(headers);
-    return true;
+    //printf("send: %.*s\n",io->w.off, io->w.bytes);
+    return _cc_io_buffer_flush(e, io);
 }
 
 _CC_API_PRIVATE(int64_t) _WebSocketGetContentLength(_cc_rbtree_t *headers) {
@@ -53,11 +51,13 @@ _CC_API_PRIVATE(int64_t) _WebSocketGetContentLength(_cc_rbtree_t *headers) {
 }
 
 /**/
-_CC_API_PRIVATE(bool_t) _Heartbeat(_WebSocket_t *ws, byte_t oc) {
+_CC_API_PRIVATE(bool_t) _Heartbeat(_cc_event_t *e, byte_t oc) {
+    _WebSocket_t *ws = (_WebSocket_t*)e->data;
+    _cc_io_buffer_t *io = (_cc_io_buffer_t*)ws->io;
     byte_t buf[2];
     buf[0] = 0x80 | oc;
     buf[1] = 0;
-    return (_SSL_send(ws->ssl, buf, 2) > 0);
+    return (_cc_io_buffer_send(e, io, buf, 2) > 0);
 }
 
 /**/
@@ -66,16 +66,20 @@ _CC_API_PRIVATE(void) _WebSocketFree(_WebSocket_t *ws) {
         _cc_http_free_request_header(&ws->request);
     }
     _cc_free_buf(&ws->buffer);
+    if (ws->io) {
+        _cc_free_io_buffer(ws->io);
+    }
     _cc_free(ws);
 }
 
 /**/
 _CC_API_PRIVATE(bool_t) _WebSocketData(_cc_event_t *e) {
+    _WebSocket_t *ws = (_WebSocket_t*)e->data;
+    _cc_io_buffer_t *io = (_cc_io_buffer_t*)ws->io;
     _CCWSHeader_t header = {0};
-    _cc_event_rbuf_t *r = &e->buffer->r;
 
-    header.bytes = r->bytes;
-    header.length = r->length;
+    header.bytes = io->r.bytes;
+    header.length = io->r.off;
     header.offset = 0;
 
     do {
@@ -88,7 +92,7 @@ _CC_API_PRIVATE(bool_t) _WebSocketData(_cc_event_t *e) {
             //fn(header, header.bytes + header.offset, header.payload);
             switch (header.opc) {
                 case WS_OP_PING:
-                    _Heartbeat((_WebSocket_t*)e->args, WS_OP_PONG);
+                    _Heartbeat(e, WS_OP_PONG);
                     break;
                 case WS_OP_PONG:
                     break;
@@ -103,15 +107,15 @@ _CC_API_PRIVATE(bool_t) _WebSocketData(_cc_event_t *e) {
             }
             header.offset += header.payload;
         } else {
-            if (header.payload > r->limit) {
+            if (header.payload > io->r.limit) {
                 _tprintf("big data fail\n");
                 return false;
                 /*
                 //If you want big data.
                 //This is just a simple example, you can optimize it
                 _cc_alloc_event_rbuf(r,header.payload + _WS_MAX_HEADER_)
-                header.bytes = r->bytes;
-                header.length = r->length;
+                header.bytes = io->r.bytes;
+                header.length = io->r.off;
                 */
             }
             break;
@@ -120,31 +124,28 @@ _CC_API_PRIVATE(bool_t) _WebSocketData(_cc_event_t *e) {
 
     if (header.offset > 0 && header.length >= header.offset) {
         header.length -= header.offset;
-        memmove(r->bytes, r->bytes + header.offset, header.length);
-        r->length = header.length;
+        memmove(io->r.bytes, io->r.bytes + header.offset, header.length);
+        io->r.off = (int32_t)header.length;
     }
     return true;
 }
 
 static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, const uint32_t which) {
-    _WebSocket_t *ws = (_WebSocket_t*)e->args;
+    _WebSocket_t *ws = (_WebSocket_t*)e->data;
     if (which & _CC_EVENT_ACCEPT_) {
         _cc_event_t *event;
         _cc_socket_t fd;
+        uint32_t timeout = e->timeout;
+        uint32_t flags = _CC_EVENT_TIMEOUT_;
         struct sockaddr_in remote_addr = {0};
         _cc_socklen_t remote_addr_len = sizeof(struct sockaddr_in);
 
-        fd = _cc_event_accept(async, e, (_cc_sockaddr_t*)&remote_addr, &remote_addr_len);
+        fd = async->accept(async, e, (_cc_sockaddr_t*)&remote_addr, &remote_addr_len);
         if (fd == _CC_INVALID_SOCKET_) {
             _cc_logger_error(_T("accept fail %s."), _cc_last_error(_cc_last_errno()));
             return true;
         }
 
-        event = _cc_event_alloc(async, _CC_EVENT_TIMEOUT_ | _CC_EVENT_READABLE_ | _CC_EVENT_BUFFER_);
-        if (event == nullptr) {
-            _cc_close_socket(fd);
-            return true;
-        }
         _cc_set_socket_nonblock(fd, 1);
 
         ws = (_WebSocket_t*)_cc_malloc(sizeof(_WebSocket_t));
@@ -153,13 +154,33 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
         ws->buffer.bytes = nullptr;
         ws->request = nullptr;
         ws->payload = 0;
-        ws->ssl = _SSL_alloc(openSSL);
-        _SSL_accept(ws->ssl,fd);
+        ws->io = _cc_alloc_io_buffer(_CC_IO_BUFFER_SIZE_);
+        ws->status = _CC_HTTP_STATUS_HEADER_;
+        ws->io->ssl = _SSL_accept(openSSL, fd, &ws->handshake);
+
+        if (ws->handshake == _CC_SSL_HS_ERROR_) {
+            _cc_logger_error(_T("SSL accept fail %s."), _cc_last_error(_cc_last_errno()));
+            _WebSocketFree(ws);
+            _cc_close_socket(fd);
+            return true;
+        } else if (ws->handshake == _CC_SSL_HS_ESTABLISHED_) {
+            flags |= _CC_EVENT_READABLE_;
+        } else {
+            //wait for handshake
+            timeout = 1000;
+        }
+
+        event = _cc_event_alloc(async, flags);
+        if (event == nullptr) {
+            _cc_close_socket(fd);
+            _WebSocketFree(ws);
+            return true;
+        }
 
         event->fd = fd;
         event->callback = e->callback;
-        event->timeout = e->timeout;
-        event->args = ws;
+        event->timeout = timeout;
+        event->data = (uintptr_t)ws;
 
         if (async->attach(async, event) == false) {
             _cc_logger_debug(_T("thread %d add socket (%d) event fial."), _cc_get_thread_id(nullptr), fd);
@@ -177,18 +198,22 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
         return true;
     }
 
-    if (which & _CC_EVENT_DISCONNECT_) {
+    if (which & _CC_EVENT_CLOSED_) {
         _cc_logger_debug(_T("%d disconnect to client."), e->fd);
-        if (e->args) {
-            _WebSocketFree((_WebSocket_t*)e->args);
+        if (e->data) {
+            _WebSocketFree((_WebSocket_t*)e->data);
         }
         return false;
     }
 
     if (which & _CC_EVENT_READABLE_) {
-        _cc_event_rbuf_t *rbuf = e->buffer->r;
-        if (!_SSL_event_read(ws->ssl,e)) {
+        _cc_io_buffer_t *io = (_cc_io_buffer_t*)ws->io;
+        int32_t off = _cc_io_buffer_read(e, io);
+        if (off < 0) {
+            _cc_logger_debug(_T("read fail %s."), _cc_last_error(_cc_last_errno()));
             return false;
+        } else if (off == 0) {
+            return true;
         }
 
         if (ws->status == _CC_HTTP_STATUS_ESTABLISHED_) {
@@ -200,7 +225,7 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
 
         if (ws->status == _CC_HTTP_STATUS_HEADER_) {
             const _cc_http_header_t *connection, *upgrade, *sec_websocket_key;
-            ws->status = _cc_http_header_parser((_cc_http_header_fn_t)_cc_http_alloc_request_header, (pvoid_t *)&ws->request, rbuf);
+            ws->status = _cc_http_header_parser((_cc_http_header_fn_t)_cc_http_alloc_request_header, (pvoid_t *)&ws->request, io->r.bytes, &io->r.off);
             /**/
             if (ws->status != _CC_HTTP_STATUS_PAYLOAD_) {
                 return ws->status == _CC_HTTP_STATUS_HEADER_;
@@ -227,11 +252,11 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
         } 
 
         if (ws->status == _CC_HTTP_STATUS_PAYLOAD_) {
-            _cc_buf_append(&ws->buffer, rbuf->bytes, rbuf->length);
+            _cc_buf_append(&ws->buffer, io->r.bytes, io->r.off);
             if (ws->buffer.length >= ws->payload) {
                 ws->status = _CC_HTTP_STATUS_ESTABLISHED_;
             }
-            rbuf->length = 0;
+            io->r.off = 0;
         }
 
         if (ws->status == _CC_HTTP_STATUS_ESTABLISHED_) {
@@ -240,13 +265,22 @@ static bool_t network_event_callback(_cc_async_event_t *async, _cc_event_t *e, c
 
         return true;
     }
-
+ 
     if (which & _CC_EVENT_WRITABLE_) {
 
     }
 
     if (which & _CC_EVENT_TIMEOUT_) {
-        if (_Heartbeat(ws, WS_OP_PONG)) {
+        if (ws->handshake != _CC_SSL_HS_ESTABLISHED_) {
+            ws->handshake = _SSL_do_handshake(ws->io->ssl);
+            _cc_logger_debug(_T("SSL do handshake %d"), ws->handshake);
+            if (ws->handshake == _CC_SSL_HS_ESTABLISHED_) {
+                e->flags |= _CC_EVENT_READABLE_;
+                e->timeout = 60000;
+            }
+            return true;
+        }
+        if (_Heartbeat(e, WS_OP_PONG)) {
             return true;
         }
         _cc_logger_debug(_T("TCP timeout %d"), e->fd);
@@ -268,7 +302,8 @@ int main(int argc, char *const argv[]) {
         return 1;
     }
 
-    _SSL_setup(openSSL, "./ssl/ws.libcc.cn_bundle.crt", "./ssl/ws.libcc.cn.key",nullptr);
+    //_SSL_setup(openSSL, "./ssl/ws.libcc.cn_bundle.crt", "./ssl/ws.libcc.cn.key",nullptr);
+    _SSL_setup(openSSL, "/opt/homebrew/etc/nginx/ssl/ws.libcc.cn_bundle.crt", "/opt/homebrew/etc/nginx/ssl/ws.libcc.cn.key",nullptr);
 
     if (_cc_register_poller(&async) == false) {
         return 1;
@@ -287,7 +322,7 @@ int main(int argc, char *const argv[]) {
 
     while (1) {
         // while((c = getchar()) != 'q') {
-        _cc_event_wait(&async, 100);
+        async.wait(&async, 100);
     }
 
     async.free(&async);

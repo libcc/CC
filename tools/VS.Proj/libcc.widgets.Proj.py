@@ -3,16 +3,12 @@ from VCXProj import VCXProj
 
 
 WidgetsSources = [
-	"src/widgets/db/sqlsvr.c",
 	"src/widgets/generic/generic.c",
 	"src/widgets/generic/gzip.c",
-	"src/widgets/generic/http.header.c",
-	"src/widgets/generic/http.request.parser.c",
-	"src/widgets/generic/http.response.parser.c",
-	"src/widgets/generic/OpenSSL.c",
+	"src/widgets/generic/WS.c",
 	"src/widgets/db/mysql.c",
 	"src/widgets/db/sqlite.c",
-	"src/widgets/generic/WS.c",
+	"src/widgets/db/sqlsvr.c",
 	"src/widgets/ini/ini.c",
 	"src/widgets/ini/ini.parser.c",
 	"src/widgets/xml/xml.c",
@@ -21,6 +17,9 @@ WidgetsSources = [
 	"src/widgets/json/json.c",
 	"src/widgets/json/json.object.c",
 	"src/widgets/json/json.parser.c",
+	"src/widgets/http/header.c",
+	"src/widgets/http/request.parser.c",
+	"src/widgets/http/response.parser.c",
 	"src/widgets/url_request/http/url_request.c",
 	"src/widgets/url_request/http/url_response.c",
 	"src/widgets/event/event.c",
@@ -29,6 +28,7 @@ WidgetsSources = [
 	"src/widgets/event/select.c",
 	"src/widgets/event/tcp.c",
 	"src/widgets/event/timeout.c",
+	"src/widgets/event/OpenSSL.c",
 	"src/widgets/event/windows/sys_iocp.c",
 	"src/widgets/event/windows/sys_io_context.c",
 	"src/widgets/event/windows/sys_WSA.c",
@@ -80,7 +80,7 @@ if __name__ == "__main__":
 	vcxproj.addSource(WidgetsSources)
 	vcxproj.addHeader(WidgetsHeaders)
 	Librarys = ["libcc.lib","libmysql.lib","sqlite3.lib","zlib.lib","libssl.lib","libcrypto.lib"]
-	Macros = ["_CC_WIDGETS_API_USE_DYNAMIC_","_CC_USE_OPENSSL_","_WINDOWS","_USRDLL"]
+	Macros = ["_CC_API_WIDGETS_USE_DYNAMIC_","_CC_USE_OPENSSL_","_WINDOWS","_USRDLL"]
 	vcxproj.addLibrarys("Debug",Librarys)
 	vcxproj.addLibrarys("Release",Librarys)
 	vcxproj.addMacros("Debug",Macros)

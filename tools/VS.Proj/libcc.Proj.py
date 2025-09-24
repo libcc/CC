@@ -56,6 +56,7 @@ LIBCCSources = [
 	"src/thread/windows/sys_sem.c",
 	"src/thread/windows/sys_thread.c",
 	"src/time/strptime.c",
+	"src/time/tick.c",
 	"src/time/time.c",
 	"src/time/windows/sys_time.c"
 ]
@@ -111,9 +112,7 @@ LIBCCHeaders = [
 	"include/libcc/crypto/hmac.h",
 	"include/libcc/crypto/sha.h",
 	"include/libcc/crypto/xxtea.h",
-	"include/libcc/core/windows/sys_flock.h",
-	"include/libcc/core/windows.h",
-	"include/libcc/core/windows/sys_mmap.h"
+	"include/libcc/core/windows.h"
 ]
 
 if __name__ == "__main__":

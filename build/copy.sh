@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-SRC_DIR=/opt/GitHub/CC/bin/aarch64
-DST_DIR=/opt/GitHub/Mir2Server/bin/aarch64
+SRC_DIR=/opt/libcc/bin/aarch64
+DST_DIR=/opt/Mir2Server/bin/aarch64
 cp -f -r ${SRC_DIR}/debug/libcc.widgets.dylib ${DST_DIR}/debug/
 cp -f -r ${SRC_DIR}/debug/libcc.debug.malloc.dylib ${DST_DIR}/debug/
 cp -f -r ${SRC_DIR}/release/libcc.widgets.dylib ${DST_DIR}/release/

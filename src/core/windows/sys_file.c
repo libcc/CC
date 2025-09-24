@@ -130,6 +130,9 @@ _CC_API_PRIVATE(size_t) _cc_win_file_read(_cc_file_t *context, pvoid_t ptr, size
     }
 
     if (!ReadFile((HANDLE)context->fp, ptr, (DWORD)total_need, &byte_read, nullptr)) {
+        if (GetLastError() == ERROR_HANDLE_EOF || byte_read == 0) {
+            context->is_eof = true;
+        }
         return 0;
     }
 
@@ -167,6 +170,10 @@ _CC_API_PRIVATE(bool_t) _cc_win_file_flush(_cc_file_t *context) {
         return false;
     }
     return true;
+}
+
+_CC_API_PRIVATE(bool_t) _cc_win_file_eof(_cc_file_t *context) {
+	return context->is_eof;
 }
 
 _CC_API_PRIVATE(bool_t) _cc_win_file_close(_cc_file_t *context) {
@@ -239,11 +246,13 @@ _CC_API_PUBLIC(bool_t) _cc_sys_open_file(_cc_file_t *f, const tchar_t *filename,
 
     f->append = fmode[2] != 0;
     f->fp = h;
+    f->is_eof = false;
 
     f->read = _cc_win_file_read;
     f->write = _cc_win_file_write;
     f->size = _cc_win_file_size;
     f->seek = _cc_win_file_seek;
+    f->eof = _cc_win_file_eof;
     f->flush = _cc_win_file_flush;
     f->close = _cc_win_file_close;
 

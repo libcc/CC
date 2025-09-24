@@ -59,7 +59,15 @@ extern "C" {
 #define _CC_SHUT_RD_WR_       SD_BOTH
 
 /* This is the system-independent socket info structure */
-typedef SOCKET                  _cc_socket_t;
+
+/*
+ * Even though sizeof(SOCKET) is 8, it's safe to cast it to int, because
+ * the value constitutes an index in per-process table of limited size
+ * and not a real pointer. And we also depend on fact that all processors
+ * Windows run on happen to be two's-complement, which allows to
+ * interchange INVALID_SOCKET and -1.
+ */
+typedef int						_cc_socket_t;
 typedef int                     _cc_socklen_t;
 typedef struct sockaddr         _cc_sockaddr_t;
 

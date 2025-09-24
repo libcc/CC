@@ -89,7 +89,6 @@ _CC_API_PUBLIC(uint64_t) _cc_query_performance_counter(void) {
 _CC_API_PUBLIC(uint64_t) _cc_query_performance_frequency(void) {
     LARGE_INTEGER frequency;
     QueryPerformanceFrequency(&frequency);
-
     return (uint64_t)frequency.QuadPart;
 }
 

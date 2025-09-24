@@ -34,7 +34,7 @@
 #ifdef __CC_ANDROID__
 #include <libcc/core/android.h>
 
-_CC_API_PRIVATE(void) _output_android(const tchar_t *file, int line, uint8_t level, const char_t *msg) {
+_CC_API_PRIVATE(void) _output_android(const tchar_t *fname, int line, uint8_t level, const char_t *msg) {
     switch(level) {
         case _CC_LOG_LEVEL_EMERG_:
             __android_log_print(ANDROID_LOG_FATAL, _CC_ANDROID_TAG_, "%s(%d) %s", fname, line, msg);
@@ -161,7 +161,7 @@ _CC_API_PUBLIC(void) _cc_loggerW(const tchar_t *file, int line, uint8_t level, c
         fname++;
     }
 #ifdef __CC_ANDROID__
-    _output_android(fname, line, level, msg);
+    //_output_android(fname, line, level, msg);
 #else
     _cc_gmtime(&now, &tm_now);
     _sntprintf(buffer, _cc_countof(buffer), _T("<%c>%04d-%02d-%02dT%02d:%02d:%02dZ %d %s(%d) "),

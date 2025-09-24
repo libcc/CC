@@ -1,5 +1,5 @@
 
-#include <libcc/core/windows/sys_mmap.h>
+#include <libcc/core/windows.h>
 #include <stdlib.h>
 #ifdef _WIN32
 #include <io.h>

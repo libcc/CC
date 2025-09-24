@@ -56,21 +56,21 @@ typedef struct _cc_ini {
 } _cc_ini_t;
 
 /**/
-_CC_WIDGETS_API(_cc_ini_t*) _cc_parse_ini(const tchar_t* src, size_t length);
+_CC_API_WIDGETS(_cc_ini_t*) _cc_parse_ini(const tchar_t* src, size_t length);
 /**/
-_CC_WIDGETS_API(_cc_ini_t*) _cc_ini_from_file(const tchar_t* file_name);
+_CC_API_WIDGETS(_cc_ini_t*) _cc_ini_from_file(const tchar_t* file_name);
 /**/
-_CC_WIDGETS_API(_cc_ini_t*) _cc_ini_parser(_cc_sbuf_t* const buffer);
+_CC_API_WIDGETS(_cc_ini_t*) _cc_ini_parser(_cc_sbuf_t* const buffer);
 /**/
-_CC_WIDGETS_API(_cc_ini_t*) _cc_ini_find(_cc_ini_t* item, const tchar_t* name);
+_CC_API_WIDGETS(_cc_ini_t*) _cc_ini_find(_cc_ini_t* item, const tchar_t* name);
 /**/
-_CC_WIDGETS_API(const tchar_t*) _cc_ini_find_string(_cc_ini_t* item, const tchar_t* name);
+_CC_API_WIDGETS(const tchar_t*) _cc_ini_find_string(_cc_ini_t* item, const tchar_t* name);
 /**/
-_CC_WIDGETS_API(void) _cc_free_ini(_cc_ini_t* ctx);
+_CC_API_WIDGETS(void) _cc_free_ini(_cc_ini_t* ctx);
 /**/
-_CC_WIDGETS_API(const tchar_t*) _cc_ini_error(void);
+_CC_API_WIDGETS(const tchar_t*) _cc_ini_error(void);
 /**/
-_CC_WIDGETS_API(void) _cc_dump_ini(_cc_ini_t* item, _cc_buf_t* buf);
+_CC_API_WIDGETS(void) _cc_dump_ini(_cc_ini_t* item, _cc_buf_t* buf);
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
 }

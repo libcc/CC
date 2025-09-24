@@ -64,7 +64,6 @@ _CC_API_PUBLIC(pvoid_t) _cc_realloc(pvoid_t d, size_t n) {
     if (_cc_unlikely(d == nullptr)) {
         return _cc_malloc(n);
     }
-
     return _out_of_memory_abort(realloc(d, n), n, _T("_cc_realloc"));
 }
 

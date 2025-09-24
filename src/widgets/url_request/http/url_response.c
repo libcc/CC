@@ -65,14 +65,14 @@ _CC_API_PRIVATE(size_t) _url_chunked_hex_length(const char_t *p, size_t *length_
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _cc_url_response_chunked(_cc_url_request_t *request, _cc_event_rbuf_t *rbuf) {
+_CC_API_PUBLIC(bool_t) _cc_url_response_chunked(_cc_url_request_t *request, _cc_io_buffer_t *io) {
     /**/
     size_t offset_of_data = 0;
     size_t length_of_data;
 
     do {
         if (request->response->download_length <= 0) {
-            size_t offset = _url_chunked_hex_length((const char_t *)(rbuf->bytes + offset_of_data), &length_of_data, rbuf->length);
+            size_t offset = _url_chunked_hex_length((const char_t *)(io->r.bytes + offset_of_data), &length_of_data, io->r.off);
             if (offset < 0) {
                 return false;
             } else if (offset == 0) {
@@ -85,27 +85,27 @@ _CC_API_PUBLIC(bool_t) _cc_url_response_chunked(_cc_url_request_t *request, _cc_
             }
             request->response->download_length = length_of_data;
             offset_of_data += offset;
-            rbuf->length -= (uint16_t)offset;
+            io->r.off -= (uint16_t)offset;
         }
 
-        if (request->response->download_length > rbuf->length) {
-            length_of_data = rbuf->length;
+        if (request->response->download_length > io->r.off) {
+            length_of_data = io->r.off;
             request->response->download_length -= length_of_data;
         } else {
             length_of_data = (size_t)request->response->download_length;
             request->response->download_length = 0;
         }
 
-        if (!_cc_url_response_body(request, rbuf->bytes + offset_of_data, length_of_data)) {
+        if (!_cc_url_response_body(request, io->r.bytes + offset_of_data, length_of_data)) {
             return false;
         }
 
         offset_of_data += length_of_data;
-        rbuf->length -= (uint16_t)length_of_data;
+        io->r.off -= (uint16_t)length_of_data;
         //\r\n0\r\n\r\n
-    } while (rbuf->length >= 2);
+    } while (io->r.off >= 2);
 
-    rbuf->length = 0;
+    io->r.off = 0;
 
     request->response->length += length_of_data;
     return true;

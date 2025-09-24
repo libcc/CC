@@ -10,7 +10,7 @@ sourcePath="$(readlink "$sourcePath")"
 
 done
 basePath="$( cd -P "$( dirname "$sourcePath"  )" && pwd  )"
-
+export NDK_HOME=/Users/cc/Library/Android/sdk/ndk/29.0.14033849/
 echo "NDK_HOME = $NDK_HOME"
 echo "APP_ROOT = $basePath"
 

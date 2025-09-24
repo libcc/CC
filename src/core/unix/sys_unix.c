@@ -25,6 +25,14 @@
 #include <execinfo.h>
 #include <dlfcn.h>
 #include <stdio.h>
+
+#ifndef __CC_APPLE__
+_CC_API_PUBLIC(size_t) _cc_get_device_name(tchar_t *cname, size_t length) {
+    cname[0] = 0;
+    return 0;
+}
+#endif
+
 /**/
 _CC_API_PUBLIC(void) _cc_get_os_version(uint32_t *major, uint32_t *minor, uint32_t *build) {
 

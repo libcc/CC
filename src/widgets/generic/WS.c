@@ -28,7 +28,7 @@ _CC_API_PUBLIC(void) _CCWSMask(byte_t *data, int64_t length, byte_t *mask) {
     }
 }
 /**/
-_CC_WIDGETS_API(int32_t) _CCWSReverseHeader(byte_t *header, byte_t operation, int64_t length, byte_t *mask) {
+_CC_API_WIDGETS(int32_t) _CCWSReverseHeader(byte_t *header, byte_t operation, int64_t length, byte_t *mask) {
     int32_t offset = 0;
     byte_t m = (mask != nullptr) ? 0x80 : 0x00;
    

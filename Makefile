@@ -30,7 +30,6 @@ LOCAL_SRC_FILES = \
 	src/crypto/sha1.o \
 	src/crypto/sha256.o \
 	src/crypto/sha512.o \
-	src/crypto/sha3.o \
 	src/crypto/hmac.o \
 	src/crypto/des.o \
 	src/crypto/xxtea.o \
@@ -58,6 +57,7 @@ LOCAL_SRC_FILES = \
 	src/socket/socket.o \
 	src/thread/thread.o \
 	src/time/strptime.o \
+	src/time/tick.o \
 	src/time/time.o \
 	src/atomic/atomic.o \
 	src/atomic/rwlock.o \

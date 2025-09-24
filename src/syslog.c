@@ -82,11 +82,11 @@ _CC_API_PUBLIC(void) _cc_syslogW(uint8_t level, const wchar_t* msg, size_t lengt
         buffer_length += _cc_w2a(msg, (int32_t)length, buffer + buffer_length, (int32_t)remaining);
 #endif
     }
-
+#ifndef __CC_ANDROID__
     if (level == _CC_LOG_LEVEL_ERROR_ && buffer_length < _CC_8K_BUFFER_SIZE_) {
         buffer_length += _cc_get_resolve_symbol(buffer, _CC_8K_BUFFER_SIZE_ - buffer_length);
     }
-
+#endif
     buffer[buffer_length % _CC_8K_BUFFER_SIZE_] = 0;
 #ifdef _CC_UNICODE_
     buffer_length = _cc_utf16_to_utf8((const uint16_t *)buffer, (const uint16_t *)&buffer[buffer_length], 
@@ -117,11 +117,11 @@ _CC_API_PUBLIC(void) _cc_syslogA(uint8_t level, const char_t* msg, size_t length
         buffer_length += length;
 #endif
     }
-
+#ifndef __CC_ANDROID__
     if (level == _CC_LOG_LEVEL_ERROR_ && buffer_length < _CC_8K_BUFFER_SIZE_) {
         buffer_length += _cc_get_resolve_symbol(buffer + buffer_length, _CC_8K_BUFFER_SIZE_ - buffer_length);
     }
-    
+#endif
     buffer[buffer_length % _CC_8K_BUFFER_SIZE_] = 0;
 #ifdef _CC_UNICODE_
     buffer_length = _cc_utf16_to_utf8((const uint16_t *)buffer, (const uint16_t *)&buffer[buffer_length], 
@@ -174,7 +174,7 @@ _CC_API_PUBLIC(void) _cc_open_syslog(byte_t facility, const tchar_t *app, const 
         return;
     }
     if (ip) {
-        syslog.fd = socket(AF_INET, SOCK_DGRAM, 0);
+        syslog.fd = (_cc_socket_t)socket(AF_INET, SOCK_DGRAM, 0);
         syslog.socklen = sizeof(struct sockaddr_in);
         bzero(&syslog.sockaddr, syslog.socklen);
         _cc_inet_ipv4_addr((struct sockaddr_in*) &syslog.sockaddr.addr_in, ip, port);

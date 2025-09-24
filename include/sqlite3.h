@@ -332,7 +332,7 @@ typedef sqlite_uint64 sqlite3_uint64;
 ** [SQLITE_BUSY]. ^If sqlite3_close_v2() is called with unfinalized prepared
 ** statements, unclosed BLOB handlers, and/or unfinished sqlite3_backups,
 ** it returns [SQLITE_OK] regardless, but instead of deallocating the database
-** connection immediately, it marks the database connection as an unusable
+** connection immediately, it filter the database connection as an unusable
 ** "zombie" and makes arrangements to automatically deallocate the database
 ** connection after all prepared statements are finalized, all BLOB handles
 ** are closed, and all backups have finished. The sqlite3_close_v2() interface
@@ -8752,7 +8752,7 @@ SQLITE_API char *sqlite3_str_value(sqlite3_str*);
 **
 ** ^These interfaces are used to retrieve runtime status information
 ** about the performance of SQLite, and optionally to reset various
-** highwater marks.  ^The first argument is an integer code for
+** highwater filter.  ^The first argument is an integer code for
 ** the specific parameter to measure.  ^(Recognized integer codes
 ** are of the form [status parameters | SQLITE_STATUS_...].)^
 ** ^The current value of the parameter is returned into *pCurrent.

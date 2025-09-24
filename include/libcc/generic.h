@@ -18,8 +18,8 @@
  *    misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
 */
-#ifndef _C_CC_CORE_H_INCLUDED_
-#define _C_CC_CORE_H_INCLUDED_
+#ifndef _C_CC_GENERIC_H_INCLUDED_
+#define _C_CC_GENERIC_H_INCLUDED_
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -370,4 +370,4 @@ _CC_API_PUBLIC(bool_t) _cc_open_url(const tchar_t *url);
 }
 #endif
 
-#endif /* _C_CC_CORE_H_INCLUDED_ */
+#endif /* _C_CC_GENERIC_H_INCLUDED_ */

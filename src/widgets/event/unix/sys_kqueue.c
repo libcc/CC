@@ -24,65 +24,57 @@
 #include <sys/event.h>
 
 #define _CC_KQUEUE_EVENTS_ _CC_MAX_CHANGE_EVENTS_
+#define _CC_KQUEUE_MAX_UPDATE_ (_CC_KQUEUE_EVENTS_ - 4)
 
 struct _cc_async_event_priv {
     int fd;
-    int nchanges;
+    int number_of_changes;
     struct kevent changes[_CC_KQUEUE_EVENTS_];
 };
 
-_CC_API_PRIVATE(bool_t) _update_kevent(_cc_async_event_priv_t *priv) {
-    /**/
-    int r = kevent(priv->fd, priv->changes, priv->nchanges, nullptr, 0, nullptr);
-    if (_cc_unlikely(r)) {
-        _cc_logger_error(_T("kevent error %d. events:%d, error:%s"), r, priv->nchanges, _cc_last_error(r));
-        return false;
-    }
-    priv->nchanges = 0;
-    return true;
-}
-
 /**/
-_CC_API_PRIVATE(bool_t) _kqueue_event_update(_cc_async_event_priv_t *priv, _cc_event_t *e, bool_t rm) {
-    uint32_t addevents = e->flags & ~e->marks;
-    uint32_t delevents = ~e->flags & e->marks;
-
-    if (rm) {
-        if (_CC_ISSET_BIT(_CC_EVENT_READABLE_ | _CC_EVENT_ACCEPT_, e->marks)) {
-            EV_SET(&priv->changes[priv->nchanges++], e->fd, EVFILT_READ, EV_DELETE, 0, 0, e);
+_CC_API_PRIVATE(bool_t) _emit_kevent(_cc_async_event_priv_t *priv, _cc_event_t *e, bool_t clean) {
+    if (priv->number_of_changes >= _CC_KQUEUE_MAX_UPDATE_) {
+        /**/
+        int r = kevent(priv->fd, priv->changes, priv->number_of_changes, nullptr, 0, nullptr);
+        if (_cc_unlikely(r)) {
+            _cc_logger_error(_T("kevent error %d. events:%d, error:%s"), r, priv->number_of_changes, _cc_last_error(r));
+            return false;
         }
+        priv->number_of_changes = 0;
+    }
 
-        if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_ | _CC_EVENT_CONNECT_, e->marks)) {
-            EV_SET(&priv->changes[priv->nchanges++], e->fd, EVFILT_WRITE, EV_DELETE, 0, 0, e);
+    if (clean) {
+        if (_CC_ISSET_BIT(_CC_EVENT_READABLE_ | _CC_EVENT_ACCEPT_, e->filter)) {
+            EV_SET(&priv->changes[priv->number_of_changes++], e->fd, EVFILT_READ, EV_DELETE, 0, 0, e);
         }
-
-        if (priv->nchanges >= (_CC_KQUEUE_EVENTS_ - 4)) {
-            _update_kevent(priv);
+        if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_ | _CC_EVENT_CONNECT_, e->filter)) {
+            EV_SET(&priv->changes[priv->number_of_changes++], e->fd, EVFILT_WRITE, EV_DELETE, 0, 0, e);
         }
-        
-        e->marks = _CC_EVENT_UNKNOWN_;
-        return true;
+        e->filter = _CC_EVENT_UNKNOWN_;
+    } else {
+        if (_CC_ISSET_BIT(_CC_EVENT_CONNECT_, e->flags)) {
+            EV_SET(&priv->changes[priv->number_of_changes++], e->fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, e);
+            e->filter |= _CC_EVENT_CONNECT_;
+        } else {
+            uint16_t m = _CC_EVENT_IS_SOCKET(e->flags);
+            uint16_t add_filter = m & ~e->filter;
+            uint16_t del_filter = ~m & e->filter;
+            if (_CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, add_filter)) {
+                EV_SET(&priv->changes[priv->number_of_changes++], e->fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, e);
+            } else if (_CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, del_filter)) {
+                EV_SET(&priv->changes[priv->number_of_changes++], e->fd, EVFILT_READ, EV_DELETE, 0, 0, e);
+            }
+
+            if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_, add_filter)) {
+                EV_SET(&priv->changes[priv->number_of_changes++], e->fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, e);
+            } else if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_ | _CC_EVENT_CONNECT_, del_filter)) {
+                EV_SET(&priv->changes[priv->number_of_changes++], e->fd, EVFILT_WRITE, EV_DELETE, 0, 0, e);
+            }
+            _CC_MODIFY_BIT(add_filter, del_filter, e->filter);
+        }
     }
 
-    /*Setting the readable event flag*/
-    if (_CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, addevents)) {
-        EV_SET(&priv->changes[priv->nchanges++], e->fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, e);
-    } else if (_CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, delevents)) {
-        EV_SET(&priv->changes[priv->nchanges++], e->fd, EVFILT_READ, EV_DELETE, 0, 0, e);
-    }
-
-    /*Setting the writable event flag*/
-    if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_ | _CC_EVENT_CONNECT_, addevents)) {
-        EV_SET(&priv->changes[priv->nchanges++], e->fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, e);
-    } else if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_ | _CC_EVENT_CONNECT_, delevents)) {
-        EV_SET(&priv->changes[priv->nchanges++], e->fd, EVFILT_WRITE, EV_DELETE, 0, 0, e);
-    }
-
-    if (priv->nchanges >= (_CC_KQUEUE_EVENTS_ - 4)) {
-        _update_kevent(priv);
-    }
-
-    _CC_MODIFY_BIT(addevents, delevents, e->marks);
     return true;
 }
 
@@ -118,10 +110,10 @@ _CC_API_PRIVATE(_cc_socket_t) _kqueue_event_accept(_cc_async_event_t *async, _cc
 
 /**/
 _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
-    uint16_t m = _CC_EVENT_IS_SOCKET(e->marks), u;
-    if (_CC_ISSET_BIT(_CC_EVENT_DISCONNECT_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags) == 0) {
+    uint16_t m = _CC_EVENT_IS_SOCKET(e->filter), u;
+    if (_CC_ISSET_BIT(_CC_EVENT_CLOSED_, e->flags) && _CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags) == 0) {
         if (m) {
-            _kqueue_event_update(async->priv, e, true);
+            _emit_kevent(async->priv, e, true);
         }
         _cc_free_event(async, e);
         return;
@@ -129,19 +121,19 @@ _CC_API_PRIVATE(void) _reset(_cc_async_event_t *async, _cc_event_t *e) {
 
     if (_CC_ISSET_BIT(_CC_EVENT_PENDING_, e->flags)) {
         if (m) {
-            _kqueue_event_update(async->priv, e, true);
+            _emit_kevent(async->priv, e, true);
         }
-
-        _cc_list_iterator_swap(&async->pending, &e->lnk);
-        return;
+        if (_CC_ISSET_BIT(_CC_EVENT_TIMEOUT_, e->flags) == 0) {
+            _cc_list_iterator_swap(&async->pending, &e->lnk);
+            return;
+        }
+    } else {
+        /*update event*/
+        u = _CC_EVENT_IS_SOCKET(e->flags);
+        if (u && u != m) {
+            _emit_kevent(async->priv, e, false);
+        }
     }
-
-    /*update event*/
-    u = _CC_EVENT_IS_SOCKET(e->flags);
-    if (u && u != m) {
-        _kqueue_event_update(async->priv, e, false);
-    }
-
     _reset_event_timeout(async, e);
 }
 
@@ -164,8 +156,8 @@ _CC_API_PRIVATE(bool_t) _kqueue_event_wait(_cc_async_event_t *async, uint32_t ti
     tv.tv_sec = timeout / 1000;
     tv.tv_nsec = (timeout % 1000) * 1000 * 1000;
 
-    rc = kevent(priv->fd, priv->changes, priv->nchanges, actives, _CC_KQUEUE_EVENTS_, &tv);
-    priv->nchanges = 0;
+    rc = kevent(priv->fd, priv->changes, priv->number_of_changes, actives, _CC_KQUEUE_EVENTS_, &tv);
+    priv->number_of_changes = 0;
 
     if (_cc_unlikely(rc < 0)) {
         int32_t lerrno = _cc_last_errno();
@@ -189,7 +181,7 @@ _CC_API_PRIVATE(bool_t) _kqueue_event_wait(_cc_async_event_t *async, uint32_t ti
             case ENOENT:
                 /* resubmit changes on ENOENT */
                 if (e) {
-                    e->marks = _CC_EVENT_UNKNOWN_;
+                    e->filter = _CC_EVENT_UNKNOWN_;
                 }
             /* Can occur for reasons not fully understood
              * on FreeBSD. */
@@ -249,8 +241,12 @@ _CC_API_PRIVATE(bool_t) _kqueue_event_wait(_cc_async_event_t *async, uint32_t ti
             which = _CC_ISSET_BIT(_CC_EVENT_ACCEPT_ | _CC_EVENT_READABLE_, e->flags);
         } else if (what == EVFILT_WRITE) {
             which = _CC_ISSET_BIT(_CC_EVENT_CONNECT_ | _CC_EVENT_WRITABLE_, e->flags);
-            if (_CC_ISSET_BIT(_CC_EVENT_CONNECT_, which)) {
-                which = _valid_connected(e, which);
+            if (which & _CC_EVENT_CONNECT_) {
+                if (_valid_fd(e->fd)) {
+                    _CC_UNSET_BIT(_CC_EVENT_CONNECT_, e->flags);
+                } else {
+                    which = _CC_EVENT_CLOSED_;
+                }
             }
         }
 
@@ -294,7 +290,7 @@ _CC_API_PRIVATE(bool_t) _kqueue_event_alloc(_cc_async_event_t *async) {
     }
 
     priv = (_cc_async_event_priv_t *)_cc_malloc(sizeof(_cc_async_event_priv_t));
-    priv->nchanges = 0;
+    priv->number_of_changes = 0;
     priv->fd = kqueue();
     if (_cc_unlikely(priv->fd == -1)) {
         _cc_free(priv);

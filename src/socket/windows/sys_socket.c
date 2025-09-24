@@ -81,7 +81,7 @@ _CC_API_PUBLIC(bool_t) _cc_install_socket(void) {
             get_disconnect_func_ptr(fd);
             get_queued_completion_status_func_ptr();
 
-            _cc_close_socket(fd);
+            _cc_close_socket((_cc_socket_t)fd);
         }
     }
     return true;

@@ -40,7 +40,6 @@ LOCAL_SRC_FILES := \
         ../../src/crypto/sha1.c \
         ../../src/crypto/sha256.c \
         ../../src/crypto/sha512.c \
-        ../../src/crypto/sha3.c \
         ../../src/crypto/hmac.c \
         ../../src/crc.c \
         ../../src/list.c \
@@ -54,6 +53,7 @@ LOCAL_SRC_FILES := \
         ../../src/buf.c \
         ../../src/url.c \
         ../../src/rand.c \
+        ../../src/syslog.c \
         ../../src/logger.c \
         ../../src/alloc.c \
         ../../src/power/power.c \
@@ -62,14 +62,15 @@ LOCAL_SRC_FILES := \
         ../../src/socket/socket.c \
         ../../src/thread/thread.c \
         ../../src/time/time.c \
+        ../../src/time/tick.c \
         ../../src/time/strptime.c \
         ../../src/time/linux/sys_time.c \
         ../../src/atomic/atomic.c \
         ../../src/atomic/rwlock.c \
         ../../src/loadso/dlopen/sys_loadso.c \
-        ../../src/core/cpu_info.c \
+        ../../src/cpu.c \
+        ../../src/file.c \
         ../../src/core/generic.c \
-        ../../src/core/file.c \
         ../../src/core/android/sys_android.c \
         ../../src/core/android/sys_dirent.c \
         ../../src/core/android/sys_file.c \
@@ -86,6 +87,7 @@ LOCAL_SRC_FILES := \
         ../../src/widgets/event/loop.c \
         ../../src/widgets/event/tcp.c \
         ../../src/widgets/event/select.c \
+        ../../src/widgets/event/OpenSSL.c \
         ../../src/widgets/event/linux/sys_epoll.c \
         ../../src/widgets/generic/generic.c \
         ../../src/widgets/generic/WS.c \
@@ -97,9 +99,19 @@ LOCAL_SRC_FILES := \
         ../../src/widgets/json/json.parser.c \
         ../../src/widgets/xml/xml.c \
         ../../src/widgets/xml/xml.parser.c \
+        ../../src/widgets/generic/gzip.c \
+        ../../src/widgets/http/header.c \
+        ../../src/widgets/http/request.parser.c \
+        ../../src/widgets/http/response.parser.c \
+        ../../src/widgets/url_request/http/url_request.c \
+        ../../src/widgets/url_request/http/url_response.c \
+        ../../src/widgets/smtp/libsmtp.c \
+        ../../src/widgets/smtp/connected.c \
+        ../../src/widgets/smtp/login.c \
+        ../../src/widgets/smtp/from_rcpt.c \
         ./main.c
 
-LOCAL_LDLIBS := -ldl -llog -landroid
+LOCAL_LDLIBS := -ldl -llog -landroid -lz
 LOCAL_EXPORT_LDLIBS := $(LOCAL_LDLIBS)
 include $(BUILD_SHARED_LIBRARY)
 

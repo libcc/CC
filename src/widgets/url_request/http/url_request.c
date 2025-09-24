@@ -23,35 +23,26 @@
 
 /**/
 _CC_API_PUBLIC(bool_t) _cc_url_response_body(_cc_url_request_t *request, byte_t *source, size_t length);
-_CC_API_PUBLIC(bool_t) _cc_url_response_chunked(_cc_url_request_t *, _cc_event_rbuf_t *);
+_CC_API_PUBLIC(bool_t) _cc_url_response_chunked(_cc_url_request_t *, _cc_io_buffer_t *io);
 
 /**/
-_CC_WIDGETS_API(void) _cc_reset_url_request(_cc_url_request_t *request) {
+_CC_API_WIDGETS(void) _cc_reset_url_request(_cc_url_request_t *request) {
     _cc_assert(request != nullptr);
     request->status = _CC_HTTP_STATUS_HEADER_;
-    request->handshaking = (request->url.scheme.ident == _CC_SCHEME_HTTPS_);
-
-#ifdef _CC_USE_OPENSSL_
-    if (request->ssl) {
-        _SSL_free(request->ssl);
-        request->ssl = nullptr;
-    }
-#endif
     if (request->response) {
         _cc_http_free_response_header(&request->response);
     }
+#ifdef _CC_USE_OPENSSL_
+    if (request->io && request->io->ssl) {
+        _SSL_free(request->io->ssl);
+        request->io->ssl = nullptr;
+    }
+#endif
 }
 
 /**/
 _CC_API_PUBLIC(void) _cc_free_url_request(_cc_url_request_t *request) {
     _cc_assert(request != nullptr);
-
-#ifdef _CC_USE_OPENSSL_
-    if (request->ssl) {
-        _SSL_free(request->ssl);
-        request->ssl = nullptr;
-    }
-#endif
 
     if (request->gzip) {
         _gzip_free(request->gzip);
@@ -70,44 +61,19 @@ _CC_API_PUBLIC(void) _cc_free_url_request(_cc_url_request_t *request) {
 /**/
 _CC_API_PUBLIC(bool_t) _cc_url_request_header(_cc_url_request_t *request, _cc_event_t *e) {
     _cc_assert(request != nullptr);
+    _cc_assert(request->io != nullptr);
+    _cc_assert(request->buffer.length > 0);
     request->status = _CC_HTTP_STATUS_HEADER_;
     if (request->response) {
         _cc_http_free_response_header(&request->response);
     }
-
+    if (request->buffer.length <= 0) {
+        return false;
+    }
 #ifdef _CC_UNICODE_
     _cc_buf_utf16_to_utf8(&request->buffer, 0);
 #endif
-    if (_cc_copy_event_wbuf(&e->buffer->w, request->buffer.bytes, (uint16_t)request->buffer.length)) {
-        _cc_async_event_t *async = _cc_get_async_event_by_id(e->ident);
-        if (async) {
-            _CC_SET_BIT(_CC_EVENT_WRITABLE_, e->flags);
-            return async->reset(async, e);
-        }
-    }
-    return false;
-}
-
-/**/
-_CC_API_PUBLIC(bool_t) _cc_url_request_ssl_handshake(_cc_url_request_t *request, _cc_event_t *e) {
-    _cc_assert(request != nullptr);
-#ifdef _CC_USE_OPENSSL_
-    switch (_SSL_do_handshake(request->ssl)) {
-    case _CC_SSL_HS_ESTABLISHED_:
-        request->handshaking = false;
-        break;
-    case _CC_SSL_HS_WANT_READ_:
-    case _CC_SSL_HS_WANT_WRITE_:
-        _CC_MODIFY_BIT(_CC_EVENT_CONNECT_, _CC_EVENT_READABLE_, e->flags);
-        break;
-    default:
-        return false;
-    }
-#else
-    _CC_UNUSED(request);
-    _CC_UNUSED(e);
-#endif
-    return true;
+    return _cc_io_buffer_send(e, request->io, request->buffer.bytes, (int32_t)request->buffer.length);
 }
 
 _CC_API_PRIVATE(int64_t) get_content_length(_cc_rbtree_t *headers) {
@@ -131,13 +97,15 @@ _CC_API_PRIVATE(bool_t) is_keep_alive(_cc_rbtree_t *headers) {
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _cc_url_request_response_header(_cc_url_request_t *request, _cc_event_rbuf_t *r) {
+_CC_API_PUBLIC(bool_t) _cc_url_request_response_header(_cc_url_request_t *request) {
     _cc_http_response_header_t *response;
+    _cc_io_buffer_t *io;
     _cc_assert(request != nullptr);
-    _cc_assert(r != nullptr);
+    _cc_assert(request->io != nullptr);
     _cc_assert(request->status == _CC_HTTP_STATUS_HEADER_);
 
-    request->status = _cc_http_header_parser((_cc_http_header_fn_t)_cc_http_alloc_response_header, (pvoid_t *)&request->response, r);
+    io = request->io;
+    request->status = _cc_http_header_parser((_cc_http_header_fn_t)_cc_http_alloc_response_header, (pvoid_t *)&request->response, io->r.bytes, (int32_t *)&io->r.off);
     /**/
     if (request->status != _CC_HTTP_STATUS_PAYLOAD_) {
         return request->status == _CC_HTTP_STATUS_HEADER_;
@@ -160,27 +128,29 @@ _CC_API_PUBLIC(bool_t) _cc_url_request_response_header(_cc_url_request_t *reques
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _cc_url_request_response_body(_cc_url_request_t *request, _cc_event_rbuf_t *r) {
+_CC_API_PUBLIC(bool_t) _cc_url_request_response_body(_cc_url_request_t *request) {
     _cc_http_response_header_t *response;
+    _cc_io_buffer_t *io;
     _cc_assert(request != nullptr);
-    _cc_assert(r != nullptr);
+    _cc_assert(request->io != nullptr);
     _cc_assert(request->status == _CC_HTTP_STATUS_PAYLOAD_);
 
     /**/
     response = request->response;
+    io = request->io;
 
-    if (r->length > 0) {
+    if (io->r.off > 0) {
         if (response->transfer_encoding == _CC_URL_TRANSFER_ENCODING_CHUNKED_) {
-            if (!_cc_url_response_chunked(request, r)) {
+            if (!_cc_url_response_chunked(request, io)) {
                 return false;
             }
         } else {
-            if (!_cc_url_response_body(request, r->bytes, r->length)) {
+            if (!_cc_url_response_body(request, io->r.bytes, io->r.off)) {
                 return false;
             }
             /**/
-            response->download_length += r->length;
-            r->length = 0;
+            response->download_length += io->r.off;
+            io->r.off = 0;
             if (response->length > 0 && response->download_length >= response->length) {
                 request->status = _CC_HTTP_STATUS_ESTABLISHED_;
             }
@@ -190,28 +160,6 @@ _CC_API_PUBLIC(bool_t) _cc_url_request_response_body(_cc_url_request_t *request,
     }
 
     return true;
-}
-
-/**/
-_CC_API_PUBLIC(bool_t) _cc_url_request_read(_cc_url_request_t *request, _cc_event_t *e) {
-    _cc_assert(request != nullptr);
-#ifdef _CC_USE_OPENSSL_
-    if (request->url.scheme.ident == _CC_SCHEME_HTTPS_ && request->ssl) {
-        return _SSL_event_read(request->ssl, e);
-    }
-#endif
-    return _cc_event_recv(e);
-}
-
-/**/
-_CC_API_PUBLIC(bool_t) _cc_url_request_sendbuf(_cc_url_request_t *request, _cc_event_t *e) {
-    _cc_assert(request != nullptr);
-#ifdef _CC_USE_OPENSSL_
-    if (request->url.scheme.ident == _CC_SCHEME_HTTPS_ && request->ssl) {
-        return _SSL_sendbuf(request->ssl, e) >= 0;
-    }
-#endif
-    return _cc_event_sendbuf(e) >= 0;
 }
 
 /**/
@@ -230,13 +178,30 @@ _CC_API_PUBLIC(_cc_url_request_t*) _cc_url_request(const tchar_t *url, pvoid_t a
         return nullptr;
     }
 
+    request->io = _cc_alloc_io_buffer(_CC_8K_BUFFER_SIZE_);
+
     request->status = _CC_HTTP_STATUS_HEADER_;
+	request->handshake = _CC_SSL_HS_ESTABLISHED_;
     request->response = nullptr;
     request->args = args;
-    request->ssl = nullptr;
     request->gzip = nullptr;
-    request->handshaking = (request->url.scheme.ident == _CC_SCHEME_HTTPS_);
+
     _cc_alloc_buf(&request->buffer, _CC_IO_BUFFER_SIZE_);
 
     return request;
+}
+
+_CC_API_PUBLIC(bool_t) _cc_url_request_ssl(_cc_OpenSSL_t *openSSL, _cc_url_request_t *request, _cc_event_t *e) {
+#ifdef _CC_USE_OPENSSL_
+    request->io->ssl = _SSL_connect(openSSL, e->fd);
+    if (request->io->ssl == nullptr) {
+        return false;
+    }
+    _SSL_set_host_name(request->io->ssl, request->url.host, _cc_sds_length(request->url.host));
+#else
+    _CC_UNUSED(openSSL);
+    _CC_UNUSED(request);
+    _CC_UNUSED(e);
+#endif
+    return true;
 }

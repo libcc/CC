@@ -175,40 +175,27 @@ _CC_API_PUBLIC(_cc_event_t*) _cc_event_alloc(_cc_async_event_t *async, const uin
         return nullptr;
     }
 
-    e->marks = _CC_EVENT_UNKNOWN_;
+    e->filter = _CC_EVENT_UNKNOWN_;
     e->flags = flags;
     e->fd = _CC_INVALID_SOCKET_;
-    e->args = nullptr;
     e->callback = nullptr;
-    e->buffer = nullptr;
     e->expire = 0;
     e->timeout = 0;
-
-    if (_CC_EVENT_IS_SOCKET(flags)) {
-        e->flags |= _CC_EVENT_DESC_SOCKET_;
-    }
-
-    if (_CC_ISSET_BIT(_CC_EVENT_BUFFER_, flags)) {
-        e->buffer = _cc_alloc_event_buffer();
-    }
-
+    e->data = 0;
 #ifdef _CC_EVENT_USE_IOCP_
-    e->accept_fd = _CC_INVALID_SOCKET_;
+	e->accept_fd = _CC_INVALID_SOCKET_;
 #endif
-
+    if (_CC_EVENT_IS_SOCKET(flags)) {
+        e->flags |= _CC_EVENT_SOCKET_;
+    }
+    
     _cc_list_iterator_cleanup(&e->lnk);
     return e;
 }
-
 /**/
 _CC_API_PUBLIC(void) _cc_free_event(_cc_async_event_t *async, _cc_event_t *e) {
     _cc_socket_t fd;
-
-    if (e->buffer) {
-        _cc_free_event_buffer(e->buffer);
-        e->buffer = nullptr;
-    }
-
+    
     if (!_cc_list_iterator_empty(&e->lnk)) {
         _cc_list_iterator_remove(&e->lnk);
     }
@@ -218,8 +205,10 @@ _CC_API_PUBLIC(void) _cc_free_event(_cc_async_event_t *async, _cc_event_t *e) {
     e->ident = (e->ident & 0xFFFFF);
     e->fd = _CC_INVALID_SOCKET_;
     e->flags = _CC_EVENT_UNKNOWN_;
-    e->marks = _CC_EVENT_UNKNOWN_;
-
+    e->filter = _CC_EVENT_UNKNOWN_;
+#ifdef _CC_EVENT_USE_IOCP_
+	e->accept_fd = _CC_INVALID_SOCKET_;
+#endif
     if (fd != _CC_INVALID_SOCKET_ && fd != 0) {
         _cc_close_socket(fd);
     }
@@ -329,8 +318,9 @@ _CC_API_PRIVATE(void) _event_link_free(_cc_async_event_t *async, _cc_list_iterat
         next = next->next;
 
         e = _cc_upcast(curr, _cc_event_t, lnk);
-        if (e->callback && ((e->flags & _CC_EVENT_DISCONNECT_) == 0)) {
-            e->callback(async, e, _CC_EVENT_DISCONNECT_);
+
+        if (_CC_ISSET_BIT(_CC_EVENT_CLOSED_, e->flags) == 0 && e->callback) {
+            e->callback(async, e, _CC_EVENT_CLOSED_);
         }
         _cc_free_event(async, e);
     }
@@ -343,9 +333,11 @@ _CC_API_PUBLIC(bool_t) _unregister_async_event(_cc_async_event_t *async) {
 
     _event_lock(async);
     async->running = 0;
+
     _cc_array_for_each(_cc_event_t, e, i, async->changes, {
         _cc_list_iterator_swap(&async->pending, &e->lnk);
     });
+
     _cc_free_array(async->changes);
     _event_unlock(async);
     
@@ -366,6 +358,7 @@ _CC_API_PUBLIC(bool_t) _unregister_async_event(_cc_async_event_t *async) {
         for (i = 0; i < g.slot_length; i += _CC_MAX_STEP_) {
             _cc_free(g.slots[i]);
         }
+
         _cc_free(g.slots);
         _cc_free(g.async);
         _cc_queue_iterator_cleanup(&g.idles);
@@ -384,66 +377,63 @@ _CC_API_PUBLIC(bool_t) _valid_event(_cc_async_event_t *async, _cc_event_t *e) {
 }
 
 /**/
-_CC_API_PUBLIC(uint32_t) _valid_connected(_cc_event_t *e, uint32_t which) {
-    if (_valid_event_fd(e)) {
-        _CC_MODIFY_BIT(_CC_EVENT_READABLE_, _CC_EVENT_CONNECT_, e->flags);
-        return which;
+_CC_API_PUBLIC(bool_t) _valid_fd(_cc_socket_t fd) {
+    int r = 0;
+    socklen_t length = sizeof(r);
+
+    if (_cc_unlikely(fd == _CC_INVALID_SOCKET_)) {
+        return false;
     }
-    
-    return _CC_EVENT_DISCONNECT_;
+
+    if (getsockopt(fd, SOL_SOCKET, SO_ERROR, (char *)&r, &length) != 0) {
+        r = _cc_last_errno();
+        _cc_logger_error(_T("Socket Error:%d, %s"), r, _cc_last_error(r));
+        return false;
+    }
+
+    if (r != 0) {
+        _cc_logger_error(_T("Socket Error:%d, %s"), r, _cc_last_error(r));
+        return false;
+    }
+    return true;
 }
 
 /**/
 _CC_API_PUBLIC(bool_t) _event_callback(_cc_async_event_t *async, _cc_event_t *e, uint32_t which) {
     /**/
     async->processed++;
-#ifndef _CC_EVENT_USE_IOCP_
-    if (e->buffer && (e->flags & _CC_EVENT_BUFFER_)) {
-        if ( (which & _CC_EVENT_READABLE_) ) {
-            if (!_cc_event_recv(e)) {
-                which = _CC_EVENT_DISCONNECT_;
-            }
-        } else if ( (which & _CC_EVENT_WRITABLE_) ) {
-            if (_cc_event_sendbuf(e) < 0) {
-                which = _CC_EVENT_DISCONNECT_;
-            }
-        }
-    }
-#endif
-    
     _cc_list_iterator_swap(&async->pending, &e->lnk);
-
     /**/
-    if (e->callback && e->callback(async, e, which)) {
-        if ((e->flags & _CC_EVENT_DISCONNECT_) == 0) {
+    _cc_assert(e->callback != nullptr);
+
+    if (e->callback(async, e, which)) {
+        if ((e->flags & _CC_EVENT_CLOSED_) == 0) {
             return true;
         }
     }
+
     /**/
-    if ((e->flags & _CC_EVENT_WRITABLE_) == 0 && (which & _CC_EVENT_DISCONNECT_) == 0) {
-        e->callback(async, e, _CC_EVENT_DISCONNECT_);
+    if (_CC_ISSET_BIT(_CC_EVENT_WRITABLE_, e->flags) == 0 && 
+        _CC_ISSET_BIT(_CC_EVENT_CLOSED_, e->flags) == 0) {
+        e->callback(async, e, _CC_EVENT_CLOSED_);
     }
 
     /*force disconnect*/
-    _CC_MODIFY_BIT(_CC_EVENT_DISCONNECT_, _CC_EVENT_READABLE_|_CC_EVENT_ACCEPT_, e->flags);
+    _CC_MODIFY_BIT(_CC_EVENT_CLOSED_, _CC_EVENT_READABLE_|_CC_EVENT_ACCEPT_, e->flags);
     return false;
 }
 
 /**/
 _CC_API_PUBLIC(bool_t) _reset_event(_cc_async_event_t *async, _cc_event_t *e) {
-    bool_t results = true;
     if (async->running == 0) {
         return false;
     }
 
-    if (_CC_ISSET_BIT(_CC_EVENT_CHANGING_, e->flags) == 0) {
-        _event_lock(async);
-        _cc_array_push(&async->changes, (uintptr_t)e);
-        _CC_SET_BIT(_CC_EVENT_CHANGING_, e->flags);
-        _event_unlock(async);
-    }
+    _event_lock(async);
+    _cc_array_push(&async->changes, (uintptr_t)e);
+    _event_unlock(async);
 
-    return results;
+    return true;
 }
 
 /**/
@@ -469,7 +459,6 @@ _CC_API_PUBLIC(void) _reset_event_pending(_cc_async_event_t *async, void (*_rese
         _event_lock(async);
         for (i = 0; i < length; i++) {
             e = ((_cc_event_t*)*((uintptr_t*)(async->changes) + i));
-            _CC_UNSET_BIT(_CC_EVENT_CHANGING_, e->flags);
             _cc_list_iterator_swap(&async->pending, &e->lnk);
         }
         _cc_array_cleanup(async->changes);
@@ -490,58 +479,46 @@ _CC_API_PUBLIC(void) _reset_event_pending(_cc_async_event_t *async, void (*_rese
 /**/
 _CC_API_PUBLIC(bool_t) _disconnect_event(_cc_async_event_t *async, _cc_event_t *e) {
     /**/
-    if (e->flags & (_CC_EVENT_DESC_SOCKET_ | _CC_EVENT_DESC_FILE_)) {
+    if (e->flags & (_CC_EVENT_SOCKET_ | _CC_EVENT_FILE_)) {
         _cc_shutdown_socket(e->fd, _CC_SHUT_RD_);
     }
     
-    _CC_MODIFY_BIT(_CC_EVENT_DISCONNECT_, _CC_EVENT_READABLE_, e->flags);
+    _CC_MODIFY_BIT(_CC_EVENT_CLOSED_, _CC_EVENT_READABLE_, e->flags);
 
     return async->reset(async, e);
 }
 
-/**/
-_CC_API_PUBLIC(bool_t) _valid_event_fd(_cc_event_t *e) {
-    int results = 0;
-    socklen_t len = sizeof(results);
-
-    if (_cc_unlikely(e->fd == _CC_INVALID_SOCKET_)) {
+#ifdef _CC_USE_OPENSSL2_
+_CC_API_PUBLIC(bool_t) _cc_setup_ssl_accept(_cc_OpenSSL_t *ctx, _cc_event_t *e) {
+    int flag = 0;
+    _cc_SSL_t *ssl = _SSL_accept(ctx, e->fd, &flag);
+    if (ssl == nullptr) {
         return false;
     }
 
-    if (getsockopt(e->fd, SOL_SOCKET, SO_ERROR, (char *)&results, &len) != 0) {
-        results = _cc_last_errno();
-        _cc_logger_error(_T("Socket Error:%d, %s"), results, _cc_last_error(results));
-        return false;
-    }
+    _cc_assert(e->ssl != nullptr);
+    e->ssl = ssl;
+    _CC_SET_BIT(_CC_EVENT_OPENSSL_, e->flags);
 
-    if (results != 0) {
-        _cc_logger_error(_T("Socket Error:%d, %s"), results, _cc_last_error(results));
-        return false;
+    if (flag != _CC_SSL_HS_ESTABLISHED_) {
+        _CC_SET_BIT(_CC_EVENT_PENDING_, e->flags);
     }
-
     return true;
 }
+_CC_API_PUBLIC(bool_t) _cc_setup_ssl_connect(_cc_OpenSSL_t *ctx, _cc_event_t *e) {
+    int flag = 0;
+    _cc_SSL_t *ssl = _SSL_connect(ctx, e->fd, &flag);
+    if (ssl == nullptr) {
+        return false;
+    }
 
-/**/
-_CC_API_PUBLIC(bool_t) _cc_event_attach(_cc_async_event_t *async, _cc_event_t *e) {
-    _cc_assert(async != nullptr && async->attach != nullptr);
-    return async->attach(async, e);
-}
+    _cc_assert(e->ssl != nullptr);
+    e->ssl = ssl;
+    _CC_SET_BIT(_CC_EVENT_OPENSSL_, e->flags);
 
-/**/
-_CC_API_PUBLIC(bool_t) _cc_event_connect(_cc_async_event_t *async, _cc_event_t *e, const _cc_sockaddr_t *sa, const _cc_socklen_t sa_len) {
-    _cc_assert(async != nullptr && async->connect != nullptr && sa != nullptr);
-    return async->connect(async, e, sa, sa_len);
+    if (flag != _CC_SSL_HS_ESTABLISHED_) {
+        _CC_SET_BIT(_CC_EVENT_PENDING_, e->flags);
+    }
+    return true;
 }
-
-/**/
-_CC_API_PUBLIC(_cc_socket_t) _cc_event_accept(_cc_async_event_t *async, _cc_event_t *e, _cc_sockaddr_t *sa, _cc_socklen_t *sa_len) {
-    _cc_assert(async != nullptr && async->accept != nullptr && e != nullptr);
-    return async->accept(async, e, sa, sa_len);
-}
-
-/**/
-_CC_API_PUBLIC(bool_t) _cc_event_wait(_cc_async_event_t *async, uint32_t timeout) {
-    _cc_assert(async != nullptr && async->wait != nullptr);
-    return async->wait(async, timeout);
-}
+#endif

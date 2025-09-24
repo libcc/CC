@@ -34,13 +34,13 @@ extern "C" {
 typedef struct _gzip _gzip_t;
 
 /**/
-_CC_WIDGETS_API(_gzip_t*) _gzip_alloc(byte_t m);
+_CC_API_WIDGETS(_gzip_t*) _gzip_alloc(byte_t m);
 /**/
-_CC_WIDGETS_API(void) _gzip_free(_gzip_t *gzip);
+_CC_API_WIDGETS(void) _gzip_free(_gzip_t *gzip);
 /**/
-_CC_WIDGETS_API(void) _gzip_reset(_gzip_t *gzip);
+_CC_API_WIDGETS(void) _gzip_reset(_gzip_t *gzip);
 /**/
-_CC_WIDGETS_API(bool_t) _gzip(_gzip_t *gzip, byte_t *source, size_t length, _cc_buf_t *buffer);
+_CC_API_WIDGETS(bool_t) _gzip(_gzip_t *gzip, byte_t *source, size_t length, _cc_buf_t *buffer);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

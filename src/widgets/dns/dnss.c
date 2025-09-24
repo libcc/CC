@@ -59,7 +59,7 @@ _CC_API_PRIVATE(bool_t) _dns_response_callback(_cc_async_event_t *async, _cc_eve
         return false;
     }
 
-    if (which & _CC_EVENT_DISCONNECT_) {
+    if (which & _CC_EVENT_CLOSED_) {
         return false;
     }
 */

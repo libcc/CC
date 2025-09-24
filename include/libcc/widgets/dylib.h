@@ -36,10 +36,10 @@
 #include "../socket/socket.h"
 #include "../types.h"
 
-#if defined(_CC_WIDGETS_API_USE_DYNAMIC_)
-    #define _CC_WIDGETS_API(t) _CC_API_EXPORT_ t
+#if defined(_CC_API_WIDGETS_USE_DYNAMIC_)
+    #define _CC_API_WIDGETS(t) _CC_API_EXPORT_ t
 #else
-    #define _CC_WIDGETS_API(t) _CC_API_IMPORT_ t
+    #define _CC_API_WIDGETS(t) _CC_API_IMPORT_ t
 #endif
 
 #endif /*_C_CC_WIDGETS_DYLIB_H_INCLUDED_*/

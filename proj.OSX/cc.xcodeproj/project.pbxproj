@@ -9,6 +9,11 @@
 /* Begin PBXBuildFile section */
 		41E3A69A29FE430A00BEFBD6 /* libcc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 414B4B562990BEB600F4A7CB /* libcc.a */; };
 		41E3A70B29FE47D900BEFBD6 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 41E3A70A29FE47D900BEFBD6 /* libz.tbd */; };
+		425E1A222E83E73200864160 /* header.c in Sources */ = {isa = PBXBuildFile; fileRef = 425E1A1E2E83E73200864160 /* header.c */; };
+		425E1A232E83E73200864160 /* response.parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 425E1A202E83E73200864160 /* response.parser.c */; };
+		425E1A242E83E73200864160 /* request.parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 425E1A1F2E83E73200864160 /* request.parser.c */; };
+		425E1A262E83E74000864160 /* OpenSSL.c in Sources */ = {isa = PBXBuildFile; fileRef = 425E1A252E83E74000864160 /* OpenSSL.c */; };
+		425E1A282E83E74F00864160 /* tick.c in Sources */ = {isa = PBXBuildFile; fileRef = 425E1A272E83E74F00864160 /* tick.c */; };
 		426BE25F2E5DD17800CE8D50 /* libsqlite3.0.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE25E2E5DD17800CE8D50 /* libsqlite3.0.tbd */; };
 		426BE2612E5DD18400CE8D50 /* libiodbc.2.1.18.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE2602E5DD18400CE8D50 /* libiodbc.2.1.18.tbd */; };
 		426BE2632E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 426BE2622E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd */; };
@@ -59,7 +64,6 @@
 		42C8180B2E50EEE200359415 /* strptime.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C8172E2E50EEE200359415 /* strptime.c */; };
 		42C8180C2E50EEE200359415 /* GBK.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C817882E50EEE200359415 /* GBK.c */; };
 		42C8180D2E50EEE200359415 /* ring.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C8178F2E50EEE200359415 /* ring.c */; };
-		42C818112E50EEE200359415 /* sha3.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C816EF2E50EEE200359415 /* sha3.c */; };
 		42C818122E50EEE200359415 /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C816EE2E50EEE200359415 /* sha1.c */; };
 		42C818162E50EEE200359415 /* rwlock.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C816C12E50EEE200359415 /* rwlock.c */; };
 		42C818172E50EEE200359415 /* hmap.c in Sources */ = {isa = PBXBuildFile; fileRef = 42C817892E50EEE200359415 /* hmap.c */; };
@@ -93,21 +97,17 @@
 		42DA6DDF2E515EC8005A3D8B /* select.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6D8C2E515EC8005A3D8B /* select.c */; };
 		42DA6DE02E515EC8005A3D8B /* url_request.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DBC2E515EC8005A3D8B /* url_request.c */; };
 		42DA6DE42E515EC8005A3D8B /* ini.parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DAA2E515EC8005A3D8B /* ini.parser.c */; };
-		42DA6DE62E515EC8005A3D8B /* OpenSSL.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DA52E515EC8005A3D8B /* OpenSSL.c */; };
 		42DA6DE72E515EC8005A3D8B /* timeout.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6D8F2E515EC8005A3D8B /* timeout.c */; };
 		42DA6DE82E515EC8005A3D8B /* dns.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6D7B2E515EC8005A3D8B /* dns.c */; };
 		42DA6DE92E515EC8005A3D8B /* event.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6D892E515EC8005A3D8B /* event.c */; };
 		42DA6DEA2E515EC8005A3D8B /* sqlite.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6D772E515EC8005A3D8B /* sqlite.c */; };
-		42DA6DEF2E515EC8005A3D8B /* http.header.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DA12E515EC8005A3D8B /* http.header.c */; };
 		42DA6DF02E515EC8005A3D8B /* dnss.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6D7C2E515EC8005A3D8B /* dnss.c */; };
 		42DA6DF12E515EC8005A3D8B /* url_response.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DBD2E515EC8005A3D8B /* url_response.c */; };
 		42DA6DF32E515EC8005A3D8B /* json.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DB02E515EC8005A3D8B /* json.c */; };
 		42DA6DF52E515EC8005A3D8B /* json.object.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DB32E515EC8005A3D8B /* json.object.c */; };
 		42DA6DF82E515EC8005A3D8B /* mysql.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6D752E515EC8005A3D8B /* mysql.c */; };
-		42DA6DF92E515EC8005A3D8B /* http.request.parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DA22E515EC8005A3D8B /* http.request.parser.c */; };
 		42DA6DFA2E515EC8005A3D8B /* ini.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DA82E515EC8005A3D8B /* ini.c */; };
 		42DA6DFB2E515EC8005A3D8B /* sqlsvr.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6D782E515EC8005A3D8B /* sqlsvr.c */; };
-		42DA6DFC2E515EC8005A3D8B /* http.response.parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DA32E515EC8005A3D8B /* http.response.parser.c */; };
 		42DA6DFD2E515EC8005A3D8B /* xml.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DC22E515EC8005A3D8B /* xml.c */; };
 		42DA6DFF2E515EC8005A3D8B /* json.array.c in Sources */ = {isa = PBXBuildFile; fileRef = 42DA6DB12E515EC8005A3D8B /* json.array.c */; };
 		42DA6E022E515EC8005A3D8B /* dns.h in Headers */ = {isa = PBXBuildFile; fileRef = 42DA6D7A2E515EC8005A3D8B /* dns.h */; };
@@ -135,6 +135,11 @@
 		414B4B562990BEB600F4A7CB /* libcc.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libcc.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		41E3A5CB29FE40D800BEFBD6 /* libcc.widgets.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libcc.widgets.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		41E3A70A29FE47D900BEFBD6 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		425E1A1E2E83E73200864160 /* header.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = header.c; sourceTree = "<group>"; };
+		425E1A1F2E83E73200864160 /* request.parser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = request.parser.c; sourceTree = "<group>"; };
+		425E1A202E83E73200864160 /* response.parser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = response.parser.c; sourceTree = "<group>"; };
+		425E1A252E83E74000864160 /* OpenSSL.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = OpenSSL.c; sourceTree = "<group>"; };
+		425E1A272E83E74F00864160 /* tick.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = tick.c; sourceTree = "<group>"; };
 		426BE25E2E5DD17800CE8D50 /* libsqlite3.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.0.tbd; path = usr/lib/libsqlite3.0.tbd; sourceTree = SDKROOT; };
 		426BE2602E5DD18400CE8D50 /* libiodbc.2.1.18.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiodbc.2.1.18.tbd; path = usr/lib/libiodbc.2.1.18.tbd; sourceTree = SDKROOT; };
 		426BE2622E5DD18A00CE8D50 /* libiodbcinst.2.1.18.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiodbcinst.2.1.18.tbd; path = usr/lib/libiodbcinst.2.1.18.tbd; sourceTree = SDKROOT; };
@@ -164,7 +169,6 @@
 		42C816EC2E50EEE200359415 /* md4.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = md4.c; sourceTree = "<group>"; };
 		42C816ED2E50EEE200359415 /* md5.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = md5.c; sourceTree = "<group>"; };
 		42C816EE2E50EEE200359415 /* sha1.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sha1.c; sourceTree = "<group>"; };
-		42C816EF2E50EEE200359415 /* sha3.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sha3.c; sourceTree = "<group>"; };
 		42C816F02E50EEE200359415 /* sha256.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sha256.c; sourceTree = "<group>"; };
 		42C816F12E50EEE200359415 /* sha512.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sha512.c; sourceTree = "<group>"; };
 		42C816F22E50EEE200359415 /* xxtea.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = xxtea.c; sourceTree = "<group>"; };
@@ -222,10 +226,6 @@
 		42DA6D9E2E515EC8005A3D8B /* generic.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = generic.c; sourceTree = "<group>"; };
 		42DA6D9F2E515EC8005A3D8B /* generic.c.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = generic.c.h; sourceTree = "<group>"; };
 		42DA6DA02E515EC8005A3D8B /* gzip.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gzip.c; sourceTree = "<group>"; };
-		42DA6DA12E515EC8005A3D8B /* http.header.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = http.header.c; sourceTree = "<group>"; };
-		42DA6DA22E515EC8005A3D8B /* http.request.parser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = http.request.parser.c; sourceTree = "<group>"; };
-		42DA6DA32E515EC8005A3D8B /* http.response.parser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = http.response.parser.c; sourceTree = "<group>"; };
-		42DA6DA52E515EC8005A3D8B /* OpenSSL.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = OpenSSL.c; sourceTree = "<group>"; };
 		42DA6DA62E515EC8005A3D8B /* WS.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = WS.c; sourceTree = "<group>"; };
 		42DA6DA82E515EC8005A3D8B /* ini.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ini.c; sourceTree = "<group>"; };
 		42DA6DA92E515EC8005A3D8B /* ini.c.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ini.c.h; sourceTree = "<group>"; };
@@ -302,6 +302,16 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		425E1A212E83E73200864160 /* http */ = {
+			isa = PBXGroup;
+			children = (
+				425E1A1E2E83E73200864160 /* header.c */,
+				425E1A1F2E83E73200864160 /* request.parser.c */,
+				425E1A202E83E73200864160 /* response.parser.c */,
+			);
+			path = http;
+			sourceTree = "<group>";
+		};
 		42C816C22E50EEE200359415 /* atomic */ = {
 			isa = PBXGroup;
 			children = (
@@ -346,7 +356,6 @@
 				42C816EC2E50EEE200359415 /* md4.c */,
 				42C816ED2E50EEE200359415 /* md5.c */,
 				42C816EE2E50EEE200359415 /* sha1.c */,
-				42C816EF2E50EEE200359415 /* sha3.c */,
 				42C816F02E50EEE200359415 /* sha256.c */,
 				42C816F12E50EEE200359415 /* sha512.c */,
 				42C816F22E50EEE200359415 /* xxtea.c */,
@@ -448,6 +457,7 @@
 		42C817302E50EEE200359415 /* time */ = {
 			isa = PBXGroup;
 			children = (
+				425E1A272E83E74F00864160 /* tick.c */,
 				42C8172B2E50EEE200359415 /* unix */,
 				42C8172E2E50EEE200359415 /* strptime.c */,
 				42C8172F2E50EEE200359415 /* time.c */,
@@ -524,6 +534,7 @@
 		42DA6D902E515EC8005A3D8B /* event */ = {
 			isa = PBXGroup;
 			children = (
+				425E1A252E83E74000864160 /* OpenSSL.c */,
 				42DA6D812E515EC8005A3D8B /* unix */,
 				42DA6D882E515EC8005A3D8B /* buffer.c */,
 				42DA6D892E515EC8005A3D8B /* event.c */,
@@ -543,10 +554,6 @@
 				42DA6D9E2E515EC8005A3D8B /* generic.c */,
 				42DA6D9F2E515EC8005A3D8B /* generic.c.h */,
 				42DA6DA02E515EC8005A3D8B /* gzip.c */,
-				42DA6DA12E515EC8005A3D8B /* http.header.c */,
-				42DA6DA22E515EC8005A3D8B /* http.request.parser.c */,
-				42DA6DA32E515EC8005A3D8B /* http.response.parser.c */,
-				42DA6DA52E515EC8005A3D8B /* OpenSSL.c */,
 				42DA6DA62E515EC8005A3D8B /* WS.c */,
 			);
 			path = generic;
@@ -613,7 +620,7 @@
 		42DA6DC72E515EC8005A3D8B /* widgets */ = {
 			isa = PBXGroup;
 			children = (
-				42AC372B2E7D774C00B44396 /* main.c */,
+				425E1A212E83E73200864160 /* http */,
 				42DA6D792E515EC8005A3D8B /* db */,
 				42DA6D7D2E515EC8005A3D8B /* dns */,
 				42DA6D902E515EC8005A3D8B /* event */,
@@ -623,6 +630,7 @@
 				42DA6DC12E515EC8005A3D8B /* url_request */,
 				42DA6DC52E515EC8005A3D8B /* xml */,
 				42DA6DC62E515EC8005A3D8B /* widgets.c */,
+				42AC372B2E7D774C00B44396 /* main.c */,
 			);
 			path = widgets;
 			sourceTree = "<group>";
@@ -741,6 +749,7 @@
 				42C817A72E50EEE200359415 /* xxtea.c in Sources */,
 				42C817A82E50EEE200359415 /* md4.c in Sources */,
 				42C817AB2E50EEE200359415 /* socket.c in Sources */,
+				425E1A282E83E74F00864160 /* tick.c in Sources */,
 				42C817B12E50EEE200359415 /* sys_file.m in Sources */,
 				42C817B32E50EEE200359415 /* sys_thread.c in Sources */,
 				42C817B82E50EEE200359415 /* syslog.c in Sources */,
@@ -774,7 +783,6 @@
 				42C8180B2E50EEE200359415 /* strptime.c in Sources */,
 				42C8180C2E50EEE200359415 /* GBK.c in Sources */,
 				42C8180D2E50EEE200359415 /* ring.c in Sources */,
-				42C818112E50EEE200359415 /* sha3.c in Sources */,
 				42C818122E50EEE200359415 /* sha1.c in Sources */,
 				42C818162E50EEE200359415 /* rwlock.c in Sources */,
 				42C818172E50EEE200359415 /* hmap.c in Sources */,
@@ -805,6 +813,9 @@
 				42DA6DD02E515EC8005A3D8B /* buffer.c in Sources */,
 				42DA6DD12E515EC8005A3D8B /* generic.c in Sources */,
 				42DA6DD22E515EC8005A3D8B /* oci8.c in Sources */,
+				425E1A222E83E73200864160 /* header.c in Sources */,
+				425E1A232E83E73200864160 /* response.parser.c in Sources */,
+				425E1A242E83E73200864160 /* request.parser.c in Sources */,
 				42AC372C2E7D774C00B44396 /* main.c in Sources */,
 				42DA6DD32E515EC8005A3D8B /* url_request.c in Sources */,
 				42DA6DD72E515EC8005A3D8B /* json.parser.c in Sources */,
@@ -814,21 +825,18 @@
 				42DA6DDF2E515EC8005A3D8B /* select.c in Sources */,
 				42DA6DE02E515EC8005A3D8B /* url_request.c in Sources */,
 				42DA6DE42E515EC8005A3D8B /* ini.parser.c in Sources */,
-				42DA6DE62E515EC8005A3D8B /* OpenSSL.c in Sources */,
 				42DA6DE72E515EC8005A3D8B /* timeout.c in Sources */,
 				42DA6DE82E515EC8005A3D8B /* dns.c in Sources */,
 				42DA6DE92E515EC8005A3D8B /* event.c in Sources */,
 				42DA6DEA2E515EC8005A3D8B /* sqlite.c in Sources */,
-				42DA6DEF2E515EC8005A3D8B /* http.header.c in Sources */,
 				42DA6DF02E515EC8005A3D8B /* dnss.c in Sources */,
 				42DA6DF12E515EC8005A3D8B /* url_response.c in Sources */,
+				425E1A262E83E74000864160 /* OpenSSL.c in Sources */,
 				42DA6DF32E515EC8005A3D8B /* json.c in Sources */,
 				42DA6DF52E515EC8005A3D8B /* json.object.c in Sources */,
 				42DA6DF82E515EC8005A3D8B /* mysql.c in Sources */,
-				42DA6DF92E515EC8005A3D8B /* http.request.parser.c in Sources */,
 				42DA6DFA2E515EC8005A3D8B /* ini.c in Sources */,
 				42DA6DFB2E515EC8005A3D8B /* sqlsvr.c in Sources */,
-				42DA6DFC2E515EC8005A3D8B /* http.response.parser.c in Sources */,
 				42DA6DFD2E515EC8005A3D8B /* xml.c in Sources */,
 				42DA6DFF2E515EC8005A3D8B /* json.array.c in Sources */,
 			);

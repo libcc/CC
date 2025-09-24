@@ -146,7 +146,7 @@ _CC_API_PRIVATE(bool_t) _dns_response_callback(_cc_async_event_t *async, _cc_eve
         socklen_t sa_len = (socklen_t)sizeof(struct sockaddr_in);
         _cc_dns_header_t *header;
         _cc_dns_record_t **record;
-        _cc_dns_t *dns = (_cc_dns_t *)e->args;
+        _cc_dns_t *dns = (_cc_dns_t *)e->data;
         int16_t error_code = 0;
 
         printf("Receiving answer...\n");
@@ -351,7 +351,7 @@ int _cc_dns_lookup(_cc_dns_t *dns, const char_t *host, int type) {
             e->fd = dns_sock;
             e->callback = _dns_response_callback;
             e->timeout = 60000;
-            e->args = dns;
+            e->data = (uintptr_t)dns;
             if (!async->attach(async, e)) {
                 _cc_logger_error(_T("thread %d attach socket (%d) event fial."), _cc_get_thread_id(nullptr), dns_sock);
                 return _CC_DNS_ERR_SEE_ERRNO_;

@@ -94,17 +94,13 @@ typedef struct _cc_url_request _cc_url_request_t;
 
 /**/
 struct _cc_url_request {
-    byte_t status;
-    bool_t handshaking;
-
+    uint8_t status;
+    uint8_t handshake;
     _cc_url_t url;
     _cc_buf_t buffer;
-
+    _cc_io_buffer_t *io;
+    _gzip_t *gzip;
     _cc_http_response_header_t *response;
-
-    _cc_SSL_t* ssl;
-    _gzip_t* gzip;
-
     pvoid_t args;
 };
 
@@ -116,23 +112,21 @@ struct _cc_url_request {
  *
  * @return _cc_url_request_t
  */
-_CC_WIDGETS_API(_cc_url_request_t*) _cc_url_request(const tchar_t *url, pvoid_t args);
+_CC_API_WIDGETS(_cc_url_request_t*) _cc_url_request(const tchar_t *url, pvoid_t args);
 /**/
-_CC_WIDGETS_API(void) _cc_reset_url_request(_cc_url_request_t *request);
+_CC_API_WIDGETS(void) _cc_reset_url_request(_cc_url_request_t *request);
 /**/
-_CC_WIDGETS_API(void) _cc_free_url_request(_cc_url_request_t *request);
+_CC_API_WIDGETS(void) _cc_free_url_request(_cc_url_request_t *request);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_url_request_header(_cc_url_request_t *request, _cc_event_t *e);
+_CC_API_WIDGETS(bool_t) _cc_url_request_header(_cc_url_request_t *request, _cc_event_t *e);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_url_request_response_header(_cc_url_request_t *request, _cc_event_rbuf_t *r);
+_CC_API_WIDGETS(bool_t) _cc_url_request_response_header(_cc_url_request_t *request);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_url_request_response_body(_cc_url_request_t *request, _cc_event_rbuf_t *r);
+_CC_API_WIDGETS(bool_t) _cc_url_request_response_body(_cc_url_request_t *request);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_url_request_ssl_handshake(_cc_url_request_t *request, _cc_event_t *e);
+_CC_API_WIDGETS(bool_t) _cc_url_request_ssl_handshake(_cc_url_request_t *request, _cc_event_t *e);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_url_request_read(_cc_url_request_t *request, _cc_event_t *e);
-/**/
-_CC_WIDGETS_API(bool_t) _cc_url_request_sendbuf(_cc_url_request_t *request, _cc_event_t *e);
+_CC_API_WIDGETS(bool_t) _cc_url_request_ssl(_cc_OpenSSL_t *openSSL,_cc_url_request_t *request, _cc_event_t *e);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

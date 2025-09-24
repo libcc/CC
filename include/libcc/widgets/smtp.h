@@ -22,7 +22,7 @@
 #ifndef _C_CC_WIDGETS_LIBSMTP_H_INCLUDED_
 #define _C_CC_WIDGETS_LIBSMTP_H_INCLUDED_
 
-#include "dylib.h"
+#include "event.h"
 
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
@@ -32,95 +32,80 @@ extern "C" {
 #define _CC_LIBSMTP_VERSION_INFO  "libSTMP Release 1.0,* Copyright 2018-2019 libcc.cn@gmail.com"
 
 enum {
-    _CC_SMTP_TEXT = 0,
-    _CC_SMTP_HTML
+    _CC_SMTP_TEXT_ = 0,
+    _CC_SMTP_HTML_,
+    _CC_SMTP_LOGIN_MODE_PLAIN_,
+    _CC_SMTP_LOGIN_MODE_XOAUTH2
 };
 
 enum {
-    _CC_LIBSMTP_RESP_PENDING = 0,
-    _CC_LIBSMTP_RESP_CONNECTED,
-    _CC_LIBSMTP_RESP_EHLO,
-    _CC_LIBSMTP_RESP_AUTH_LOGIN,
-    _CC_LIBSMTP_RESP_LOGIN_USER,
-    _CC_LIBSMTP_RESP_LOGIN_PASSWORD,
-    _CC_LIBSMTP_RESP_LOGOUT,
-    _CC_LIBSMTP_RESP_FROM,
-    _CC_LIBSMTP_RESP_RCPT_TO,
-    _CC_LIBSMTP_RESP_DATA,
-    _CC_LIBSMTP_RESP_SEND_EMAIL,
+    _CC_LIBSMTP_RESP_PENDING_ = 0,
+    _CC_LIBSMTP_RESP_CONNECTED_,
+    _CC_LIBSMTP_RESP_EHLO_,
+    _CC_LIBSMTP_RESP_AUTH_LOGIN_,
+    _CC_LIBSMTP_RESP_LOGIN_USER_,
+    _CC_LIBSMTP_RESP_LOGIN_PASSWORD_,
+    _CC_LIBSMTP_RESP_FROM_,
+    _CC_LIBSMTP_RESP_RCPT_TO_,
+    _CC_LIBSMTP_RESP_DATA_,
+    _CC_LIBSMTP_RESP_SEND_EMAIL_,
+    _CC_LIBSMTP_RESP_LOGOUT_
 };
 
 enum {
-    _CC_LIBSMTP_CONNECTED = 0,
-    _CC_LIBSMTP_CONNECT_FAILED,
-    _CC_LIBSMTP_EHLO,
-    _CC_LIBSMTP_LOGINED,
-    _CC_LIBSMTP_LOGIN_FAILED,
-    _CC_LIBSMTP_LOGIN_USER_FAILED,
-    _CC_LIBSMTP_LOGIN_PASSWORD_FAILED,
-    _CC_LIBSMTP_LOGOUT,
-    _CC_LIBSMTP_LOGOUT_FAILED,
-    
-    _CC_LIBSMTP_SEND_EMAIL,
-    _CC_LIBSMTP_SEND_EMAIL_SUCCESS,
-    
-    _CC_LIBSMTP_MAIL_FROM_FAILED,
-    _CC_LIBSMTP_RCPT_TO_FAILED,
-    _CC_LIBSMTP_MAIL_DATA_FAILED,
-    _CC_LIBSMTP_SEND_EMAIL_FAILED
+    _CC_LIBSMTP_CONNECTED_ = 0,
+    _CC_LIBSMTP_EHLO_,
+    _CC_LIBSMTP_LOGINED_,
+    _CC_LIBSMTP_LOGOUT_,
+    _CC_LIBSMTP_SEND_EMAIL_,
+    _CC_LIBSMTP_SEND_EMAIL_SUCCESS_,
 };
 
 typedef struct _cc_smtp _cc_smtp_t;
-typedef struct _cc_smtp_resp _cc_smtp_resp_t;
 /**/
-typedef bool_t (*_cc_smtp_resp_callback_t)(_cc_smtp_t*, const byte_t *buf, uint32_t len);
+typedef bool_t (*_cc_smtp_response_callback_t)(_cc_smtp_t*, const byte_t *buf, uint32_t length);
 typedef bool_t (*_cc_smtp_callback_t)(_cc_smtp_t*, uint32_t which);
 
 /**/
-struct _cc_smtp_resp {
-    uint16_t flag;
-    pvoid_t data;
-    _cc_smtp_resp_callback_t callback;
-};
-    
-/**/
 struct _cc_smtp {
-    bool_t logined;
+    byte_t login_mode;
         
     byte_t cmode;
     byte_t smode;
-    byte_t mailtype;
+    byte_t mail_type;
+
+    uint16_t flag;
         
-    struct {
-        _cc_event_t *e;
-        _cc_async_event_t *async;
-    } ctrl;
-        
-    _cc_smtp_resp_t resp;
+    _cc_smtp_response_callback_t response_cb;
     _cc_smtp_callback_t callback;
-        
-    char_t *user;
-    char_t *password;
-    char_t *from;
-    char_t *to;
+
+    _cc_io_buffer_t *io;
+
+    _cc_sds_t user;
+    _cc_sds_t password;
+    _cc_sds_t from;
+    _cc_sds_t to;
 };
 
 /**/
-void libsmtp_set_error_info(const char_t *p, int32_t len);
+void libsmtp_setup(_cc_smtp_t *smtp, uint16_t flag, _cc_smtp_response_callback_t cb);
+bool_t libsmtp_command(_cc_smtp_t* smtp, const tchar_t *fmt, ...);
 /**/
-void libsmtp_setup(_cc_smtp_t *smtp, uint16_t flag, _cc_smtp_resp_callback_t fn, pvoid_t data);
+_CC_API_WIDGETS(_cc_smtp_t*) _cc_alloc_smtp(byte_t login_mode, byte_t mail_type, _cc_smtp_callback_t callback);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_smtp_connected(_cc_smtp_t *smtp);
+_CC_API_WIDGETS(void) _cc_free_smtp(_cc_smtp_t *smtp) ;
 /**/
-_CC_WIDGETS_API(bool_t) _cc_smtp_disconnected(_cc_smtp_t *smtp);
+_CC_API_WIDGETS(bool_t) _cc_smtp_connected(_cc_smtp_t *smtp);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_smtp_login(_cc_smtp_t *smtp, const char_t *user, const char_t *password);
+_CC_API_WIDGETS(bool_t) _cc_smtp_disconnected(_cc_smtp_t *smtp);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_smtp_logout(_cc_smtp_t *smtp);
+_CC_API_WIDGETS(bool_t) _cc_smtp_login(_cc_smtp_t *smtp, const char_t *user, const char_t *password);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_smtp_from_to(_cc_smtp_t *smtp, const char_t *from, const char_t *to);
+_CC_API_WIDGETS(bool_t) _cc_smtp_logout(_cc_smtp_t *smtp);
 /**/
-_CC_WIDGETS_API(bool_t) _cc_send_email(_cc_smtp_t *smtp, const char_t *from_name, const char_t *subject, const char_t *content);
+_CC_API_WIDGETS(bool_t) _cc_smtp_from_to(_cc_smtp_t *smtp, const char_t *from, const char_t *to);
+/**/
+_CC_API_WIDGETS(bool_t) _cc_send_email(_cc_smtp_t *smtp, const char_t *from_name, const char_t *subject, const char_t *content);
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
 }

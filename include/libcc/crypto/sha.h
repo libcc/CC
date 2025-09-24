@@ -66,27 +66,6 @@ typedef struct _cc_sha512 {
     bool_t is384;       /*!< 0 => SHA-512, else SHA-384 */
 } _cc_sha512_t;
 
-typedef size_t (sha3_absorb_fn)(void *vctx, const void *inp, size_t len);
-typedef int (sha3_final_fn)(byte_t *md, void *vctx);
-
-typedef struct prov_sha3_meth {
-    sha3_absorb_fn *absorb;
-    sha3_final_fn *final;
-} prov_sha3_meth_t;
-
-/**
- * @brief          SHA-3 context structure
- */
-typedef struct _cc_sha3 {
-    uint64_t A[5][5];
-    size_t block_size;          /* cached ctx->digest->block_size */
-    size_t md_size;             /* output length, variable in XOF */
-    size_t bufsz;               /* used bytes in below buffer */
-    byte_t buf[_CC_KECCAK1600_WIDTH_ / 8 - 32];
-    byte_t pad;
-    prov_sha3_meth_t meth;
-} _cc_sha3_t;
-
 /**
  * @brief          Initialize SHA-1 context
  *
@@ -234,32 +213,6 @@ _CC_API_PUBLIC(bool_t) _cc_sha512_fp(FILE *fp, tchar_t *output, bool_t is384);
  */
 _CC_API_PUBLIC(bool_t)
 _cc_sha512file(const tchar_t* filename, tchar_t* output, bool_t is384);
-
-/**
- * @brief          Initialize SHA-3 context
- *
- * @param ctx      SHA-3 context to be initialized
- * @param pad      pad
- * @param bitlen   bitlen
- */
-_CC_API_PUBLIC(void) _cc_sha3_init(_cc_sha3_t* ctx, byte_t pad, size_t bitlen);
-/**
- * @brief          SHA-3 process buffer
- *
- * @param ctx      SHA-3 context
- * @param input    buffer holding the  data
- * @param ilen     length of the input data
- */
-_CC_API_PUBLIC(void)
-_cc_sha3_update(_cc_sha3_t* ctx, const byte_t* input, size_t ilen);
-
-/**
- * @brief          SHA-3 final digest
- *
- * @param ctx      SHA-3 context
- * @param output   SHA-3 checksum result
- */
-_CC_API_PUBLIC(void) _cc_sha3_final(_cc_sha3_t* ctx, byte_t* output);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

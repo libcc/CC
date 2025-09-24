@@ -69,7 +69,7 @@ _CC_API_PUBLIC(_cc_socket_t) _cc_socket(uint32_t domain, uint32_t type, uint32_t
         return -1;
     }
 #endif
-    fd = socket(domain, (type & (~(_CC_SOCK_NONBLOCK_ | _CC_SOCK_CLOEXEC_))), protocol);
+    fd = (_cc_socket_t)socket(domain, (type & (~(_CC_SOCK_NONBLOCK_ | _CC_SOCK_CLOEXEC_))), protocol);
     if (fd < 0) {
         return -1;
     }
@@ -129,7 +129,7 @@ _CC_API_PUBLIC(_cc_socket_t) _cc_socket_accept(_cc_socket_t fd, _cc_sockaddr_t *
     int err = 0;
 
     for (;;) {
-        accept_fd = accept(fd, (struct sockaddr *)sa, sa_len);
+        accept_fd = (_cc_socket_t)accept(fd, (struct sockaddr *)sa, sa_len);
         if (_cc_unlikely(accept_fd == -1)) {
             err = _cc_last_errno();
             if (err == _CC_EINTR_) {

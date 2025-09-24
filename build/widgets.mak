@@ -1,15 +1,15 @@
-#make .dll target=widgets event=1 json=1 db=1 debug=1
+#make .dll target=widgets url_request=1 db=1 debug=1
 WIDGET_FILES = $(SRCROOT)/src/widgets
 TARGET_NAME = cc.$(target)
 
 ifdef all
-	event = 1
-	json = 1
 	db = 1
 	url_request = 1
 endif
 
-MACROS	+= _CC_WIDGETS_API_USE_DYNAMIC_=1
+MACROS	+= _CC_USE_OPENSSL_=1
+MACROS	+= _CC_API_WIDGETS_USE_DYNAMIC_=1
+
 LIBS	+= cc
 
 ifdef debug
@@ -21,26 +21,22 @@ ifeq ($(PLATFORM), osx)
 	LIBRARY_PATH	+= /opt/homebrew/lib
 endif
 
-ifdef shared
-	ifdef url_request
-		ifeq ($(PLATFORM), windows)
-			LIBS += ssl-3-x64 crypto-3-x64
-		else ifeq ($(PLATFORM), osx)
-			LIBS += ssl.3 crypto.3
-		else
-			LIBS += ssl crypto
-		endif
-	endif
-	ifdef db
-		LIBS += sqlite3 
-		ifeq ($(PLATFORM), windows)
-			LIBS += mysql
-		else
-			LIBS += mysqlclient
-		endif
-	endif
+ifeq ($(PLATFORM), windows)
+	LIBS += ssl-3-x64 crypto-3-x64
+else ifeq ($(PLATFORM), osx)
+	LIBS += ssl.3 crypto.3
+else
+	LIBS += ssl crypto
 endif
 
+ifdef db
+	LIBS += sqlite3 
+	ifeq ($(PLATFORM), windows)
+		LIBS += mysql
+	else
+		LIBS += mysqlclient
+	endif
+endif
 ifdef db
 ifeq ($(PLATFORM), osx)
 	MACROS			+= _CC_USE_UNIXODBC_=1
@@ -61,34 +57,30 @@ LOCAL_SRC_FILES += \
 					$(WIDGET_FILES)/db/mysql.o
 endif # --end db--
 
-ifdef event
 LOCAL_SRC_FILES += \
 					$(WIDGET_FILES)/event/event.o \
 					$(WIDGET_FILES)/event/loop.o \
 					$(WIDGET_FILES)/event/select.o \
 					$(WIDGET_FILES)/event/timeout.o \
+					$(WIDGET_FILES)/event/buffer.o \
 					$(WIDGET_FILES)/event/tcp.o \
-					$(WIDGET_FILES)/event/buffer.o
-
-ifneq ($(filter $(PLATFORM), ios osx freebsd unix),)
-LOCAL_SRC_FILES += $(WIDGET_FILES)/event/unix/sys_kqueue.o
-endif
+					$(WIDGET_FILES)/event/OpenSSL.o
 
 ifeq ($(PLATFORM), linux)
 LOCAL_SRC_FILES += $(WIDGET_FILES)/event/linux/sys_epoll.o
-LOCAL_SRC_FILES += $(WIDGET_FILES)/event/linux/sys_io_uring.o
 endif
 
 ifeq ($(PLATFORM), windows)
+#LOCAL_SRC_FILES += $(WIDGET_FILES)/event/linux/sys_io_uring.o
+else ifeq ($(PLATFORM), windows)
 LOCAL_SRC_FILES += \
 					$(WIDGET_FILES)/event/windows/sys_WSA.o \
 					$(WIDGET_FILES)/event/windows/sys_iocp.o \
 					$(WIDGET_FILES)/event/windows/sys_iocp_overlapped.o
+else
+LOCAL_SRC_FILES += $(WIDGET_FILES)/event/unix/sys_kqueue.o
 endif
 
-endif # --end event--
-
-ifdef json
 LOCAL_SRC_FILES += \
 					$(WIDGET_FILES)/json/json.o \
 					$(WIDGET_FILES)/json/json.array.o \
@@ -102,16 +94,14 @@ LOCAL_SRC_FILES += \
 LOCAL_SRC_FILES += \
 					$(WIDGET_FILES)/xml/xml.o \
 					$(WIDGET_FILES)/xml/xml.parser.o
-endif # --json db--
+
 
 ifdef url_request
-MACROS			+= _CC_USE_OPENSSL_=1
 LOCAL_SRC_FILES += \
 					$(WIDGET_FILES)/generic/gzip.o \
-					$(WIDGET_FILES)/generic/http.header.o \
-					$(WIDGET_FILES)/generic/http.request.parser.o \
-					$(WIDGET_FILES)/generic/http.response.parser.o \
-					$(WIDGET_FILES)/generic/OpenSSL.o \
+					$(WIDGET_FILES)/http/header.o \
+					$(WIDGET_FILES)/http/request.parser.o \
+					$(WIDGET_FILES)/http/response.parser.o \
 					$(WIDGET_FILES)/url_request/http/url_request.o \
 					$(WIDGET_FILES)/url_request/http/url_response.o
 endif # --end url_request --
@@ -119,7 +109,7 @@ endif # --end url_request --
 #LOCAL_SRC_FILES += \
 					$(WIDGET_FILES)/ip_locator/ip_locator.o
 
-#LOCAL_SRC_FILES += \
+LOCAL_SRC_FILES += \
 					$(WIDGET_FILES)/smtp/libsmtp.o \
 					$(WIDGET_FILES)/smtp/connected.o \
 					$(WIDGET_FILES)/smtp/login.o \
