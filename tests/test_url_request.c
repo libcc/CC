@@ -130,15 +130,17 @@ static bool_t _url_request_callback(_cc_async_event_t *async, _cc_event_t *e, co
         return false;
     } else if (_CC_ISSET_BIT(_CC_EVENT_TIMEOUT_, which)) {    
 #ifdef _CC_USE_OPENSSL_
-        if (request->handshake != _CC_SSL_HS_ESTABLISHED_) {
-			request->handshake = _SSL_do_handshake(request->io->ssl);
-			if (request->handshake == _CC_SSL_HS_ESTABLISHED_) {
-				e->timeout = 10000;
-				_CC_UNSET_BIT(_CC_EVENT_PENDING_, e->flags);
-				return url_request_header(request, e);
-			}
+        if (request->url.scheme.ident == _CC_SCHEME_HTTPS_ && request->handshake != _CC_SSL_HS_ESTABLISHED_) {
+            request->handshake = _SSL_do_handshake(request->io->ssl);
+            if (request->handshake == _CC_SSL_HS_ESTABLISHED_) {
+                e->timeout = 10000;
+                _CC_SET_BIT(_CC_EVENT_READABLE_, e->flags);
+                return url_request_header(request, e);
+            } else if (request->handshake == _CC_SSL_HS_ERROR_) {
+                return false;
+            }
             //wait SSL handshake complete
-			return true;
+            return true;
         }
 #endif
         if (request->response && request->response->keep_alive && request->status == _CC_HTTP_STATUS_ESTABLISHED_) {
@@ -148,14 +150,18 @@ static bool_t _url_request_callback(_cc_async_event_t *async, _cc_event_t *e, co
     } else if (_CC_ISSET_BIT(_CC_EVENT_CONNECT_, which)) {
         _cc_logger_info(_T("url_request connected,%s"), request->url.host);
     #ifdef _CC_USE_OPENSSL_
-		request->handshake = _SSL_do_handshake(request->io->ssl);
-		if (request->handshake != _CC_SSL_HS_ESTABLISHED_) {
-			//wait SSL handshake complete
-			e->timeout = 2000;
-			_CC_SET_BIT(_CC_EVENT_PENDING_, e->flags);
-			return true;
-		}
+        if (request->url.scheme.ident == _CC_SCHEME_HTTPS_) {
+            request->handshake = _SSL_do_handshake(request->io->ssl);
+            if (request->handshake != _CC_SSL_HS_ESTABLISHED_) {
+                //wait SSL handshake complete
+                e->timeout = 1000;
+                return true;
+            } else if (request->handshake == _CC_SSL_HS_ERROR_) {
+                return false;
+            }
+        }
     #endif
+        _CC_SET_BIT(_CC_EVENT_READABLE_, e->flags);
         return url_request_header(request, e);
     }
 
@@ -228,7 +234,7 @@ static bool_t url_request_connect(_cc_url_request_t *request) {
     /* if we can't terminate nicely, at least allow the socket to be reused*/
     _cc_set_socket_reuseaddr(fd);
 
-    e = _cc_event_alloc(async, _CC_EVENT_CONNECT_|_CC_EVENT_TIMEOUT_|_CC_EVENT_READABLE_);
+    e = _cc_event_alloc(async, _CC_EVENT_CONNECT_|_CC_EVENT_TIMEOUT_);
     if (e == nullptr) {
         return false;
     }
