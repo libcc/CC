@@ -180,6 +180,10 @@ _CC_API_PRIVATE(_cc_url_t *) _parser_url(_cc_url_t *u, const tchar_t *url) {
         u->scheme.value = _url_supported_schemes[0].value;
         u->port = _url_supported_schemes[0].port;
     }
+    /*not host*/
+    if (*cursor == _T('/')) {
+        goto URL_PRASE_PATH_PARAMS;
+    }
 
     /*Check if the user (and password) are specified. */
     if (_url_exists_user_password(cursor)) {
