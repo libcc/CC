@@ -148,7 +148,7 @@ _CC_API_PUBLIC(bool_t) _cc_buf_append(_cc_buf_t *ctx, const void *data, size_t l
     }
 
     expand_length = length + ctx->length;
-    if (ctx->limit <= 0x80000000 && expand_length > ctx->limit) {
+    if (ctx->limit <= 0x80000000 && expand_length >= ctx->limit) {
         if (_buf_expand(ctx, expand_length) == false) {
             return false;
         }
@@ -168,38 +168,43 @@ _CC_API_PUBLIC(bool_t) _cc_bufA_puts(_cc_buf_t *ctx, const char_t *s) {
 
 /**/
 _CC_API_PUBLIC(bool_t) _cc_bufA_appendvf(_cc_buf_t *ctx, const char_t *fmt, va_list arg) {
-    int32_t fmt_length, free_length;
+    size_t fmt_length, free_length;
+    float32_t factor = 0.75f;
 
+    free_length = _cc_buf_remaining(ctx);
+    if (free_length <= 0) {
+        _cc_assert(free_length == 0);
+        if (!_buf_expand(ctx, _cc_aligned_alloc_opt((size_t)(ctx->limit + ctx->limit * factor), 64))) {
+            return false;
+        }
+        free_length = _cc_buf_remaining(ctx);
+    }
     /* If the first attempt to append fails, resize the buffer appropriately
      * and try again */
-    while (1) {
-        free_length = (int32_t)_cc_buf_remaining(ctx);
-        /* Append the new formatted string */
-        /* fmt_length is the length of the string required*/
-        fmt_length = (int32_t)_vsnprintf((char_t *)(ctx->bytes + ctx->length), free_length, fmt, arg);
-
+_ABUF_TRY_AGAIN:
+    /* Append the new formatted string */
+    /* fmt_length is the length of the string required*/
+    fmt_length = _vsnprintf((char_t *)(ctx->bytes + ctx->length), free_length - sizeof(char_t), fmt, arg);
 #ifdef __CC_WINDOWS__
-        if (fmt_length == -1) {
-            fmt_length = _vsnprintf(nullptr, 0, fmt, arg);
-        }
-#endif
-        if (fmt_length > 0) {
-            /* SUCCESS */
-            if (fmt_length < free_length) {
-                break;
-            }
-
-            if (_buf_expand(ctx, (fmt_length + 32) * sizeof(char_t))) {
-                continue;
-            }
-        }
-        _cc_logger_error(_T("_cc_buf_t: length of formatted string changed"));
-
-        return false;
+    if (fmt_length == -1) {
+        fmt_length = _vsnprintf(nullptr, 0, fmt, arg);
     }
-
-    ctx->length += (fmt_length * sizeof(char_t));
-    return true;
+#endif
+    if (fmt_length > 0) {
+        /* SUCCESS */
+        if (fmt_length < free_length) {
+            ctx->length += fmt_length;
+            return true;
+        }
+        /* FAILURE */
+        fmt_length = _cc_aligned_alloc_opt((size_t)(ctx->length + fmt_length + ctx->limit * factor), 64);
+        if (_buf_expand(ctx, fmt_length)) {
+            free_length = _cc_buf_remaining(ctx);
+            goto _ABUF_TRY_AGAIN;
+        }
+    }
+    _cc_logger_error(_T("_cc_buf_t: length of formatted string changed"));
+    return false;
 }
 
 /* _cc_bufA_appendf() can be used when the there is no known
@@ -230,38 +235,45 @@ _CC_API_PUBLIC(bool_t) _cc_bufW_puts(_cc_buf_t *ctx, const wchar_t *s) {
 /**/
 _CC_API_PUBLIC(bool_t) _cc_bufW_appendvf(_cc_buf_t *ctx, const wchar_t *fmt, va_list arg) {
     size_t fmt_length, free_length;
+    float32_t factor = 0.75f;
+    
+    free_length = _cc_buf_remaining(ctx) / sizeof(wchar_t);
+    if (free_length <= 0) {
+        _cc_assert(free_length == 0);
+        if (!_buf_expand(ctx, _cc_aligned_alloc_opt((size_t)(ctx->limit + ctx->limit * factor) * sizeof(wchar_t), 64))) {
+            return false;
+        }
+        free_length = _cc_buf_remaining(ctx) / sizeof(wchar_t);
+    }
     
     /* If the first attempt to append fails, resize the buffer appropriately
      * and try again */
-    while (1) {
-        free_length = _cc_buf_remaining(ctx) / sizeof(wchar_t);
-        /* Append the new formatted string */
-        /* fmt_length is the length of the string required*/
-        fmt_length = _vsnwprintf((wchar_t *)(ctx->bytes + ctx->length), free_length - 1, fmt, arg);
+_WBUF_TRY_AGAIN:
+    /* Append the new formatted string */
+    /* fmt_length is the length of the string required*/
+    fmt_length = _vsnwprintf((wchar_t *)(ctx->bytes + ctx->length), free_length - sizeof(wchar_t), fmt, arg);
 
 #ifdef __CC_WINDOWS__
-        if (fmt_length == -1) {
-            fmt_length = _vsnwprintf(nullptr, 0, fmt, arg);
-        }
-#endif
-        if (fmt_length > 0) {
-            /* SUCCESS */
-            if (fmt_length < free_length) {
-                break;
-            }
-
-            if (_buf_expand(ctx, (fmt_length + 32) * sizeof(wchar_t))) {
-                continue;
-            }
-        }
-
-        va_end(arg);
-        _cc_logger_error(_T("_cc_buf_t: length of formatted string changed"));
-
-        return false;
+    if (fmt_length == -1) {
+        fmt_length = _vsnwprintf(nullptr, 0, fmt, arg);
     }
-    ctx->length += (fmt_length * sizeof(wchar_t));
-    return true;
+#endif
+    if (fmt_length > 0) {
+        /* SUCCESS */
+        if (fmt_length < free_length) {
+            ctx->length += (fmt_length * sizeof(wchar_t));
+            return true;
+        }
+        /* FAILURE */
+        fmt_length = _cc_aligned_alloc_opt((size_t)(ctx->length + fmt_length + ctx->limit * factor) * sizeof(wchar_t), 64);
+        if (_buf_expand(ctx, fmt_length)) {
+            free_length = _cc_buf_remaining(ctx) / sizeof(wchar_t);
+            goto _WBUF_TRY_AGAIN;
+        }
+    }
+
+    _cc_logger_error(_T("_cc_buf_t: length of formatted string changed"));
+    return false;
 }
 /* _cc_bufA_appendf() can be used when the there is no known
  * upper bound for the output string. */

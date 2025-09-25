@@ -64,7 +64,7 @@ _CC_API_PUBLIC(_gzip_t*) _gzip_alloc(byte_t m) {
     return gzip;
 }
 
-_CC_API_PUBLIC(bool_t) _gzip(_gzip_t *gzip, byte_t *source, size_t length, _cc_buf_t *buffer) {
+_CC_API_PUBLIC(bool_t) _gzip(_gzip_t *gzip, byte_t *source, size_t length, _cc_buf_t *buffer, bool_t finish) {
     int res = Z_STREAM_ERROR, flush;
     size_t have, left = 0;
     byte_t out[CHUNK_DEST];
@@ -80,7 +80,7 @@ _CC_API_PUBLIC(bool_t) _gzip(_gzip_t *gzip, byte_t *source, size_t length, _cc_b
         strm->avail_in = (have > CHUNK_SOURCE) ? CHUNK_SOURCE : (uInt)have;
 
         left += strm->avail_in;
-        flush = Z_NO_FLUSH;//(length == left) ? Z_FINISH : Z_NO_FLUSH;
+        flush = (finish && (length == left)) ? Z_FINISH : Z_NO_FLUSH;
         /* run inflate() on input until output buffer not full */
         do {
             strm->avail_out = CHUNK_DEST;
