@@ -16,11 +16,6 @@ ifdef debug
 	LIBS += cc.debug.malloc
 endif
 
-ifeq ($(PLATFORM), osx)
-	INCLUDE_PATH	+= /opt/homebrew/include
-	LIBRARY_PATH	+= /opt/homebrew/lib
-endif
-
 ifeq ($(PLATFORM), windows)
 	LIBS += ssl-3-x64 crypto-3-x64
 else ifeq ($(PLATFORM), osx)
@@ -37,6 +32,12 @@ ifdef db
 		LIBS += mysqlclient
 	endif
 endif
+
+ifeq ($(PLATFORM), osx)
+	INCLUDE_PATH	+= /opt/homebrew/include
+	LIBRARY_PATH	+= /opt/homebrew/lib
+endif
+
 ifdef db
 ifeq ($(PLATFORM), osx)
 	MACROS			+= _CC_USE_UNIXODBC_=1
@@ -68,16 +69,13 @@ LOCAL_SRC_FILES += \
 
 ifeq ($(PLATFORM), linux)
 LOCAL_SRC_FILES += $(WIDGET_FILES)/event/linux/sys_epoll.o
-endif
-
-ifeq ($(PLATFORM), windows)
 #LOCAL_SRC_FILES += $(WIDGET_FILES)/event/linux/sys_io_uring.o
 else ifeq ($(PLATFORM), windows)
 LOCAL_SRC_FILES += \
 					$(WIDGET_FILES)/event/windows/sys_WSA.o \
 					$(WIDGET_FILES)/event/windows/sys_iocp.o \
-					$(WIDGET_FILES)/event/windows/sys_iocp_overlapped.o
-else
+					$(WIDGET_FILES)/event/windows/sys_io_context.o
+else ifeq ($(PLATFORM), osx)
 LOCAL_SRC_FILES += $(WIDGET_FILES)/event/unix/sys_kqueue.o
 endif
 
