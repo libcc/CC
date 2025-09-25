@@ -30,11 +30,11 @@ extern "C" {
 /** @name Version Number
  *  Printable format: "%d.%d.%d", MAJOR, MINOR, MICRO
 */
-#define _CC_MAJOR_VERSION_    3
+#define _CC_MAJOR_VERSION_    2
 #define _CC_MINOR_VERSION_    0
 #define _CC_MICRO_VERSION_    0
 
-#define _CC_VERSION_ "3.0.0"
+#define _CC_VERSION_ "2.0.0"
 
 /**
  * This macro turns the version numbers into a numeric value.
