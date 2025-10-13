@@ -55,7 +55,7 @@ _CC_API_PUBLIC(bool_t) _cc_url_response_chunked(_cc_url_request_t *request, _cc_
     _cc_http_response_header_t *response = request->response;
 
     do {
-        if (response->download_length <= 0) {
+        if (response->content_length <= 0) {
             size_t offset = _url_chunked_hex_length((const char_t *)(io->r.bytes + offset_of_data), &length_of_data, io->r.off);
             if (offset < 0) {
                 return false;
@@ -67,17 +67,17 @@ _CC_API_PUBLIC(bool_t) _cc_url_response_chunked(_cc_url_request_t *request, _cc_
                 request->state = _CC_HTTP_STATUS_ESTABLISHED_;
                 break;
             }
-            response->download_length = length_of_data;
+            response->content_length = length_of_data;
             offset_of_data += offset;
             io->r.off -= (uint16_t)offset;
         }
 
-        if (response->download_length > io->r.off) {
+        if (response->content_length > io->r.off) {
             length_of_data = io->r.off;
-            response->download_length -= length_of_data;
+            response->content_length -= length_of_data;
         } else {
-            length_of_data = (size_t)response->download_length;
-            response->download_length = 0;
+            length_of_data = (size_t)response->content_length;
+            response->content_length = 0;
         }
 
         if (!_cc_url_response_body(request, io->r.bytes + offset_of_data, length_of_data)) {

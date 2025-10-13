@@ -1,4 +1,6 @@
 #include <libcc/url_request.h>
+#include <libcc/json.h>
+#include <libcc/timeout.h>
 
 static _cc_OpenSSL_t *openSSL = nullptr;
 static bool_t url_request(const tchar_t *url, pvoid_t args);
@@ -220,7 +222,7 @@ static bool_t url_request_connect(_cc_url_request_t *request) {
 
     e->fd = fd;
     e->callback = _url_request_callback;
-    e->timeout = 10000;
+    e->timeout = 1000;
     e->data = (uintptr_t)request;
 
     _cc_reset_url_request(request);
@@ -248,11 +250,9 @@ static bool_t url_request_connect(_cc_url_request_t *request) {
 }
 
 int main(int argc, char *const argv[]) {
-    openSSL = _SSL_init(true);
+    openSSL = _SSL_init(_CC_SSL_DEFAULT_PROTOCOLS_);
 
     _cc_alloc_async_event(0, nullptr);
-
-    _cc_logger_alert("_cc_event_t %ld",sizeof(_cc_event_t));
 
     url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);
     //url_request("https://api.trongrid.io/wallet/getnowblock", nullptr);

@@ -105,10 +105,14 @@ _CC_API_PUBLIC(bool_t) _cc_url_request_response_header(_cc_url_request_t *reques
     }
 
     response = request->response;
-    response->content_length = get_content_length(&response->headers);
     response->content_encoding = get_content_encoding(&response->headers);
     response->transfer_encoding = is_chunked_transfer(&response->headers);
     response->keep_alive = is_keep_alive(&response->headers);
+    if (response->transfer_encoding == _CC_URL_TRANSFER_ENCODING_IDENTITY_) {
+        response->content_length = get_content_length(&response->headers);
+    } else {
+        response->content_length = 0;
+    }
 
     _cc_buf_cleanup(&request->buffer);
 
