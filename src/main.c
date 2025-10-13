@@ -3,6 +3,10 @@
 #include <signal.h>
 #endif
 
+#ifdef _CC_USE_OPENSSL_
+#include <openssl/evp.h>
+#endif
+
 #ifdef _CC_USE_DEBUG_MALLOC_
 #include "malloc/debug.tracked.c.h"
 #endif
@@ -18,8 +22,11 @@ __attribute__((constructor)) void _libcc_attach(void) {
 #endif
     _cc_get_cpu_cores();
     _cc_install_socket();
-
+#ifdef _CC_USE_OPENSSL_
+	OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CONFIG, NULL);
+#endif
 	_cc_logger_debug("libcc attach");
+
 }
 
 __attribute__((destructor)) void _libcc_detach(void) {
