@@ -1,25 +1,16 @@
-/*
- * Copyright libcc.cn@gmail.com. and other libcc contributors.
- * All rights reserved.org>
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
-
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
-*/
 #include <libcc/crypto/sha.h>
 #include <libcc/string.h>
+#include <libcc/alloc.h>
+
+#ifdef _CC_USE_OPENSS_
+#include "openssl/openssl_sha.c"
+#else
+
+struct _cc_sha1 {
+    uint32_t total[2]; /*!< number of bytes processed  */
+    uint32_t state[5]; /*!< intermediate digest state  */
+    byte_t buffer[64]; /*!< data block being processed */
+};
 
 #if !defined(_CC_SHA1_ALT_)
 /*
@@ -46,7 +37,9 @@
 /*
  * SHA-1 context setup
  */
-_CC_API_PUBLIC(void) _cc_sha1_init(_cc_sha1_t *ctx) {
+_CC_API_PRIVATE(void) __sha1_init(_cc_hash_t *sha) {
+   struct _cc_sha1 *ctx = (struct _cc_sha1 *)sha->handle;
+    sha->method = _CC_SHA1_;
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
@@ -57,8 +50,15 @@ _CC_API_PUBLIC(void) _cc_sha1_init(_cc_sha1_t *ctx) {
     ctx->state[4] = 0xC3D2E1F0;
 }
 
+/*
+ * SHA-1 context free
+ */
+_CC_API_PRIVATE(void) __free_sha1(_cc_hash_t *ctx) {
+    _cc_free((struct _cc_sha1 *)ctx->handle);
+}
+
 #if !defined(_CC_SHA1_PROCESS_ALT)
-_CC_API_PUBLIC(void) _cc_sha1_process(_cc_sha1_t *ctx, const byte_t data[64]) {
+_CC_API_PRIVATE(void) __sha1_process(struct _cc_sha1 *ctx, const byte_t data[64]) {
     uint32_t temp, W[16], A, B, C, D, E;
 
     GET_UINT32_BE(W[0], data, 0);
@@ -214,40 +214,41 @@ _CC_API_PUBLIC(void) _cc_sha1_process(_cc_sha1_t *ctx, const byte_t data[64]) {
 /*
  * SHA-1 process buffer
  */
-_CC_API_PUBLIC(void) _cc_sha1_update(_cc_sha1_t *ctx, const byte_t *input, size_t ilen) {
+_CC_API_PRIVATE(void) __sha1_update(_cc_hash_t *sha, const byte_t *input, size_t length) {
+    struct _cc_sha1 *ctx = (struct _cc_sha1 *)sha->handle;
     size_t fill;
     uint32_t left;
 
-    if (ilen == 0) {
+    if (length == 0) {
         return;
     }
 
     left = ctx->total[0] & 0x3F;
     fill = 64 - left;
 
-    ctx->total[0] += (uint32_t)ilen;
+    ctx->total[0] += (uint32_t)length;
     ctx->total[0] &= 0xFFFFFFFF;
 
-    if (ctx->total[0] < (uint32_t)ilen) {
+    if (ctx->total[0] < (uint32_t)length) {
         ctx->total[1]++;
     }
 
-    if (left && ilen >= fill) {
+    if (left && length >= fill) {
         memcpy((void *)(ctx->buffer + left), input, fill);
-        _cc_sha1_process(ctx, ctx->buffer);
+        __sha1_process(ctx, ctx->buffer);
         input += fill;
-        ilen -= fill;
+        length -= fill;
         left = 0;
     }
 
-    while (ilen >= 64) {
-        _cc_sha1_process(ctx, input);
+    while (length >= 64) {
+        __sha1_process(ctx, input);
         input += 64;
-        ilen -= 64;
+        length -= 64;
     }
 
-    if (ilen > 0) {
-        memcpy((void *)(ctx->buffer + left), input, ilen);
+    if (length > 0) {
+        memcpy((void *)(ctx->buffer + left), input, length);
     }
 }
 
@@ -258,7 +259,8 @@ static const byte_t sha1_padding[64] = {0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 /*
  * SHA-1 final digest
  */
-_CC_API_PUBLIC(void) _cc_sha1_final(_cc_sha1_t *ctx, byte_t *output) {
+_CC_API_PRIVATE(void) __sha1_final(_cc_hash_t *sha, byte_t *digest, int32_t *digest_length) {
+    struct _cc_sha1 *ctx = (struct _cc_sha1 *)sha->handle;
     uint32_t last, padn;
     uint32_t high, low;
     byte_t msglen[8];
@@ -272,17 +274,33 @@ _CC_API_PUBLIC(void) _cc_sha1_final(_cc_sha1_t *ctx, byte_t *output) {
     last = ctx->total[0] & 0x3F;
     padn = (last < 56) ? (56 - last) : (120 - last);
 
-    _cc_sha1_update(ctx, sha1_padding, padn);
-    _cc_sha1_update(ctx, msglen, 8);
+    __sha1_update(sha, sha1_padding, padn);
+    __sha1_update(sha, msglen, 8);
 
-    PUT_UINT32_BE(ctx->state[0], output, 0);
-    PUT_UINT32_BE(ctx->state[1], output, 4);
-    PUT_UINT32_BE(ctx->state[2], output, 8);
-    PUT_UINT32_BE(ctx->state[3], output, 12);
-    PUT_UINT32_BE(ctx->state[4], output, 16);
+    PUT_UINT32_BE(ctx->state[0], digest, 0);
+    PUT_UINT32_BE(ctx->state[1], digest, 4);
+    PUT_UINT32_BE(ctx->state[2], digest, 8);
+    PUT_UINT32_BE(ctx->state[3], digest, 12);
+    PUT_UINT32_BE(ctx->state[4], digest, 16);
+
+    if (digest_length) {
+        *digest_length = _CC_SHA1_DIGEST_LENGTH_;
+    }
+}
+#endif /* !CC_SHA1_ALT */
+
+_CC_API_PUBLIC(void) _cc_sha1_init(_cc_hash_t *sha) {
+    sha->handle = (uintptr_t)_cc_malloc(sizeof(struct _cc_sha1));
+    sha->init = __sha1_init;
+    sha->update = __sha1_update;
+    sha->final = __sha1_final;
+    sha->free = __free_sha1;
+
+    __sha1_init(sha);
 }
 
-#endif /* !CC_SHA1_ALT */
+#endif /* _CC_USE_OPENSS_ */
+
 /*
     Digests a file.
  */
@@ -291,7 +309,7 @@ _CC_API_PUBLIC(bool_t) _cc_sha1_fp(FILE *fp, tchar_t *output) {
     byte_t buf[1024 * 16];
     size_t i;
     long seek_cur = 0;
-    _cc_sha1_t c;
+    _cc_hash_t c;
 
     if (fp == nullptr) {
         return false;
@@ -303,10 +321,11 @@ _CC_API_PUBLIC(bool_t) _cc_sha1_fp(FILE *fp, tchar_t *output) {
     fseek(fp, 0, SEEK_SET);
 
     while ((i = fread(buf, sizeof(byte_t), _cc_countof(buf), fp))) {
-        _cc_sha1_update(&c, buf, i);
+        c.update(&c, buf, i);
     }
 
-    _cc_sha1_final(&c, &(results[0]));
+    c.final(&c, results, nullptr);
+    c.free(&c);
 
     fseek(fp, seek_cur, SEEK_SET);
 
@@ -331,13 +350,15 @@ _CC_API_PUBLIC(bool_t) _cc_sha1file(const tchar_t *filename, tchar_t *output) {
 /*
  * output = SHA-1( input buffer )
  */
-_CC_API_PUBLIC(void) _cc_sha1(const byte_t *input, size_t ilen, tchar_t *output) {
-    _cc_sha1_t ctx;
+_CC_API_PUBLIC(void) _cc_sha1(const byte_t *input, size_t length, tchar_t *output) {
+    _cc_hash_t c;
     byte_t results[_CC_SHA1_DIGEST_LENGTH_];
 
-    _cc_sha1_init(&ctx);
-    _cc_sha1_update(&ctx, input, ilen);
-    _cc_sha1_final(&ctx, results);
+    _cc_sha1_init(&c);
+
+    c.update(&c, input, length);
+    c.final(&c, results, nullptr);
+    c.free(&c);
 
     _cc_bytes2hex(results, _CC_SHA1_DIGEST_LENGTH_, output, _CC_SHA1_DIGEST_LENGTH_ * 2);
 }

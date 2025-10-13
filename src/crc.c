@@ -1,23 +1,3 @@
-/*
- * Copyright libcc.cn@gmail.com. and other libcc contributors.
- * All rights reserved.org>
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
-
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
-*/
 #include <libcc/crc.h>
 #include <libcc/string.h>
 #include <stddef.h>
@@ -393,7 +373,7 @@ _CC_API_PUBLIC(uint64_t) _cc_crc64(const byte_t *s, size_t len) {
 }
 
 /**/
-_CC_API_PUBLIC(uint32_t) _cc_hash(const byte_t *key, size_t len) {
+_CC_API_PUBLIC(uint32_t) _cc_hash_code(const byte_t *key, size_t len) {
     const unsigned int seed = 131;
     uint32_t hash = 0;
     size_t i = 0;

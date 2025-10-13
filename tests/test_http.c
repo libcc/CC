@@ -1,9 +1,9 @@
 #include <libcc/dirent.h>
-#include <libcc/widgets/widgets.h>
+#include <libcc/event.h>
 
 
 typedef struct _http {
-    uint8_t status;
+    uint8_t state;
     size_t payload;
     _cc_io_buffer_t *io;
     _cc_http_request_header_t *request;
@@ -67,7 +67,7 @@ static bool_t onAccept(_cc_async_event_t *async, _cc_event_t *e) {
     _cc_set_socket_nonblock(fd, 1);
 
     http = (_http_t*)_cc_malloc(sizeof(_http_t));
-    http->status = _CC_HTTP_STATUS_HEADER_;
+    http->state = _CC_HTTP_STATUS_HEADER_;
     http->request = nullptr;
     http->payload = 0;
     http->io = _cc_alloc_io_buffer(_CC_IO_BUFFER_SIZE_);
@@ -173,21 +173,21 @@ static bool_t onRead(_cc_async_event_t *async, _cc_event_t *e) {
         return true;
     }
 
-    if (http->status == _CC_HTTP_STATUS_ESTABLISHED_) {
+    if (http->state == _CC_HTTP_STATUS_ESTABLISHED_) {
         return false;
-    } else  if (http->status == _CC_HTTP_STATUS_HEADER_) {
-        http->status = _cc_http_header_parser((_cc_http_header_fn_t)_cc_http_alloc_request_header, (pvoid_t *)&http->request, io->r.bytes, &io->r.off);
+    } else  if (http->state == _CC_HTTP_STATUS_HEADER_) {
+        http->state = _cc_http_header_parser((_cc_http_header_fn_t)_cc_http_alloc_request_header, (pvoid_t *)&http->request, io->r.bytes, &io->r.off);
         /**/
-        if (http->status == _CC_HTTP_STATUS_HEADER_) {
+        if (http->state == _CC_HTTP_STATUS_HEADER_) {
             return true;
-        } else if (http->status != _CC_HTTP_STATUS_PAYLOAD_) {
+        } else if (http->state != _CC_HTTP_STATUS_PAYLOAD_) {
             bad_request(e, io);
             return false;
         }
 
         http->payload = _get_content_length(&http->request->headers);
         if (http->payload == 0) {
-            http->status = _CC_HTTP_STATUS_ESTABLISHED_;
+            http->state = _CC_HTTP_STATUS_ESTABLISHED_;
         }
 
         if (http->buffer.bytes == nullptr && http->payload > 0) {
@@ -195,15 +195,15 @@ static bool_t onRead(_cc_async_event_t *async, _cc_event_t *e) {
         }
     } 
 
-    if (http->status == _CC_HTTP_STATUS_PAYLOAD_) {
+    if (http->state == _CC_HTTP_STATUS_PAYLOAD_) {
         _cc_buf_append(&http->buffer, io->r.bytes, io->r.off);
         if (http->buffer.length >= http->payload) {
-            http->status = _CC_HTTP_STATUS_ESTABLISHED_;
+            http->state = _CC_HTTP_STATUS_ESTABLISHED_;
         }
         io->r.off = 0;
     }
 
-    if (http->status == _CC_HTTP_STATUS_ESTABLISHED_) {
+    if (http->state == _CC_HTTP_STATUS_ESTABLISHED_) {
         if (http->request->script[0] == '/' && http->request->script[1] == 0) {
             request_ok(e, io);
         } else {
@@ -217,7 +217,7 @@ static bool_t onRead(_cc_async_event_t *async, _cc_event_t *e) {
             }
         }
 
-        http->status = _CC_HTTP_STATUS_HEADER_;
+        http->state = _CC_HTTP_STATUS_HEADER_;
         _cc_logger_info("http:%s %s %s",http->request->method,http->request->script,http->request->protocol);
 
         if (_tcsicmp(http->request->method, _T("POST")) == 0) {

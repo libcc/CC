@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include <libcc/generic.h>
+#include <libcc/platform.h>
 
 #ifdef _CC_HAVE_SYSCONF_
 #include <unistd.h>

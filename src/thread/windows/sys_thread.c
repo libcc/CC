@@ -1,23 +1,3 @@
-/*
- * Copyright libcc.cn@gmail.com. and other libcc contributors.
- * All rights reserved.org>
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
-
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
-*/
 #include <libcc/alloc.h>
 #include <libcc/loadso.h>
 #include "sys_thread.c.h"
@@ -94,7 +74,7 @@ static unsigned __stdcall MINGW32_FORCEALIGN RunThreadViaBeginThreadEx(LPVOID ar
 #define STACK_SIZE_PARAM_IS_A_RESERVATION 0x00010000
 #endif
 /**/
-_CC_API_PUBLIC(bool_t) _cc_create_sys_thread(_cc_thread_t* self) {
+bool_t _cc_create_sys_thread(_cc_thread_t* self) {
     int flags = self->stack_size ? STACK_SIZE_PARAM_IS_A_RESERVATION : 0;
     DWORD thread_id = 0;
     // self->stack_size == 0 means "system default", same as win32 expects
@@ -134,7 +114,7 @@ static LONG NTAPI EmptyVectoredExceptionHandler(EXCEPTION_POINTERS *info) {
     }
 }
 /**/
-_CC_API_PUBLIC(void) _cc_setup_sys_thread(const tchar_t* name) {
+void _cc_setup_sys_thread(const tchar_t* name) {
 /* Visual Studio 2015, MSVC++ 14.0*/
 //#if (_CC_MSVC_ >= 1900) || (defined(__GNUC__) && defined(__i386__))
     PVOID exceptionHandlerHandle;
@@ -184,12 +164,12 @@ _CC_API_PUBLIC(void) _cc_setup_sys_thread(const tchar_t* name) {
 }
 
 /**/
-_CC_API_PUBLIC(size_t) _cc_get_current_sys_thread_id(void) {
+size_t _cc_get_current_sys_thread_id(void) {
     return ((size_t)GetCurrentThreadId());
 }
 
 /**/
-_CC_API_PUBLIC(bool_t) _cc_set_sys_thread_priority(_CC_THREAD_PRIORITY_EMUM_ priority) {
+bool_t _cc_set_sys_thread_priority(_CC_THREAD_PRIORITY_EMUM_ priority) {
     int value;
 
     if (priority == _CC_THREAD_PRIORITY_LOW_) {
@@ -207,7 +187,7 @@ _CC_API_PUBLIC(bool_t) _cc_set_sys_thread_priority(_CC_THREAD_PRIORITY_EMUM_ pri
 }
 
 /**/
-_CC_API_PUBLIC(size_t) _cc_get_sys_thread_id(_cc_thread_t* self) {
+size_t _cc_get_sys_thread_id(_cc_thread_t* self) {
     size_t id;
 
     if (self) {
@@ -219,7 +199,7 @@ _CC_API_PUBLIC(size_t) _cc_get_sys_thread_id(_cc_thread_t* self) {
 }
 
 /**/
-_CC_API_PUBLIC(void) _cc_wait_sys_thread(_cc_thread_t* self) {
+void _cc_wait_sys_thread(_cc_thread_t* self) {
     if (self->handle != nullptr) {
         WaitForSingleObject(self->handle, INFINITE);
         CloseHandle(self->handle);
@@ -228,7 +208,7 @@ _CC_API_PUBLIC(void) _cc_wait_sys_thread(_cc_thread_t* self) {
     }
 }
 
-_CC_API_PUBLIC(void) _cc_detach_sys_thread(_cc_thread_t* self) {
+void _cc_detach_sys_thread(_cc_thread_t* self) {
     CloseHandle(self->handle);
     self->handle = nullptr;
 }

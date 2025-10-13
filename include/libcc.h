@@ -1,23 +1,3 @@
-/*
- * Copyright libcc.cn@gmail.com. and other libcc contributors.
- * All rights reserved.org>
- * 
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- * 
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
-
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
-*/
 #ifndef _C_CC_LIBCC_H_INCLUDED_
 #define _C_CC_LIBCC_H_INCLUDED_
 
@@ -29,7 +9,7 @@
 #include "libcc/atomic.h"
 #include "libcc/crc.h"
 #include "libcc/ring.h"
-#include "libcc/socket/socket.h"
+#include "libcc/socket.h"
 #include "libcc/crypto/crypto.h"
 #include "libcc/crypto/xxtea.h"
 #include "libcc/math.h"
@@ -43,6 +23,9 @@
 #include "libcc/rbtree.h"
 #include "libcc/sds.h"
 #include "libcc/queue.h"
+#include <libcc/timeout.h>
+#include <libcc/json.h>
+#include <libcc/WS.h>
 #include "libcc/version.h"
 
 

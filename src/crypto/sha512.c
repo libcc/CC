@@ -1,25 +1,18 @@
-/*
- * Copyright libcc.cn@gmail.com. and other libcc contributors.
- * All rights reserved.org>
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
-
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
-*/
 #include <libcc/crypto/sha.h>
 #include <libcc/string.h>
+#include <libcc/alloc.h>
+
+#ifdef _CC_USE_OPENSSL_
+#include "openssl/openssl_sha512.c"
+#else
+/**
+ * @brief          SHA-256 context structure
+ */
+struct _cc_sha512 {
+    uint64_t total[2];  /*!< number of bytes processed  */
+    uint64_t state[8];  /*!< intermediate digest state  */
+    byte_t buffer[128]; /*!< data block being processed */
+};
 
 #if !defined(_CC_SHA512_ALT_)
 
@@ -57,35 +50,50 @@
 /*
  * SHA-512 context setup
  */
-_CC_API_PUBLIC(void) _cc_sha512_init(_cc_sha512_t *ctx, bool_t is384) {
+_CC_API_PRIVATE(void) __sha512_init(_cc_hash_t *sha) {
+    struct _cc_sha512 *ctx = (struct _cc_sha512*)sha->handle;
+    sha->method = _CC_SHA512_;
+
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
-    if (is384 == false) {
-        /* SHA-512 */
-        ctx->state[0] = UL64(0x6A09E667F3BCC908);
-        ctx->state[1] = UL64(0xBB67AE8584CAA73B);
-        ctx->state[2] = UL64(0x3C6EF372FE94F82B);
-        ctx->state[3] = UL64(0xA54FF53A5F1D36F1);
-        ctx->state[4] = UL64(0x510E527FADE682D1);
-        ctx->state[5] = UL64(0x9B05688C2B3E6C1F);
-        ctx->state[6] = UL64(0x1F83D9ABFB41BD6B);
-        ctx->state[7] = UL64(0x5BE0CD19137E2179);
-    } else {
-        /* SHA-384 */
-        ctx->state[0] = UL64(0xCBBB9D5DC1059ED8);
-        ctx->state[1] = UL64(0x629A292A367CD507);
-        ctx->state[2] = UL64(0x9159015A3070DD17);
-        ctx->state[3] = UL64(0x152FECD8F70E5939);
-        ctx->state[4] = UL64(0x67332667FFC00B31);
-        ctx->state[5] = UL64(0x8EB44A8768581511);
-        ctx->state[6] = UL64(0xDB0C2E0D64F98FA7);
-        ctx->state[7] = UL64(0x47B5481DBEFA4FA4);
-    }
+    /* SHA-512 */
+    ctx->state[0] = UL64(0x6A09E667F3BCC908);
+    ctx->state[1] = UL64(0xBB67AE8584CAA73B);
+    ctx->state[2] = UL64(0x3C6EF372FE94F82B);
+    ctx->state[3] = UL64(0xA54FF53A5F1D36F1);
+    ctx->state[4] = UL64(0x510E527FADE682D1);
+    ctx->state[5] = UL64(0x9B05688C2B3E6C1F);
+    ctx->state[6] = UL64(0x1F83D9ABFB41BD6B);
+    ctx->state[7] = UL64(0x5BE0CD19137E2179);
+}/*
+ * SHA-512 context setup
+ */
+_CC_API_PRIVATE(void) __sha384_init(_cc_hash_t *sha) {
+    struct _cc_sha512 *ctx = (struct _cc_sha512*)sha->handle;
+    sha->method = _CC_SHA384_;
+    
+    ctx->total[0] = 0;
+    ctx->total[1] = 0;
 
-    ctx->is384 = is384;
+    /* SHA-384 */
+    ctx->state[0] = UL64(0xCBBB9D5DC1059ED8);
+    ctx->state[1] = UL64(0x629A292A367CD507);
+    ctx->state[2] = UL64(0x9159015A3070DD17);
+    ctx->state[3] = UL64(0x152FECD8F70E5939);
+    ctx->state[4] = UL64(0x67332667FFC00B31);
+    ctx->state[5] = UL64(0x8EB44A8768581511);
+    ctx->state[6] = UL64(0xDB0C2E0D64F98FA7);
+    ctx->state[7] = UL64(0x47B5481DBEFA4FA4);
 }
-
+/*
+ * SHA-512 context free
+ */
+_CC_API_PRIVATE(void) __free_sha512(_cc_hash_t *ctx) {
+    if (ctx->handle) {
+        _cc_free((struct _cc_sha512 *)ctx->handle);
+    }
+}
 #if !defined(_CC_SHA512_PROCESS_ALT)
 
 /*
@@ -113,7 +121,7 @@ static const uint64_t K[80] = {
     UL64(0x28DB77F523047D84), UL64(0x32CAAB7B40C72493), UL64(0x3C9EBE0A15C9BEBC), UL64(0x431D67C49C100D4C),
     UL64(0x4CC5D4BECB3E42B6), UL64(0x597F299CFC657E2A), UL64(0x5FCB6FAB3AD6FAEC), UL64(0x6C44198C4A475817)};
 
-_CC_API_PUBLIC(void) _cc_sha512_process(_cc_sha512_t *ctx, const byte_t data[128]) {
+_CC_API_PRIVATE(void) __sha512_process(struct _cc_sha512 *ctx, const byte_t data[128]) {
     int i;
     uint64_t temp1, temp2, W[80];
     uint64_t A, B, C, D, E, F, G, H;
@@ -189,39 +197,40 @@ _CC_API_PUBLIC(void) _cc_sha512_process(_cc_sha512_t *ctx, const byte_t data[128
 /*
  * SHA-512 process buffer
  */
-_CC_API_PUBLIC(void) _cc_sha512_update(_cc_sha512_t *ctx, const byte_t *input, size_t ilen) {
+_CC_API_PRIVATE(void) __sha512_update(_cc_hash_t *sha, const byte_t *input, size_t length) {
+    struct _cc_sha512 *ctx = (struct _cc_sha512 *)sha->handle;
     size_t fill;
     unsigned int left;
 
-    if (_cc_unlikely(ilen == 0)) {
+    if (length == 0) {
         return;
     }
 
     left = (unsigned int)(ctx->total[0] & 0x7F);
     fill = 128 - left;
 
-    ctx->total[0] += (uint64_t)ilen;
+    ctx->total[0] += (uint64_t)length;
 
-    if (ctx->total[0] < (uint64_t)ilen) {
+    if (ctx->total[0] < (uint64_t)length) {
         ctx->total[1]++;
     }
 
-    if (left && ilen >= fill) {
+    if (left && length >= fill) {
         memcpy((void *)(ctx->buffer + left), input, fill);
-        _cc_sha512_process(ctx, ctx->buffer);
+        __sha512_process(ctx, ctx->buffer);
         input += fill;
-        ilen -= fill;
+        length -= fill;
         left = 0;
     }
 
-    while (ilen >= 128) {
-        _cc_sha512_process(ctx, input);
+    while (length >= 128) {
+        __sha512_process(ctx, input);
         input += 128;
-        ilen -= 128;
+        length -= 128;
     }
 
-    if (ilen > 0) {
-        memcpy((void *)(ctx->buffer + left), input, ilen);
+    if (length > 0) {
+        memcpy((void *)(ctx->buffer + left), input, length);
     }
 }
 
@@ -234,7 +243,8 @@ static const byte_t sha512_padding[128] = {
 /*
  * SHA-512 final digest
  */
-_CC_API_PUBLIC(void) _cc_sha512_final(_cc_sha512_t *ctx, byte_t *output) {
+_CC_API_PRIVATE(void) __sha512_final(_cc_hash_t *sha, byte_t *digest, int32_t *digest_length) {
+    struct _cc_sha512 *ctx = (struct _cc_sha512 *)sha->handle;
     size_t last, padn;
     uint64_t high, low;
     byte_t msglen[16];
@@ -248,35 +258,65 @@ _CC_API_PUBLIC(void) _cc_sha512_final(_cc_sha512_t *ctx, byte_t *output) {
     last = (size_t)(ctx->total[0] & 0x7F);
     padn = (last < 112) ? (112 - last) : (240 - last);
 
-    _cc_sha512_update(ctx, sha512_padding, padn);
-    _cc_sha512_update(ctx, msglen, 16);
+    __sha512_update(sha, sha512_padding, padn);
+    __sha512_update(sha, msglen, 16);
 
-    PUT_UINT64_BE(ctx->state[0], output, 0);
-    PUT_UINT64_BE(ctx->state[1], output, 8);
-    PUT_UINT64_BE(ctx->state[2], output, 16);
-    PUT_UINT64_BE(ctx->state[3], output, 24);
-    PUT_UINT64_BE(ctx->state[4], output, 32);
-    PUT_UINT64_BE(ctx->state[5], output, 40);
+    PUT_UINT64_BE(ctx->state[0], digest, 0);
+    PUT_UINT64_BE(ctx->state[1], digest, 8);
+    PUT_UINT64_BE(ctx->state[2], digest, 16);
+    PUT_UINT64_BE(ctx->state[3], digest, 24);
+    PUT_UINT64_BE(ctx->state[4], digest, 32);
+    PUT_UINT64_BE(ctx->state[5], digest, 40);
 
-    if (ctx->is384 == 0) {
-        PUT_UINT64_BE(ctx->state[6], output, 48);
-        PUT_UINT64_BE(ctx->state[7], output, 56);
+    if (sha->method == _CC_SHA512_) {
+        PUT_UINT64_BE(ctx->state[6], digest, 48);
+        PUT_UINT64_BE(ctx->state[7], digest, 56);
+    }
+    if (digest_length) {
+        *digest_length = sha->method == _CC_SHA512_ ? _CC_SHA512_DIGEST_LENGTH_ : _CC_SHA384_DIGEST_LENGTH_;
     }
 }
 
 #endif /* !CC_SHA512_ALT */
+_CC_API_PUBLIC(void) _cc_sha384_init(_cc_hash_t *sha) {
+    sha->handle = (uintptr_t)_cc_malloc(sizeof(struct _cc_sha512));
+    sha->init = __sha384_init;
+    sha->update = __sha512_update;
+    sha->final = __sha512_final;
+    sha->free = __free_sha512;
+
+    __sha384_init(sha);
+}
+
+_CC_API_PUBLIC(void) _cc_sha512_init(_cc_hash_t *sha) {
+    sha->handle = (uintptr_t)_cc_malloc(sizeof(struct _cc_sha512));
+    sha->method = _CC_SHA512_;
+    sha->init = __sha512_init;
+    sha->update = __sha512_update;
+    sha->final = __sha512_final;
+    sha->free = __free_sha512;
+
+    __sha512_init(sha);
+}
+#endif /* _CC_USE_OPENSSL_ */
 
 /*
  * output = SHA-512( input buffer )
  */
-_CC_API_PUBLIC(void) _cc_sha512(const byte_t *input, size_t ilen, tchar_t *output, bool_t is384) {
-    _cc_sha512_t ctx;
+_CC_API_PUBLIC(void) _cc_sha512(const byte_t *input, size_t length, tchar_t *output, bool_t is384) {
+    _cc_hash_t c;
     byte_t results[_CC_SHA512_DIGEST_LENGTH_];
-    int32_t digest_length = is384 ? _CC_SHA384_DIGEST_LENGTH_ : _CC_SHA512_DIGEST_LENGTH_;
+    int32_t digest_length = _CC_SHA512_DIGEST_LENGTH_;
 
-    _cc_sha512_init(&ctx, is384);
-    _cc_sha512_update(&ctx, input, ilen);
-    _cc_sha512_final(&ctx, results);
+    if (is384)  {
+        _cc_sha384_init(&c);
+    } else {
+        _cc_sha512_init(&c);
+    }
+
+    c.update(&c, input, length);
+    c.final(&c, results, &digest_length);
+    c.free(&c);
 
     _cc_bytes2hex(results, digest_length, output, digest_length * 2);
 }
@@ -289,23 +329,28 @@ _CC_API_PUBLIC(bool_t) _cc_sha512_fp(FILE *fp, tchar_t *output, bool_t is384) {
     byte_t buf[1024 * 16];
     size_t i;
     long seek_cur = 0;
-    _cc_sha512_t c;
-    size_t digest_length = is384 ? _CC_SHA384_DIGEST_LENGTH_ : _CC_SHA512_DIGEST_LENGTH_;
+    _cc_hash_t c;
+    int32_t digest_length = _CC_SHA512_DIGEST_LENGTH_;
 
     if (fp == nullptr) {
         return false;
     }
 
-    _cc_sha512_init(&c, is384);
+    if (is384)  {
+        _cc_sha384_init(&c);
+    } else {
+        _cc_sha512_init(&c);
+    }
 
     seek_cur = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
     while ((i = fread(buf, sizeof(byte_t), _cc_countof(buf), fp))) {
-        _cc_sha512_update(&c, buf, i);
+        c.update(&c, buf, i);
     }
 
-    _cc_sha512_final(&c, &(results[0]));
+    c.final(&c, results, &digest_length);
+    c.free(&c);
 
     fseek(fp, seek_cur, SEEK_SET);
 

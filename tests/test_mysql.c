@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libcc.h>
-#include <libcc/widgets/sql.h>
+#include <libcc/sql.h>
 
 #define MYSQL_DB "mysql://root:123654asd@127.0.0.1:3306/test"
 

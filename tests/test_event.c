@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <libcc/widgets/event.h>
-#include <libcc/widgets/timeout.h>
+#include <libcc/thread.h>
+#include <libcc/event.h>
+#include <libcc/timeout.h>
 static int c = 0;
 static uint16_t port = 3000;
 

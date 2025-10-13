@@ -1,27 +1,7 @@
-/*
- * Copyright libcc.cn@gmail.com. and other libcc contributors.
- * All rights reserved.org>
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
-
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
-*/
 #ifndef _C_CC_RB_TREE_H_INCLUDED_
 #define _C_CC_RB_TREE_H_INCLUDED_
 
-#include "generic.h"
+#include "platform.h"
 
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
@@ -72,16 +52,14 @@ struct _cc_rbtree {
 typedef struct _cc_rbtree _cc_rbtree_t;
 
 #define _cc_rbtree_entry(ptr, type, member) _cc_upcast(ptr, type, member)
-
-#define _CC_RB_INIT_ROOT(root) ((root)->rb_node = nullptr)
 #define _CC_RB_EMPTY_ROOT(root) ((root)->rb_node == nullptr)
 
 _CC_API_PUBLIC(void) _cc_rbtree_insert_color(_cc_rbtree_t *, _cc_rbtree_iterator_t *);
 _CC_API_PUBLIC(void) _cc_rbtree_erase(_cc_rbtree_t *, _cc_rbtree_iterator_t *);
 _CC_API_PUBLIC(void)
-_cc_rbtree_destroy(_cc_rbtree_t *, void (*_func)(_cc_rbtree_iterator_t *));
+_cc_rbtree_destroy(_cc_rbtree_t *, void (*cb)(_cc_rbtree_iterator_t *));
 _CC_API_PUBLIC(void)
-_cc_rbtree_traverse(_cc_rbtree_iterator_t *node, void (*_func)(_cc_rbtree_iterator_t *, pvoid_t), pvoid_t args);
+_cc_rbtree_traverse(_cc_rbtree_iterator_t *node, void (*cb)(_cc_rbtree_iterator_t *, pvoid_t), pvoid_t args);
 
 /* Find logical next and previous nodes in a tree */
 _CC_API_PUBLIC(_cc_rbtree_iterator_t *) _cc_rbtree_next(const _cc_rbtree_iterator_t *);
@@ -95,14 +73,18 @@ _cc_rbtree_replace_node(_cc_rbtree_t *root, _cc_rbtree_iterator_t *victim, _cc_r
 
 /**/
 _CC_API_PUBLIC(_cc_rbtree_iterator_t *)
-_cc_rbtree_get(const _cc_rbtree_t *root, pvoid_t args, 
-                int32_t (*func)(_cc_rbtree_iterator_t *, pvoid_t));
+_cc_rbtree_get(const _cc_rbtree_t *root, uintptr_t keyword, 
+                int32_t (*cb)(_cc_rbtree_iterator_t *, uintptr_t));
 /**/
 _CC_API_PUBLIC(bool_t)
 _cc_rbtree_push(_cc_rbtree_t *root, _cc_rbtree_iterator_t *data,
-                int32_t (*func)(_cc_rbtree_iterator_t *, _cc_rbtree_iterator_t *));
+                int32_t (*cb)(_cc_rbtree_iterator_t *, _cc_rbtree_iterator_t *));
 /**/
-_CC_FORCE_INLINE_ void _cc_rbtree_node_init(_cc_rbtree_iterator_t *rb) {
+_CC_FORCE_INLINE_ void _cc_rbtree_cleanup(_cc_rbtree_t *root) {
+    root->rb_node = nullptr;
+}
+/**/
+_CC_FORCE_INLINE_ void _cc_rbtree_iterator_cleanup(_cc_rbtree_iterator_t *rb) {
     rb->right = nullptr;
     rb->left = nullptr;
     rb->parent_color = 0;

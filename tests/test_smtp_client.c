@@ -1,4 +1,4 @@
-#include <libcc/widgets/smtp.h>
+#include <libcc/smtp.h>
 #include <libcc.h>
 #include <locale.h>
 #include <stdio.h>

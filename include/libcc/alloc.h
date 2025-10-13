@@ -1,23 +1,3 @@
-/*
- * Copyright libcc.cn@gmail.com. and other libcc contributors.
- * All rights reserved.org>
- * 
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- * 
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
-
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
-*/
 #ifndef _C_CC_MEMORY_H_INCLUDED_
 #define _C_CC_MEMORY_H_INCLUDED_
 
@@ -54,6 +34,7 @@ extern "C" {
 #endif
 
 #ifdef _CC_USE_DEBUG_MALLOC_
+
 /**/
 _CC_API_PUBLIC(pvoid_t) _cc_debug_malloc(size_t n, const tchar_t *file, const int line);
 /**/
@@ -70,6 +51,7 @@ _CC_API_PUBLIC(void) _cc_debug_free(pvoid_t p);
 #define _cc_realloc(P, N) _cc_debug_realloc((P),(N), _CC_FILE_, _CC_LINE_)
 /**/
 #define _cc_free(P) _cc_debug_free(P)
+
 #else
 
 /**/
@@ -82,6 +64,7 @@ _CC_API_PUBLIC(pvoid_t) _cc_realloc(pvoid_t, size_t);
 _CC_API_PUBLIC(void) _cc_free(pvoid_t);
 
 #endif /* _CC_USE_DEBUG_MALLOC_ */
+
 /**/
 #define _cc_safe_free(d) do {\
     if ((d)) {\

@@ -1,28 +1,16 @@
-/*
- * Copyright libcc.cn@gmail.com. and other libcc contributors.
- * All rights reserved.org>
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
-
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
-*/
 #include <libcc/crypto/sha.h>
 #include <libcc/string.h>
+#include <libcc/alloc.h>
 
+#ifdef _CC_USE_OPENSSL_
+#include "openssl/openssl_sha256.c"
+#else
+struct _cc_sha256 {
+    uint32_t total[2]; /*!< number of bytes processed  */
+    uint32_t state[8]; /*!< intermediate digest state  */
+    byte_t buffer[64]; /*!< data block being processed */
+};
 #if !defined(_CC_SHA256_ALT_)
-
 /*
  * 32-bit integer manipulation macros (big endian)
  */
@@ -47,33 +35,46 @@
 /*
  * SHA-256 context setup
  */
-_CC_API_PUBLIC(void) _cc_sha256_init(_cc_sha256_t *ctx, bool_t is224) {
+_CC_API_PRIVATE(void) __sha256_init(_cc_hash_t *sha) {
+    struct _cc_sha256 *ctx = (struct _cc_sha256 *)sha->handle;
+    sha->method = _CC_SHA256_;
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
-    if (is224 == false) {
-        /* SHA-256 */
-        ctx->state[0] = 0x6A09E667;
-        ctx->state[1] = 0xBB67AE85;
-        ctx->state[2] = 0x3C6EF372;
-        ctx->state[3] = 0xA54FF53A;
-        ctx->state[4] = 0x510E527F;
-        ctx->state[5] = 0x9B05688C;
-        ctx->state[6] = 0x1F83D9AB;
-        ctx->state[7] = 0x5BE0CD19;
-    } else {
-        /* SHA-224 */
-        ctx->state[0] = 0xC1059ED8;
-        ctx->state[1] = 0x367CD507;
-        ctx->state[2] = 0x3070DD17;
-        ctx->state[3] = 0xF70E5939;
-        ctx->state[4] = 0xFFC00B31;
-        ctx->state[5] = 0x68581511;
-        ctx->state[6] = 0x64F98FA7;
-        ctx->state[7] = 0xBEFA4FA4;
-    }
+    /* SHA-256 */
+    ctx->state[0] = 0x6A09E667;
+    ctx->state[1] = 0xBB67AE85;
+    ctx->state[2] = 0x3C6EF372;
+    ctx->state[3] = 0xA54FF53A;
+    ctx->state[4] = 0x510E527F;
+    ctx->state[5] = 0x9B05688C;
+    ctx->state[6] = 0x1F83D9AB;
+    ctx->state[7] = 0x5BE0CD19;
+}
+/*
+ * SHA-256 context setup
+ */
+_CC_API_PRIVATE(void) __sha224_init(_cc_hash_t *sha) {
+    struct _cc_sha256 *ctx = (struct _cc_sha256 *)sha->handle;
+    sha->method = _CC_SHA224_;
+    ctx->total[0] = 0;
+    ctx->total[1] = 0;
 
-    ctx->is224 = is224;
+    /* SHA-224 */
+    ctx->state[0] = 0xC1059ED8;
+    ctx->state[1] = 0x367CD507;
+    ctx->state[2] = 0x3070DD17;
+    ctx->state[3] = 0xF70E5939;
+    ctx->state[4] = 0xFFC00B31;
+    ctx->state[5] = 0x68581511;
+    ctx->state[6] = 0x64F98FA7;
+    ctx->state[7] = 0xBEFA4FA4;
+}
+
+_CC_API_PRIVATE(void) __free_sha256(_cc_hash_t *sha) {
+    if (sha->handle) {
+        _cc_free((struct _cc_sha256 *)sha->handle);
+    }
 }
 
 #if !defined(_CC_SHA256_PROCESS_ALT)
@@ -110,7 +111,7 @@ static const uint32_t K[] = {
         h = temp1 + temp2;                                                                                             \
     } while (0)
 
-_CC_API_PUBLIC(void) _cc_sha256_process(_cc_sha256_t *ctx, const byte_t *data) {
+_CC_API_PRIVATE(void) __sha256_process(struct _cc_sha256 *ctx, const byte_t *data) {
     uint32_t temp1, temp2, W[64];
     uint32_t A[8];
     unsigned int i;
@@ -176,40 +177,41 @@ _CC_API_PUBLIC(void) _cc_sha256_process(_cc_sha256_t *ctx, const byte_t *data) {
 /*
  * SHA-256 process buffer
  */
-_CC_API_PUBLIC(void) _cc_sha256_update(_cc_sha256_t *ctx, const byte_t *input, size_t ilen) {
+_CC_API_PRIVATE(void) __sha256_update(_cc_hash_t *sha, const byte_t *input, size_t length) {
+    struct _cc_sha256 *ctx = (struct _cc_sha256 *)sha->handle;
     size_t fill;
     uint32_t left;
 
-    if (_cc_unlikely(ilen == 0)) {
+    if (length == 0) {
         return;
     }
 
     left = ctx->total[0] & 0x3F;
     fill = 64 - left;
 
-    ctx->total[0] += (uint32_t)ilen;
+    ctx->total[0] += (uint32_t)length;
     ctx->total[0] &= 0xFFFFFFFF;
 
-    if (ctx->total[0] < (uint32_t)ilen) {
+    if (ctx->total[0] < (uint32_t)length) {
         ctx->total[1]++;
     }
 
-    if (left && ilen >= fill) {
+    if (left && length >= fill) {
         memcpy((void *)(ctx->buffer + left), input, fill);
-        _cc_sha256_process(ctx, ctx->buffer);
+        __sha256_process(ctx, ctx->buffer);
         input += fill;
-        ilen -= fill;
+        length -= fill;
         left = 0;
     }
 
-    while (ilen >= 64) {
-        _cc_sha256_process(ctx, input);
+    while (length >= 64) {
+        __sha256_process(ctx, input);
         input += 64;
-        ilen -= 64;
+        length -= 64;
     }
 
-    if (ilen > 0) {
-        memcpy((void *)(ctx->buffer + left), input, ilen);
+    if (length > 0) {
+        memcpy((void *)(ctx->buffer + left), input, length);
     }
 }
 
@@ -220,7 +222,8 @@ static const byte_t sha256_padding[64] = {0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /*
  * SHA-256 final digest
  */
-_CC_API_PUBLIC(void) _cc_sha256_final(_cc_sha256_t *ctx, byte_t *output) {
+_CC_API_PRIVATE(void) __sha256_final(_cc_hash_t *sha, byte_t *digest, int32_t *digest_length) {
+    struct _cc_sha256 *ctx = (struct _cc_sha256 *)sha->handle;
     uint32_t last, padn;
     uint32_t high, low;
     byte_t msglen[8];
@@ -234,35 +237,65 @@ _CC_API_PUBLIC(void) _cc_sha256_final(_cc_sha256_t *ctx, byte_t *output) {
     last = ctx->total[0] & 0x3F;
     padn = (last < 56) ? (56 - last) : (120 - last);
 
-    _cc_sha256_update(ctx, sha256_padding, padn);
-    _cc_sha256_update(ctx, msglen, 8);
+    __sha256_update(sha, sha256_padding, padn);
+    __sha256_update(sha, msglen, 8);
 
-    PUT_UINT32_BE(ctx->state[0], output, 0);
-    PUT_UINT32_BE(ctx->state[1], output, 4);
-    PUT_UINT32_BE(ctx->state[2], output, 8);
-    PUT_UINT32_BE(ctx->state[3], output, 12);
-    PUT_UINT32_BE(ctx->state[4], output, 16);
-    PUT_UINT32_BE(ctx->state[5], output, 20);
-    PUT_UINT32_BE(ctx->state[6], output, 24);
+    PUT_UINT32_BE(ctx->state[0], digest, 0);
+    PUT_UINT32_BE(ctx->state[1], digest, 4);
+    PUT_UINT32_BE(ctx->state[2], digest, 8);
+    PUT_UINT32_BE(ctx->state[3], digest, 12);
+    PUT_UINT32_BE(ctx->state[4], digest, 16);
+    PUT_UINT32_BE(ctx->state[5], digest, 20);
+    PUT_UINT32_BE(ctx->state[6], digest, 24);
 
-    if (ctx->is224 == false) {
-        PUT_UINT32_BE(ctx->state[7], output, 28);
+    if (sha->method == _CC_SHA256_) {
+        PUT_UINT32_BE(ctx->state[7], digest, 28);
+    }
+    
+    if (digest_length) {
+        *digest_length = sha->method == _CC_SHA256_ ? _CC_SHA256_DIGEST_LENGTH_ : _CC_SHA224_DIGEST_LENGTH_;
     }
 }
-
 #endif /* !_cc_SHA256_ALT */
 
+_CC_API_PUBLIC(void) _cc_sha224_init(_cc_hash_t *sha) {
+    sha->handle = (uintptr_t)_cc_malloc(sizeof(struct _cc_sha256));
+    sha->init = __sha224_init;
+    sha->update = __sha256_update;
+    sha->final = __sha256_final;
+    sha->free = __free_sha256;
+
+    __sha224_init(sha);
+}
+
+_CC_API_PUBLIC(void) _cc_sha256_init(_cc_hash_t *sha) {
+    sha->handle = (uintptr_t)_cc_malloc(sizeof(struct _cc_sha256));
+    sha->init = __sha256_init;
+    sha->update = __sha256_update;
+    sha->final = __sha256_final;
+    sha->free = __free_sha256;
+
+    __sha256_init(sha);
+}
+
+#endif /* _CC_USE_OPENSSL_ */
 /*
  * output = SHA-256( input buffer )
  */
-_CC_API_PUBLIC(void) _cc_sha256(const byte_t *input, size_t ilen, tchar_t *output, bool_t is224) {
-    _cc_sha256_t ctx;
+_CC_API_PUBLIC(void) _cc_sha256(const byte_t *input, size_t length, tchar_t *output, bool_t is224) {
+    _cc_hash_t c;
     byte_t results[_CC_SHA256_DIGEST_LENGTH_];
-    size_t digest_length = is224 ? _CC_SHA224_DIGEST_LENGTH_ : _CC_SHA256_DIGEST_LENGTH_;
+    int32_t digest_length = _CC_SHA256_DIGEST_LENGTH_;
 
-    _cc_sha256_init(&ctx, is224);
-    _cc_sha256_update(&ctx, input, ilen);
-    _cc_sha256_final(&ctx, results);
+    if (is224)  {
+        _cc_sha224_init(&c);
+    } else {
+        _cc_sha256_init(&c);
+    }
+
+    c.update(&c, input, length);
+    c.final(&c, results, &digest_length);
+    c.free(&c);
 
     _cc_bytes2hex(results, digest_length, output, digest_length * 2);
 }
@@ -275,26 +308,30 @@ _CC_API_PUBLIC(bool_t) _cc_sha256_fp(FILE *fp, tchar_t *output, bool_t is224) {
     byte_t buf[1024 * 16];
     size_t i;
     long seek_cur = 0;
-    _cc_sha256_t c;
-    size_t digest_length = is224 ? _CC_SHA224_DIGEST_LENGTH_ : _CC_SHA256_DIGEST_LENGTH_;
+    _cc_hash_t c;
+    int32_t digest_length = _CC_SHA256_DIGEST_LENGTH_;
 
     if (fp == nullptr) {
         return false;
     }
 
-    _cc_sha256_init(&c, is224);
+    if (is224)  {
+        _cc_sha224_init(&c);
+    } else {
+        _cc_sha256_init(&c);
+    }
 
     seek_cur = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
     while ((i = fread(buf, sizeof(byte_t), _cc_countof(buf), fp))) {
-        _cc_sha256_update(&c, buf, i);
+        c.update(&c, buf, i);
     }
 
-    _cc_sha256_final(&c, &(results[0]));
+    c.final(&c, results, &digest_length);
+    c.free(&c);
 
     fseek(fp, seek_cur, SEEK_SET);
-
     _cc_bytes2hex(results, digest_length, output, digest_length * 2);
 
     return true;

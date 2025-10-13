@@ -4,17 +4,14 @@ SRC_TESTS_DIR := $(SRCROOT)/tests
 LOCAL_SRC_FILES = $(SRC_TESTS_DIR)/test_$(build).o
 
 TARGET_NAME = $(build)
-MACROS			+= _CC_USE_OPENSSL_=1
 
-LIBS	+= cc cc.widgets
+MACROS	+= _CC_USE_OPENSSL_=1
+
+LIBS	+= cc
 
 ifeq ($(PLATFORM), osx)
 	INCLUDE_PATH	+= /opt/homebrew/include
 	LIBRARY_PATH	+= /opt/homebrew/lib
-endif
-
-ifdef debug
-	LIBS += cc.debug.malloc
 endif
 
 ifdef dll

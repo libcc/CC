@@ -58,7 +58,14 @@
         "sds.h": "c",
         "variant": "c",
         "istream": "c",
-        "unistd.h": "c"
+        "unistd.h": "c",
+        "endian.h": "c",
+        "xxtea.h": "c",
+        "pkcs12.h": "c",
+        "buf.h": "c",
+        "*.inc": "c",
+        "rand.h": "c",
+        "platform.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     //"C_Cpp.clang_format_style": "{ BasedOnStyle: Microsoft, UseTab: Never, IndentWidth: 4, TabWidth: 4, }",

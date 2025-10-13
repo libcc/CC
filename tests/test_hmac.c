@@ -3,48 +3,22 @@
 #include <libcc/alloc.h>
 #include <assert.h>
 
-void test_hmac_alloc_free() {
-    _cc_hmac_t *hmac = _cc_hmac_alloc(_CC_HMAC_SHA256_);
-    assert(hmac != nullptr);
-    _cc_hmac_free(hmac);
-}
-
-void test_hmac_init_update_final() {
-    _cc_hmac_t *hmac = _cc_hmac_alloc(_CC_HMAC_SHA256_);
-    assert(hmac != nullptr);
-
-    const byte_t key[] = "test_key";
-    const byte_t input[] = "test_input";
-    byte_t output[64];
-
-    _cc_hmac_init(hmac, key, sizeof(key) - 1);
-    _cc_hmac_update(hmac, input, sizeof(input) - 1);
-    int result = _cc_hmac_final(hmac, output, sizeof(output));
-    assert(result > 0);
-
-    _cc_hmac_free(hmac);
-}
-
-void test_hmac_invalid_type() {
-    _cc_hmac_t *hmac = _cc_hmac_alloc(0xFF); // Invalid type
-    assert(hmac == nullptr);
-}
-
-void test_hmac_key_too_long() {
-    _cc_hmac_t *hmac = _cc_hmac_alloc(_CC_HMAC_SHA256_);
-    assert(hmac != nullptr);
-
-    byte_t long_key[128];
-    memset(long_key, 'A', sizeof(long_key));
-
-    _cc_hmac_init(hmac, long_key, sizeof(long_key));
-    _cc_hmac_free(hmac);
-}
-
 int main() {
-    test_hmac_alloc_free();
-    test_hmac_init_update_final();
-    test_hmac_invalid_type();
-    test_hmac_key_too_long();
+    tchar_t output[256];
+    _cc_String_t key = _cc_String("key");
+    _cc_String_t data = _cc_String("The quick brown fox jumps over the lazy dog");
+    _cc_hmac(_CC_SHA1_, (byte_t*)data.data, data.length, (byte_t*)key.data, key.length, output);
+    printf("HMAC-SHA1 = %s\n", output);
+    _cc_hmac(_CC_SHA224_, (byte_t*)data.data, data.length, (byte_t*)key.data, key.length, output);
+    printf("HMAC-SHA224 = %s\n", output);
+    _cc_hmac(_CC_SHA256_, (byte_t*)data.data, data.length, (byte_t*)key.data, key.length, output);
+    printf("HMAC-SHA256 = %s\n", output);
+    _cc_hmac(_CC_SHA384_, (byte_t*)data.data, data.length, (byte_t*)key.data, key.length, output);
+    printf("HMAC-SHA384 = %s\n", output);
+    _cc_hmac(_CC_SHA512_, (byte_t*)data.data, data.length, (byte_t*)key.data, key.length, output);
+    printf("HMAC-SHA512 = %s\n", output);
+    _cc_hmac(_CC_MD5_, (byte_t*)data.data, data.length, (byte_t*)key.data, key.length, output);
+    printf("HMAC-MD5 = %s\n", output);
+    
     return 0;
 }

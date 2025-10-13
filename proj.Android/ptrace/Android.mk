@@ -6,8 +6,6 @@ ifeq ($(NDK_DEBUG),1)
     LOCAL_CFLAGS +=  -DDEBUG
 endif
 
-#LOCAL_CFLAGS +=  -D_CC_JNI_BUILD_SHARED_LIBRARY_
-
 LOCAL_MODULE := inject
 LOCAL_LDLIBS += -L$(SYSROOT)/usr/lib -llog
 LOCAL_C_INCLUDES := ../../include

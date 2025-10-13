@@ -2,7 +2,6 @@ import os
 from VCXProj import VCXProj 
 
 LIBCCSources = [
-	"src/alloc.c",
 	"src/array.c",
 	"src/queue.c",
 	"src/buf.c",
@@ -23,14 +22,21 @@ LIBCCSources = [
 	"src/cpu.c",
 	"src/atomic/atomic.c",
 	"src/atomic/rwlock.c",
-	"src/core/generic.c",
-	"src/core/windows/sys_mmap.c",
-	"src/core/windows/sys_pipe.c",
-	"src/core/windows/sys_windows.c",
-	"src/core/windows/sys_clipboard.c",
-	"src/core/windows/sys_dirent.c",
-	"src/core/windows/sys_file.c",
-	"src/core/windows/sys_locale.c",
+	"src/platform/platform.c",
+	"src/platform/windows/sys_mmap.c",
+	"src/platform/windows/sys_pipe.c",
+	"src/platform/windows/sys_windows.c",
+	"src/platform/windows/sys_clipboard.c",
+	"src/platform/windows/sys_dirent.c",
+	"src/platform/windows/sys_file.c",
+	"src/platform/windows/sys_locale.c",
+	"src/platform/windows/sys_time.c",
+	"src/platform/windows/sys_iocp.c",
+	"src/platform/windows/sys_io_context.c",
+	"src/platform/windows/sys_WSA.c",
+	"src/platform/windows/sys_loadso.c",
+	"src/platform/windows/sys_socket.c",
+	"src/platform/windows/sys_power.c",
 	"src/crypto/des.c",
 	"src/crypto/aes.c",
 	"src/crypto/base16.c",
@@ -44,28 +50,56 @@ LIBCCSources = [
 	"src/crypto/sha256.c",
 	"src/crypto/sha512.c",
 	"src/crypto/xxtea.c",
-	"src/loadso/windows/sys_loadso.c",
-	"src/power/power.c",
-	"src/power/windows/sys_power.c",
-	"src/socket/inet.c",
-	"src/socket/socket.c",
-	"src/socket/windows/sys_socket.c",
 	"src/thread/thread.c",
 	"src/thread/windows/sys_cond.c",
 	"src/thread/windows/sys_mutex.c",
 	"src/thread/windows/sys_sem.c",
 	"src/thread/windows/sys_thread.c",
-	"src/time/strptime.c",
-	"src/time/tick.c",
-	"src/time/time.c",
-	"src/time/windows/sys_time.c"
+	"src/generic/generic.c.h",
+	"src/generic/inet.c",
+	"src/generic/socket.c",
+	"src/generic/power.c",
+	"src/generic/strptime.c",
+	"src/generic/tick.c",
+	"src/generic/time.c",
+	"src/generic/generic.c",
+	"src/generic/gzip.c",
+	"src/generic/WS.c",
+	"src/malloc/alloc.c",
+	"src/malloc/debug.malloc.c",
+	"src/malloc/debug.tracked.c",
+	"src/db/mysql.c",
+	"src/db/sqlite.c",
+	"src/db/sqlsvr.c",
+	"src/ini/ini.c",
+	"src/ini/ini.parser.c",
+	"src/xml/xml.c",
+	"src/xml/xml.parser.c",
+	"src/json/json.array.c",
+	"src/json/json.c",
+	"src/json/json.object.c",
+	"src/json/json.parser.c",
+	"src/http/header.c",
+	"src/http/request.parser.c",
+	"src/http/response.parser.c",
+	"src/url_request/http/url_request.c",
+	"src/url_request/http/url_response.c",
+	"src/event/event.c",
+	"src/event/loop.c",
+	"src/event/buffer.c",
+	"src/event/select.c",
+	"src/event/tcp.c",
+	"src/event/timeout.c",
+	"src/event/OpenSSL.c",
+	"src/main.c"
 ]
 LIBCCHeaders = [
+	"include/libcc.h",
 	"include/libcc/alloc.h",
 	"include/libcc/array.h",
 	"include/libcc/atomic.h",
 	"include/libcc/buf.h",
-	"include/libcc/generic.h",
+	"include/libcc/platform.h",
 	"include/libcc/dirent.h",
 	"include/libcc/list.h",
 	"include/libcc/endian.h",
@@ -85,9 +119,11 @@ LIBCCHeaders = [
 	"include/libcc/hmap.h",
 	"include/libcc/tchar.h",
 	"include/libcc/thread.h",
-	"include/libcc/socket/socket.h",
-	"include/libcc/socket/windows/sys_iocp.h",
-	"include/libcc/socket/windows/sys_socket.h",
+	"include/libcc/socket.h",
+	"include/libcc/platform/windows.h",
+	"include/libcc/platform/compiler.h",
+	"include/libcc/platform/platform.h",
+	"include/libcc/platform/windows/sys_socket.h",
 	"include/libcc/thread/sys_thread.h",
 	"include/libcc/thread/windows/sys_thread.h",
 	"include/libcc/time.h",
@@ -97,10 +133,7 @@ LIBCCHeaders = [
 	"include/libcc/uuid.h",
 	"include/libcc/cpu.h",
 	"include/libcc/file.h",
-	"include/libcc/compiler.h",
-	"include/libcc/platform.h",
 	"include/libcc/version.h",
-	"include/libcc.h",
 	"include/libcc/crypto/aes.h",
 	"include/libcc/crypto/des.h",
 	"include/libcc/crypto/base16.h",
@@ -112,19 +145,45 @@ LIBCCHeaders = [
 	"include/libcc/crypto/hmac.h",
 	"include/libcc/crypto/sha.h",
 	"include/libcc/crypto/xxtea.h",
-	"include/libcc/core/windows.h"
+	"include/libcc/event.h",
+	"include/libcc/http.h",
+	"include/libcc/ini.h",
+	"include/libcc/json.h",
+	"include/libcc/socks5.h",
+	"include/libcc/sql.h",
+	"include/libcc/timeout.h",
+	"include/libcc/WS.h",
+	"include/libcc/xml.h",
+	"include/libcc/dns.h",
+	"include/libcc/smtp.h",
+	"include/libcc/OpenSSL.h",
+	"include/libcc/gzip.h",
+	"include/libcc/url_request.h",
+	"src/xml/xml.c.h",
+	"src/ini/ini.c.h",
+	"src/json/json.c.h",
+	"src/malloc/debug.tracked.c.h",
+	"src/platform/windows/sys_iocp.h",
+	"src/event/event.c.h"
 ]
 
 if __name__ == "__main__":
-	vcxproj = VCXProj("libcc","StaticLibrary","../../proj.Win/")
-	vcxproj.OutDir = "..\\lib"
+	vcxproj = VCXProj("libcc","DynamicLibrary","../../proj.Win/")
+	#vcxproj.OutDir = "..\\lib"	
+	vcxproj.OutDir = "..\\bin"
+	vcxproj.ImportLibrary = "..\\lib"
+
+	Librarys = ["libmysql.lib","sqlite3.lib","zlib.lib","libssl.lib","libcrypto.lib"]
+	Macros = ["_CC_API_USE_DYNAMIC_","_CC_USE_OPENSSL_","_WINDOWS","_USRDLL"]
 
 	vcxproj.addIncludePath(["C:\\0216\\third-party","C:\\0216\\libcc\\include"])
 	vcxproj.addLibraryPath(["C:\\0216\\third-party\\lib\\$(Platform)\\$(Configuration)","C:\\0216\\libcc\\lib\\$(Platform)\\$(Configuration)"])
 	vcxproj.addSource(LIBCCSources)
 	vcxproj.addHeader(LIBCCHeaders)
-	vcxproj.addMacros("Debug",["_LIB"])
-	vcxproj.addMacros("Release",["_LIB"])
+	vcxproj.addLibrarys("Debug",Librarys)
+	vcxproj.addLibrarys("Release",Librarys)
+	vcxproj.addMacros("Debug",Macros)
+	vcxproj.addMacros("Release",Macros)
 	vcxproj.build()
 
 

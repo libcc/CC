@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <locale.h>
-#include <libcc/widgets/event.h>
+#include <libcc/event.h>
 
 //A simple example program which connects to a daytime server and prints the response:
 //

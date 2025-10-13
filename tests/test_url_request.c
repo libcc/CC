@@ -1,25 +1,4 @@
-/*
- * Copyright libcc.cn@gmail.com. and other libcc contributors.
- * All rights reserved.org>
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
-
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
-*/
-#include <libcc/widgets/widgets.h>
-#include <libcc.h>
+#include <libcc/url_request.h>
 
 static _cc_OpenSSL_t *openSSL = nullptr;
 static bool_t url_request(const tchar_t *url, pvoid_t args);
@@ -143,7 +122,7 @@ static bool_t _url_request_callback(_cc_async_event_t *async, _cc_event_t *e, co
             return true;
         }
 #endif
-        if (request->response && request->response->keep_alive && request->status == _CC_HTTP_STATUS_ESTABLISHED_) {
+        if (request->response && request->response->keep_alive && request->state == _CC_HTTP_STATUS_ESTABLISHED_) {
             return url_request_header(request, e);;
         }
         return false;
@@ -177,18 +156,18 @@ static bool_t _url_request_callback(_cc_async_event_t *async, _cc_event_t *e, co
         } else if (off == 0) {
             return true;
         }
-        if (request->status == _CC_HTTP_STATUS_HEADER_) {
+        if (request->state == _CC_HTTP_STATUS_HEADER_) {
             //printf("response header\n");
             if (!_cc_url_request_response_header(request)) {
                 return false;
             }
             //Response header completed.
-            if (request->status == _CC_HTTP_STATUS_PAYLOAD_) {
+            if (request->state == _CC_HTTP_STATUS_PAYLOAD_) {
                 url_response_header(request);
             }
         }
 
-        if (request->status == _CC_HTTP_STATUS_PAYLOAD_) {
+        if (request->state == _CC_HTTP_STATUS_PAYLOAD_) {
             //printf("response body\n");
             if (!_cc_url_request_response_body(request)) {
                 return false;
@@ -196,7 +175,7 @@ static bool_t _url_request_callback(_cc_async_event_t *async, _cc_event_t *e, co
 
             url_request_read(request);
 
-            if (request->status == _CC_HTTP_STATUS_ESTABLISHED_) {
+            if (request->state == _CC_HTTP_STATUS_ESTABLISHED_) {
                 //printf("response successful\n");
                 url_request_success(request);
                 return request->response->keep_alive;

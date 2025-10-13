@@ -22,8 +22,9 @@
 		41F05F4129A39B7100168B2F /* PopupViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 41F05F3E29A39B7100168B2F /* PopupViewController.xib */; };
 		41F05F4229A39B7100168B2F /* PopupViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 41F05F4029A39B7100168B2F /* PopupViewController.m */; };
 		41F05F4829A39D5000168B2F /* BasicsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 41F05F4629A39D5000168B2F /* BasicsController.m */; };
-		426BE2702E5DD33F00CE8D50 /* libcc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 41E3A71729FE480100BEFBD6 /* libcc.a */; };
-		426BE2712E5DD34200CE8D50 /* libcc.widgets.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 41E3A71B29FE480100BEFBD6 /* libcc.widgets.dylib */; };
+		425E1DF02E881B1E00864160 /* libcc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 41E3A71729FE480100BEFBD6 /* libcc.a */; };
+		425E1DF12E881B2200864160 /* libcc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 41E3A71729FE480100BEFBD6 /* libcc.a */; };
+		425E1E042E881E1400864160 /* libcc.a in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 41E3A71729FE480100BEFBD6 /* libcc.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		42AC373A2E7D84EB00B44396 /* test_event.c in Sources */ = {isa = PBXBuildFile; fileRef = 42AC37392E7D84EB00B44396 /* test_event.c */; };
 /* End PBXBuildFile section */
 
@@ -34,13 +35,6 @@
 			proxyType = 2;
 			remoteGlobalIDString = 414B4B562990BEB600F4A7CB;
 			remoteInfo = cc;
-		};
-		41E3A71A29FE480100BEFBD6 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 41E3A71029FE480100BEFBD6 /* cc.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 41E3A5CB29FE40D800BEFBD6;
-			remoteInfo = cc.widgets;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -71,6 +65,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				425E1E042E881E1400864160 /* libcc.a in Copy Libraries */,
 			);
 			name = "Copy Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -117,8 +112,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				426BE2712E5DD34200CE8D50 /* libcc.widgets.dylib in Frameworks */,
-				426BE2702E5DD33F00CE8D50 /* libcc.a in Frameworks */,
+				425E1DF12E881B2200864160 /* libcc.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -126,6 +120,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				425E1DF02E881B1E00864160 /* libcc.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -146,7 +141,6 @@
 			isa = PBXGroup;
 			children = (
 				41E3A71729FE480100BEFBD6 /* libcc.a */,
-				41E3A71B29FE480100BEFBD6 /* libcc.widgets.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -306,13 +300,6 @@
 			fileType = archive.ar;
 			path = libcc.a;
 			remoteRef = 41E3A71629FE480100BEFBD6 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		41E3A71B29FE480100BEFBD6 /* libcc.widgets.dylib */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.dylib";
-			path = libcc.widgets.dylib;
-			remoteRef = 41E3A71A29FE480100BEFBD6 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */

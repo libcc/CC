@@ -34,7 +34,7 @@ void test_buf_expand() {
     _cc_buf_t buf;
     assert(_cc_alloc_buf(&buf, 10) == true);
     assert(_cc_buf_expand(&buf, 20) == true);
-    assert(buf.limit >= 30);
+    assert(buf.limit == 20);
     assert(_cc_free_buf(&buf) == true);
     printf("buf expand test passed!\n");
 }

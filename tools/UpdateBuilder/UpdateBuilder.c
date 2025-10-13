@@ -35,7 +35,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 */
 #else
 static __attribute__((constructor)) void _dynamic_attach(void) {
-    _cc_init_sqlite(&sqldelegate);
+    _cc_register_sqlite(&sqldelegate);
 }
 
 static __attribute__((destructor)) void _dynamic_detach(void) {
@@ -79,7 +79,7 @@ void DeleteDeepDirectory(const tchar_t *directory) {
 }*/
 
 int main(int argc, char const *argv[]) {
-    _cc_init_sqlite(&sqldelegate);
+    _cc_register_sqlite(&sqldelegate);
 
     if (argc < 3) {
         return 0;

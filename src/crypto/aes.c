@@ -1,25 +1,9 @@
-/*
- * Copyright libcc.cn@gmail.com. and other libcc contributors.
- * All rights reserved.org>
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
-
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
-*/
 #include <libcc/crypto/aes.h>
 #include <libcc/string.h>
+
+#ifdef _CC_USE_OPENSS_
+#include "openssl/openssl_aes.c"
+#else
 /*
  * 32-bit integer manipulation macros (little endian)
  */
@@ -376,7 +360,7 @@ _CC_API_PUBLIC(int) _cc_aes_setkey_enc(_cc_aes_t *ctx, const byte_t *key, uint32
         return (_CC_ERR_AES_INVALID_KEY_LENGTH_);
     }
 
-    ctx->rk = RK = ctx->buf;
+    RK = ctx->buf;
 
     for (i = 0; i < (keybits >> 5); i++) {
         GET_UINT32_LE(RK[i], key, i << 2);
@@ -441,7 +425,7 @@ _CC_API_PUBLIC(int) _cc_aes_setkey_dec(_cc_aes_t *ctx, const byte_t *key, uint32
     uint32_t *SK;
 
     _cc_aes_init(&cty);
-    ctx->rk = RK = ctx->buf;
+    RK = ctx->buf;
 
     /* Also checks keybits */
     if ((res = _cc_aes_setkey_enc(&cty, key, keybits)) != 0) {
@@ -449,7 +433,7 @@ _CC_API_PUBLIC(int) _cc_aes_setkey_dec(_cc_aes_t *ctx, const byte_t *key, uint32
     }
 
     ctx->nr = cty.nr;
-    SK = cty.rk + cty.nr * 4;
+    SK = &cty.buf[cty.nr * 4];
 
     *RK++ = *SK++;
     *RK++ = *SK++;
@@ -505,7 +489,7 @@ _CC_API_PUBLIC(void) _cc_aes_encrypt(_cc_aes_t *ctx, const byte_t input[16], byt
     int i;
     uint32_t *RK, X0, X1, X2, X3, Y0, Y1, Y2, Y3;
 
-    RK = ctx->rk;
+    RK = (uint32_t *)ctx->buf;
 
     GET_UINT32_LE(X0, input, 0);
     X0 ^= *RK++;
@@ -548,7 +532,7 @@ _CC_API_PUBLIC(void) _cc_aes_decrypt(_cc_aes_t *ctx, const byte_t input[16], byt
     int i;
     uint32_t *RK, X0, X1, X2, X3, Y0, Y1, Y2, Y3;
 
-    RK = ctx->rk;
+    RK = (uint32_t *)ctx->buf;
 
     GET_UINT32_LE(X0, input, 0);
     X0 ^= *RK++;
@@ -584,7 +568,6 @@ _CC_API_PUBLIC(void) _cc_aes_decrypt(_cc_aes_t *ctx, const byte_t input[16], byt
     PUT_UINT32_LE(X3, output, 12);
 }
 
-#if defined(_CC_CIPHER_MODE_CBC_)
 /*
  * AES-CBC buffer encryption/decryption
  */
@@ -627,9 +610,7 @@ _CC_API_PUBLIC(int) _cc_aes_crypt_cbc(_cc_aes_t *ctx, int mode, const byte_t *in
 
     return (0);
 }
-#endif /* _CC_CIPHER_MODE_CBC_ */
 
-#if defined(_CC_CIPHER_MODE_CFB_)
 /*
  * AES-CFB128 buffer encryption/decryption
  */
@@ -694,9 +675,6 @@ _CC_API_PUBLIC(int) _cc_aes_crypt_cfb8(_cc_aes_t *ctx, int mode, const byte_t *i
     }
     return 0;
 }
-#endif /*_CC_CIPHER_MODE_CFB_ */
-
-#if defined(_CC_CIPHER_MODE_CTR_)
 /*
  * AES-CTR buffer encryption/decryption
  */
@@ -725,4 +703,5 @@ _CC_API_PUBLIC(int) _cc_aes_crypt_ctr(_cc_aes_t *ctx, const byte_t *input, size_
 
     return 0;
 }
-#endif /* _CC_CIPHER_MODE_CTR_ */
+
+#endif /* _CC_USE_OPENSSL_ */

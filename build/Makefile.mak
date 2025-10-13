@@ -231,6 +231,7 @@ help:
 	@echo  -e "X3 = (\033[36mx64 = Compile 64-bit, x32 = Compile 32-bit\033[0m"
 	@echo "See REANDME.Makefile for complete instructions."
 	@echo
+	@echo "System is : $(PLATFORM)"
 	@echo "====================== Version2.6 ============================"
 	@exit
 

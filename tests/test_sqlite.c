@@ -2,14 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libcc.h>
-#include <libcc/widgets/sql.h>
+#include <libcc/sql.h>
 
 #if _CC_USE_SYSTEM_SQLITE3_LIB_
 #include <sqlite3.h>
 #else 
 #include <sqlite3/sqlite3.h>
 #endif
-#define SQLite_DB "SQLITE://127.0.0.1/./sqlite3test.db"
+#define SQLite_DB "SQLITE:///./sqlite3test.db"
 
 _cc_sql_delegate_t sql_delegate;
 _cc_sql_t *sql = nullptr;

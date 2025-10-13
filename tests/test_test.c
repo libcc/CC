@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <libcc/widgets/json.h>
+#include <libcc/json.h>
 
 void read_remove_comments(_cc_buf_t *buf) {
 	size_t length = 0;

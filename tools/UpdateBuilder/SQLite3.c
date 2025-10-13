@@ -26,11 +26,12 @@ _cc_sql_t* openSQLite3(void) {
     }
     
     _cc_get_base_path(path, _cc_countof(path));
-    _sntprintf(sqliteFile,_cc_countof(sqliteFile), _T("SQLITE://x/%s/UpdateBuilder.db"), path);
+    _sntprintf(sqliteFile,_cc_countof(sqliteFile), _T("SQLITE:///%s/UpdateBuilder.db"), path);
 
     sql = sqldelegate.connect(sqliteFile);
     if (sql == nullptr) {
         _cc_logger_debug("Update SQL is null");
+        return nullptr;
     }
 
     sqldelegate.execute(sql, createTable, false);

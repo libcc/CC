@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <libcc/socket/socket.h>
+#include <libcc/socket.h>
 #include <libcc/alloc.h>
 #include <libcc/crc.h>
 #include <libcc/time.h>

@@ -1,25 +1,6 @@
-/*
- * Copyright libcc.cn@gmail.com. and other libcc contributors.
- * All rights reserved.org>
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
-
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
-*/
 #include <libcc/crypto/md5.h>
 #include <libcc/string.h>
+#include <libcc/alloc.h>
 
 /*
  * 32-bit integer manipulation macros (little endian)
@@ -227,7 +208,7 @@ static const byte_t md5_padding[64] = {0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /*
  * MD5 final digest
  */
-_CC_API_PUBLIC(void) _cc_md5_final(_cc_md5_t *ctx, byte_t *output) {
+_CC_API_PUBLIC(void) _cc_md5_final(_cc_md5_t *ctx, byte_t *digest) {
     uint32_t last, padn;
     uint32_t high, low;
     byte_t msglen[8];
@@ -244,10 +225,40 @@ _CC_API_PUBLIC(void) _cc_md5_final(_cc_md5_t *ctx, byte_t *output) {
     _cc_md5_update(ctx, md5_padding, padn);
     _cc_md5_update(ctx, msglen, 8);
 
-    PUT_UINT32_LE(ctx->state[0], output, 0);
-    PUT_UINT32_LE(ctx->state[1], output, 4);
-    PUT_UINT32_LE(ctx->state[2], output, 8);
-    PUT_UINT32_LE(ctx->state[3], output, 12);
+    PUT_UINT32_LE(ctx->state[0], digest, 0);
+    PUT_UINT32_LE(ctx->state[1], digest, 4);
+    PUT_UINT32_LE(ctx->state[2], digest, 8);
+    PUT_UINT32_LE(ctx->state[3], digest, 12);
+}
+
+_CC_API_PRIVATE(void) __md5_init(_cc_hash_t *ctx) {
+    _cc_md5_init((_cc_md5_t*)ctx->handle);
+    ctx->method = _CC_MD5_;
+}
+_CC_API_PRIVATE(void) __md5_update(_cc_hash_t *ctx, const byte_t *input, size_t length) {
+    _cc_md5_update((_cc_md5_t*)ctx->handle, input, length);
+}
+
+_CC_API_PRIVATE(void) __md5_final(_cc_hash_t *ctx, byte_t *digest, int32_t *digest_length) {
+    _cc_md5_final((_cc_md5_t*)ctx->handle, digest);
+    if (digest_length) {
+        *digest_length = _CC_MD5_DIGEST_LENGTH_;
+    }
+}
+_CC_API_PRIVATE(void) __free_md5(_cc_hash_t *ctx) {
+    if (ctx->handle) {
+        _cc_free((_cc_md5_t*)ctx->handle);
+    }
+}
+
+_CC_API_PUBLIC(void) _cc_md5_hash_init(_cc_hash_t *ctx) {
+    ctx->handle = (uintptr_t)_cc_malloc(sizeof(_cc_md5_t));
+    ctx->init = __md5_init;
+    ctx->update = __md5_update;
+    ctx->final = __md5_final;
+    ctx->free = __free_md5;
+
+    __md5_init(ctx);
 }
 
 /*

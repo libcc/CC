@@ -13,29 +13,13 @@
     "tasks": [
         {
             "label": "test",
-            "args": [".bin","target=tests","build=sha","debug=1"],
-        },
-        {
-            "label": "build-widgets",
-            "args": [".dylib","target=widgets","all=1","debug=1"],
+            "args": [".bin","target=tests","build=wss","debug=1"],
         },
         {
             "label": "clean",
             "args": ["clean"],
             "options": {
                 "cwd": "${workspaceRoot}"
-            },
-        },
-        {
-            "label": "build-all",
-            "command": "./build.sh",
-            "args": [],
-        },
-        {
-            "label": "build-debug-UpdateBuilder",
-            "args": [".bin","debug=1"],
-            "options": {
-                "cwd": "${workspaceRoot}/tools/UpdateBuilder/"
             },
         },
         {
@@ -47,7 +31,7 @@
         },
         {
             "label": "build",
-            "args": [".a"],
+            "args": [".dylib"],
             "options": {
                 "cwd": "${workspaceRoot}"
             },
@@ -58,7 +42,7 @@
         },
         {
 			"label": "build-debug",
-            "args": [".a", "debug=1"],
+            "args": [".dylib", "debug=1"],
             "options": {
                 "cwd": "${workspaceRoot}"
             },

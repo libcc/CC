@@ -1,5 +1,5 @@
 #include "libcc/list.h"
-#include "libcc/generic.h"
+#include "libcc/platform.h"
 #include <assert.h>
 #include <stdio.h>
 

@@ -1,23 +1,3 @@
-/*
- * Copyright libcc.cn@gmail.com. and other libcc contributors.
- * All rights reserved.org>
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
-
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
-*/
 #include <libcc/rbtree.h>
 
 /*
@@ -606,13 +586,13 @@ _CC_API_PUBLIC(void) _cc_rbtree_replace_node(_cc_rbtree_t *root, _cc_rbtree_iter
     _rb_change_child(victim, new_iter, parent, root);
 }
 
-_CC_API_PUBLIC(_cc_rbtree_iterator_t*) _cc_rbtree_get(const _cc_rbtree_t *root, pvoid_t args,
-                                      int32_t (*func)(_cc_rbtree_iterator_t *, pvoid_t)) {
+_CC_API_PUBLIC(_cc_rbtree_iterator_t*) _cc_rbtree_get(const _cc_rbtree_t *root, uintptr_t keyword,
+                                      int32_t (*cb)(_cc_rbtree_iterator_t *, uintptr_t)) {
     int32_t result = 0;
     _cc_rbtree_iterator_t *node = root->rb_node;
 
     while (node) {
-        result = func(node, args);
+        result = cb(node, keyword);
         if (result < 0) {
             node = node->left;
         } else if (result > 0) {
@@ -626,12 +606,12 @@ _CC_API_PUBLIC(_cc_rbtree_iterator_t*) _cc_rbtree_get(const _cc_rbtree_t *root, 
 }
 
 _CC_API_PUBLIC(bool_t) _cc_rbtree_push(_cc_rbtree_t *root, _cc_rbtree_iterator_t *data,
-                       int32_t (*func)(_cc_rbtree_iterator_t *, _cc_rbtree_iterator_t *)) {
+                       int32_t (*cb)(_cc_rbtree_iterator_t *, _cc_rbtree_iterator_t *)) {
     int32_t result = 0;
     _cc_rbtree_iterator_t **node = &(root->rb_node), *parent = nullptr;
 
     while (*node) {
-        result = func(*node, data);
+        result = cb(*node, data);
 
         parent = *node;
 
@@ -649,35 +629,35 @@ _CC_API_PUBLIC(bool_t) _cc_rbtree_push(_cc_rbtree_t *root, _cc_rbtree_iterator_t
     return true;
 }
 
-_CC_API_PUBLIC(void) _cc_rbtree_traverse(_cc_rbtree_iterator_t *node, void (*_func)(_cc_rbtree_iterator_t *, pvoid_t), pvoid_t args) {
+_CC_API_PUBLIC(void) _cc_rbtree_traverse(_cc_rbtree_iterator_t *node, void (*cb)(_cc_rbtree_iterator_t *, pvoid_t), pvoid_t args) {
     if (node->left) {
-        _cc_rbtree_traverse(node->left, _func, args);
+        _cc_rbtree_traverse(node->left, cb, args);
     }
 
     if (node->right) {
-        _cc_rbtree_traverse(node->right, _func, args);
+        _cc_rbtree_traverse(node->right, cb, args);
     }
 
-    _func(node, args);
+    cb(node, args);
 }
 
-static void _free_rbtree_traverse(_cc_rbtree_iterator_t *node, void (*_func)(_cc_rbtree_iterator_t *)) {
+static void _free_rbtree_traverse(_cc_rbtree_iterator_t *node, void (*cb)(_cc_rbtree_iterator_t *)) {
     if (node->left) {
-        _free_rbtree_traverse(node->left, _func);
+        _free_rbtree_traverse(node->left, cb);
     }
 
     if (node->right) {
-        _free_rbtree_traverse(node->right, _func);
+        _free_rbtree_traverse(node->right, cb);
     }
 
-    _func(node);
+    cb(node);
 }
 
-_CC_API_PUBLIC(void) _cc_rbtree_destroy(_cc_rbtree_t *root, void (*_func)(_cc_rbtree_iterator_t *)) {
-    _cc_assert(_func != nullptr);
-    if (!_func || !root->rb_node) {
+_CC_API_PUBLIC(void) _cc_rbtree_destroy(_cc_rbtree_t *root, void (*cb)(_cc_rbtree_iterator_t *)) {
+    _cc_assert(cb != nullptr);
+    if (!cb || !root->rb_node) {
         return;
     }
-    _free_rbtree_traverse(root->rb_node, _func);
+    _free_rbtree_traverse(root->rb_node, cb);
     root->rb_node = nullptr;
 }

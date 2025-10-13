@@ -1,4 +1,4 @@
-#include <libcc/widgets/sql.h>
+#include <libcc/sql.h>
 #include <assert.h>
 #include <stdio.h>
 

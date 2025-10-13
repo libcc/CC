@@ -1,5 +1,5 @@
 #include <libcc/string.h>
-#include <libcc/generic.h>
+#include <libcc/platform.h>
 #include <assert.h>
 #include <stdio.h>
 

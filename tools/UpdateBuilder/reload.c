@@ -68,6 +68,7 @@ static void OpenDeepDirectory(const tchar_t *directory, _cc_sql_t *sql, _cc_sql_
 }
 
 int builder_ReloadList(void) {
+    _cc_String_t sql_str;
     _cc_sql_result_t *result = nullptr;
 
     _cc_sql_t *sql = openSQLite3();
@@ -75,9 +76,12 @@ int builder_ReloadList(void) {
         return 1;
     }
 
-    sqldelegate.execute(sql, _T("DELETE FROM `FileList`;"), nullptr);
-    sqldelegate.execute(sql, _T("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'FileList';"), nullptr);
-    if (sqldelegate.execute(sql, _T("INSERT INTO `FileList` (`Name`, `CheckMD5`, `Compress`, `CompressSize`, `Size`, `Path`) VALUES ( ?,'',0,?,?,?);"), &result)) {
+    _cc_String_Set(&sql_str, _T("DELETE FROM `FileList`;"));
+    sqldelegate.execute(sql, &sql_str, nullptr);
+    _cc_String_Set(&sql_str, _T("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'FileList';"));
+    sqldelegate.execute(sql, &sql_str, nullptr);
+    _cc_String_Set(&sql_str, _T("INSERT INTO `FileList` (`Name`, `CheckMD5`, `Compress`, `CompressSize`, `Size`, `Path`) VALUES ( ?,'',0,?,?,?);"));
+    if (sqldelegate.execute(sql, &sql_str, &result)) {
         OpenDeepDirectory(sourceDirectory, sql, result);
         sqldelegate.free_result(sql, result);
     }

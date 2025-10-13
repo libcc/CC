@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libcc.h>
-#include <libcc/widgets/sql.h>
+#include <libcc/sql.h>
 
 #include <locale.h>
 

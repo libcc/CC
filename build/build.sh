@@ -45,10 +45,4 @@ current_path=$(cd `dirname $0`; pwd)
 cd $current_path
 
 cd ..
-$MAKE_TOOL .a platform=$PLATFORM $DEBUG
-
-cd ./build
-
-$MAKE_TOOL $TARGET_NAME platform=$PLATFORM target=debug.malloc $DEBUG
-
-$MAKE_TOOL $TARGET_NAME platform=$PLATFORM target=widgets all=1 $DEBUG
+$MAKE_TOOL $TARGET_NAME platform=$PLATFORM $DEBUG libsmtp=1 libsql=1 url_request=1 openssl=1

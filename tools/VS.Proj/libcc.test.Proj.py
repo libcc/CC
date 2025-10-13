@@ -17,7 +17,7 @@ if __name__ == "__main__":
 	vcxproj.addSource(Sources)
 	vcxproj.addHeader(Headers)
 
-	Librarys = ["libcc.lib","libcc.widgets.lib"]
+	Librarys = ["libcc.lib"]
 	Macros = ["_WINDOWS","_CONSOLE","_CC_USE_OPENSSL_"]
 
 	vcxproj.addLibrarys("Debug",Librarys)
