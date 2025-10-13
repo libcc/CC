@@ -47,7 +47,7 @@ endif
 
 #MACROS += _CC_SYSLOG_RFC5424_
 
-LOCAL_SRC_FILES = \
+LOCAL_SRC_FILES += \
 	$(LIBCC_SRC_ROOT)/src/crypto/aes.o \
 	$(LIBCC_SRC_ROOT)/src/crypto/base16.o \
 	$(LIBCC_SRC_ROOT)/src/crypto/base58.o \
