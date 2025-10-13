@@ -13,60 +13,36 @@ struct _hmac {
  */
 _CC_API_PRIVATE(void) __hmac_md5_init(_cc_hash_t *ctx) {
     struct _hmac *hmac = (struct _hmac *)ctx->handle;
-    OSSL_PARAM params[] = {
-        OSSL_PARAM_construct_utf8_string("digest", "MD5", 0),
-        OSSL_PARAM_END
-    };
-    
+    OSSL_PARAM params[] = {{"digest", OSSL_PARAM_UTF8_STRING, "MD5", 0}, {NULL, 0, NULL, 0}};
     EVP_MAC_init(hmac->ctx, hmac->key, hmac->key_length, params);
 }
 _CC_API_PRIVATE(void) __hmac_sha1_init(_cc_hash_t *ctx) {
     struct _hmac *hmac = (struct _hmac *)ctx->handle;
-    OSSL_PARAM params[] = {
-        OSSL_PARAM_construct_utf8_string("digest", "SHA1", 0),
-        OSSL_PARAM_END
-    };
-    
+    OSSL_PARAM params[] = {{"digest", OSSL_PARAM_UTF8_STRING, "SHA1", 0}, {NULL, 0, NULL, 0}};
     EVP_MAC_init(hmac->ctx, hmac->key, hmac->key_length, params);
 }
 
 _CC_API_PRIVATE(void) __hmac_sha256_init(_cc_hash_t *ctx) {
     struct _hmac *hmac = (struct _hmac *)ctx->handle;
-    OSSL_PARAM params[] = {
-        OSSL_PARAM_construct_utf8_string("digest", "SHA256", 0),
-        OSSL_PARAM_END
-    };
-    
+    OSSL_PARAM params[] = {{"digest", OSSL_PARAM_UTF8_STRING, "SHA256", 0}, {NULL, 0, NULL, 0}};
     EVP_MAC_init(hmac->ctx, hmac->key, hmac->key_length, params);
 }
 
 _CC_API_PRIVATE(void) __hmac_sha224_init(_cc_hash_t *ctx) {
     struct _hmac *hmac = (struct _hmac *)ctx->handle;
-    OSSL_PARAM params[] = {
-        OSSL_PARAM_construct_utf8_string("digest", "SHA224", 0),
-        OSSL_PARAM_END
-    };
-    
+    OSSL_PARAM params[] = {{"digest", OSSL_PARAM_UTF8_STRING, "SHA224", 0}, {NULL, 0, NULL, 0}};
     EVP_MAC_init(hmac->ctx, hmac->key, hmac->key_length, params);
 }
 
 _CC_API_PRIVATE(void) __hmac_sha384_init(_cc_hash_t *ctx) {
     struct _hmac *hmac = (struct _hmac *)ctx->handle;
-    OSSL_PARAM params[] = {
-        OSSL_PARAM_construct_utf8_string("digest", "SHA384", 0),
-        OSSL_PARAM_END
-    };
-    
+    OSSL_PARAM params[] = {{"digest", OSSL_PARAM_UTF8_STRING, "SHA384", 0}, {NULL, 0, NULL, 0}}; 
     EVP_MAC_init(hmac->ctx, hmac->key, hmac->key_length, params);
 }
 
 _CC_API_PRIVATE(void) __hmac_sha512_init(_cc_hash_t *ctx) {
     struct _hmac *hmac = (struct _hmac *)ctx->handle;
-    OSSL_PARAM params[] = {
-        OSSL_PARAM_construct_utf8_string("digest", "SHA512", 0),
-        OSSL_PARAM_END
-    };
-    
+    OSSL_PARAM params[] = {{"digest", OSSL_PARAM_UTF8_STRING, "SHA512", 0}, {NULL, 0, NULL, 0}}; 
     EVP_MAC_init(hmac->ctx, hmac->key, hmac->key_length, params);
 }
 
