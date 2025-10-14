@@ -169,7 +169,7 @@ _CC_API_PUBLIC(size_t) _cc_base64_decode(const tchar_t *input, size_t length, by
         }
     }
 
-    output[j] = 0;
+    output[k] = 0;
 
-    return j;
+    return k;
 }

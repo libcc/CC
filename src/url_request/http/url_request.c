@@ -81,12 +81,12 @@ _CC_API_PRIVATE(int) is_chunked_transfer(_cc_rbtree_t *headers) {
 
 _CC_API_PRIVATE(int) get_content_encoding(_cc_rbtree_t *headers) {
     const _cc_http_header_t *data = _cc_http_header_find(headers, _T("Content-Encoding"));
-    return (data && !_tcsicmp(data->value, _T("gzip"))) ? _CC_URL_CONTENT_ENCODING_GZIP_ : _CC_URL_CONTENT_ENCODING_PLAINTEXT_;
+    return (data && _tcsicmp(data->value, _T("gzip")) == 0) ? _CC_URL_CONTENT_ENCODING_GZIP_ : _CC_URL_CONTENT_ENCODING_PLAINTEXT_;
 }
 
 _CC_API_PRIVATE(bool_t) is_keep_alive(_cc_rbtree_t *headers) {
     const _cc_http_header_t *data = _cc_http_header_find(headers, _T("Connection"));
-    return data ? !_tcsicmp(data->value, _T("keep-alive")) : false;
+    return (data && _tcsicmp(data->value, _T("keep-alive")) == 0);
 }
 
 /**/

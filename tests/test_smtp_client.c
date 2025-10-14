@@ -34,13 +34,12 @@ _CC_API_PRIVATE(bool_t) _net_cb(_cc_async_event_t* async, _cc_event_t* e, const 
                 if (p == nullptr) {
                     break;
                 }
-                _cc_logger_warin("%.d",(int)smtp->flag);
                 if ( !smtp->response_cb(smtp, (byte_t*)start, p - start) ) {
-                    _cc_logger_error("%.*s",(int)(p - start), start);
+                    _cc_logger_error("%d, %.*s",(int)smtp->state, (int)(p - start), start);
                     _cc_smtp_logout(smtp);
                     break;
                 } else {
-                    _cc_logger_info("%.*s",(int)(p - start), start);
+                    _cc_logger_info("%d,%.*s",(int)smtp->state, (int)(p - start), start);
                 }
                 offset += (p - start) + 1;
                 start = p + 1;
@@ -71,40 +70,12 @@ _CC_API_PRIVATE(bool_t) _net_cb(_cc_async_event_t* async, _cc_event_t* e, const 
 
     return true;
 }
-int times = 0;
-_CC_API_PRIVATE(bool_t) smtp_callback(_cc_smtp_t* smtp, uint32_t which) {
-    switch (which) {
-        case _CC_LIBSMTP_CONNECTED_:
-            printf("CC_LIBSMTP_CONNECTED\n");
-            _cc_smtp_login(smtp, "yourmail@163.com", "yourpassword");
-            break;
-        case _CC_LIBSMTP_LOGINED_:
-            printf("CC_LIBSMTP_LOGIN\n");
-            _cc_smtp_from_to(smtp, "yourmail@163.com", "libcc.cn@gmail.com");
-            break;
-        case _CC_LIBSMTP_LOGOUT_:
-            printf("CC_LIBSMTP_LOGOUT\n");
-            break;
-        case _CC_LIBSMTP_SEND_EMAIL_:
-            printf("CC_LIBSMTP_SEND_EMAIL\n");
-            _cc_send_email(smtp, "libcc", "test libcc-smtp.", "Hey libcc!<br/><br/><p>test test libcc-smtp!</p><br/><br/>Thanks, <br/>The libcc Team");
-            break;
-        case _CC_LIBSMTP_SEND_EMAIL_SUCCESS_:
-            printf("_CC_LIBSMTP_SEND_EMAIL_SUCCESS_\n");
-            if (times == 3) {
-                _cc_smtp_logout(smtp);
-                break;
-            }
-            times++;
-            _cc_smtp_from_to(smtp, "yourmail@163.com", "libcc.cn@gmail.com");
-            break;
-    }
-    return true;
-}
 
 int main(int argc, char *const arvg[]) {
     int c;
     _cc_smtp_t *smtp;
+    _cc_email_t *email1;
+    _cc_email_t *email2;
     _cc_event_t *event;
     _cc_async_event_t *async;
     struct sockaddr_in sa;
@@ -114,7 +85,17 @@ int main(int argc, char *const arvg[]) {
     async = _cc_get_async_event();
     _cc_assert(async != NULL);
 
-    smtp = _cc_alloc_smtp(_CC_SMTP_LOGIN_MODE_PLAIN_, _CC_SMTP_HTML_, smtp_callback);
+    smtp = _cc_alloc_smtp("your name", "libcc.cn@gmail.com");
+    _cc_smtp_set_login(smtp, _CC_SMTP_LOGIN_MODE_PLAIN_, "libcc.cn@gmail.com", "Password");
+    email1 = _cc_alloc_email(_CC_SMTP_HTML_, "test1", "libcc.cn@gmail.com");
+    email2 = _cc_alloc_email(_CC_SMTP_HTML_, nullptr, "libcc.cn@gmail.com");
+
+    _cc_set_email(email1, "title - libcc.1", "<div><h3>test libcc1</h3><p>Hey libcc!<br/><br/><p>test 1 libcc-smtp!</p><br/><br/>Thanks, <br/>The libcc Team</p><div>");
+    _cc_set_email(email2, "title - libcc.2", "<div><h3>test libcc2</h3><p>Hey libcc!<br/><br/><p>test 2 libcc-smtp!</p><br/><br/>Thanks, <br/>The libcc Team</p><div>");
+
+    _cc_smtp_set_email(smtp, email1);
+    _cc_smtp_set_email(smtp, email2);
+
     event = _cc_event_alloc(async, _CC_EVENT_CONNECT_|_CC_EVENT_TIMEOUT_|_CC_EVENT_READABLE_);
     _cc_assert(event != NULL);
     if (event == nullptr) {

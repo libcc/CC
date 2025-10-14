@@ -47,14 +47,18 @@ _CC_API_PUBLIC(_cc_sds_t) _cc_sds_alloc(const tchar_t *s, size_t length) {
     byte_t hdr_length;
     byte_t *hdr;
     byte_t *ptr;
-
     size_t ptr_length = 0;
+    
+    _cc_assert(s != nullptr || length != 0);
     if (s) {
-        length = (length == 0) ? _tcslen(s) : length;
+        if (length == 0) {
+            length = _tcslen(s);
+        }
+    } else if (length == 0) {
+        _cc_assert(false);
     }
 
-    type = (length == 0) ? _SDS_MASK_8_ : sds_rtype(length);
-    
+    type = sds_rtype(length);
     hdr_length = sds_hdr(type);
     hdr = (byte_t*)_cc_malloc(hdr_length + (length + sizeof(tchar_t)) * sizeof(tchar_t));
     ptr = hdr + hdr_length;

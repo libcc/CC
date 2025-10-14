@@ -51,54 +51,6 @@ struct _sds_hdr64 {
 };
 #pragma pack(pop)
 
-struct _sds_hdr {
-    size_t length;
-    size_t limit;
-    byte_t flags;
-};
-
-_CC_FORCE_INLINE_ void _cc_sdsx(const _cc_sds_t s, struct _sds_hdr *hdrx) {
-    byte_t *hdr = (byte_t*)s;
-    byte_t flags = *(hdr - sizeof(byte_t));
-    switch (flags & _SDS_MASK_) {
-        case _SDS_MASK_5_: {
-            struct _sds_hdr5 *h = (struct _sds_hdr5 *)(hdr - sizeof(struct _sds_hdr5));
-            hdrx->length = h->flags >> _SDS_BITS_;
-            hdrx->limit = 0;
-            hdrx->flags = h->flags;
-        }
-        break;
-        case _SDS_MASK_8_: {
-            struct _sds_hdr8 *h = (struct _sds_hdr8 *)(hdr - sizeof(struct _sds_hdr8));
-            hdrx->length = h->length;
-            hdrx->limit = h->limit;
-            hdrx->flags = h->flags;
-        }
-        break;
-        case _SDS_MASK_16_: {
-            struct _sds_hdr16 *h = (struct _sds_hdr16 *)(hdr - sizeof(struct _sds_hdr16));
-            hdrx->length = h->length;
-            hdrx->limit = h->limit;
-            hdrx->flags = h->flags;
-        }
-        break;
-        case _SDS_MASK_32_: {
-            struct _sds_hdr32 *h = (struct _sds_hdr32 *)(hdr - sizeof(struct _sds_hdr32));
-            hdrx->length = h->length;
-            hdrx->limit = h->limit;
-            hdrx->flags = h->flags;
-        }
-        break;
-        case _SDS_MASK_64_: {
-            struct _sds_hdr64 *h = (struct _sds_hdr64 *)(hdr - sizeof(struct _sds_hdr64));
-            hdrx->length = (size_t)h->length;
-            hdrx->limit = (size_t)h->limit;
-            hdrx->flags = h->flags;
-        }
-        break;
-    }
-}
-
 _CC_FORCE_INLINE_ size_t _cc_sds_length(const _cc_sds_t s) {
     byte_t *hdr = (byte_t*)s;
     byte_t flags = *(hdr - sizeof(byte_t));
@@ -133,9 +85,10 @@ _CC_FORCE_INLINE_ void _cc_sds_set_length(_cc_sds_t s, size_t length) {
     byte_t flags = *(hdr - sizeof(byte_t));
     switch (flags & _SDS_MASK_) {
         case _SDS_MASK_5_: {
-            // struct _sds_hdr5 *h = (struct _sds_hdr5 *)(hdr - sizeof(struct _sds_hdr5));
-            // if (length > (size_t)(h->flags >> _SDS_BITS_)) {
-            // }
+            struct _sds_hdr5 *h = (struct _sds_hdr5 *)(hdr - sizeof(struct _sds_hdr5));
+            if (length <= (size_t)(h->flags >> _SDS_BITS_)) {
+                h->flags = _SDS_MASK_5_ | ((byte_t)length << _SDS_BITS_);
+            }
         }
         break;
         case _SDS_MASK_8_: {

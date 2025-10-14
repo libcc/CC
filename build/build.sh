@@ -45,4 +45,4 @@ current_path=$(cd `dirname $0`; pwd)
 cd $current_path
 
 cd ..
-$MAKE_TOOL $TARGET_NAME platform=$PLATFORM $DEBUG libsmtp=1 libsql=1 url_request=1 openssl=1
+$MAKE_TOOL $TARGET_NAME platform=$PLATFORM $DEBUG
