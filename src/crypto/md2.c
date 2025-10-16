@@ -65,21 +65,21 @@ _CC_API_PUBLIC(void) _cc_md2_process(_cc_md2_t *ctx) {
 /*
  * MD2 process buffer
  */
-_CC_API_PUBLIC(void) _cc_md2_update(_cc_md2_t *ctx, const byte_t *input, size_t ilen) {
+_CC_API_PUBLIC(void) _cc_md2_update(_cc_md2_t *ctx, const byte_t *input, size_t length) {
     size_t fill;
 
-    while (ilen > 0) {
-        if (ilen > 16 - ctx->left) {
+    while (length > 0) {
+        if (length > 16 - ctx->left) {
             fill = 16 - ctx->left;
         } else {
-            fill = ilen;
+            fill = length;
         }
 
         memcpy(ctx->buffer + ctx->left, input, fill);
 
         ctx->left += fill;
         input += fill;
-        ilen -= fill;
+        length -= fill;
 
         if (ctx->left == 16) {
             ctx->left = 0;
