@@ -60,10 +60,10 @@ _CC_API_PUBLIC(bool_t) _cc_md4file(const tchar_t* filename, tchar_t* output);
  * @brief          Output = MD4( input buffer )
  *
  * @param input    buffer holding the  data
- * @param ilen     length of the input data
+ * @param length   length of the input data
  * @param output   MD4 checksum result
  */
-_CC_API_PUBLIC(void) _cc_md4(const byte_t* input, size_t ilen, tchar_t* output);
+_CC_API_PUBLIC(void) _cc_md4(const byte_t* input, size_t length, tchar_t* output);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
