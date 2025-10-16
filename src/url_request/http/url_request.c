@@ -151,7 +151,7 @@ _CC_API_PUBLIC(bool_t) _cc_url_request_response_body(_cc_url_request_t *request)
             /**/
             response->download_length += io->r.off;
             io->r.off = 0;
-            if (response->download_length == response->content_length) {
+            if (response->download_length >= response->content_length) {
                 request->state = _CC_HTTP_STATUS_ESTABLISHED_;
             }
         } else {
