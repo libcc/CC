@@ -126,7 +126,7 @@ _CC_API_PUBLIC(int) _cc_http_header_parser(_cc_http_header_fn_t fn, pvoid_t *arg
         }
 
         if (*(n - 1) == '\r') {
-            if ((size_t)(n - start) > 1024) {
+            if ((size_t)(n - start) > 4096) {
                 _cc_logger_error(_T("size of header is too bigger"));
                 return _CC_HTTP_ERROR_TOOLARGE_;
             }
