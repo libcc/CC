@@ -4,30 +4,9 @@
 #include <string.h>
 #include <zlib.h>
 
-byte_t* keys = (byte_t*)"a3a2836d-0a32-1c";
-#if 0
-int main (int argc, char * const argv[]) {
-    const char *text = "Hello World! 你好，中国！";
-    size_t len;
-    size_t outlen = 0;
-
-    tchar_t base64_en[256];
-    byte_t *encrypt_data = _cc_xxtea_encrypt((byte_t*)text, (int32_t)strlen(text), keys, &len);
-
-    outlen = _cc_base64_encode((byte_t*)encrypt_data, (int32_t)(len * sizeof(tchar_t)), base64_en, 256);
-    printf("%s\n", base64_en);
-    byte_t* decrypt_data = _cc_xxtea_decrypt(encrypt_data, len, keys, &len);
-    if (strncmp(text, (char*)decrypt_data, len) == 0) {
-        printf("success:%s!\n",decrypt_data);
-    }
-    else {
-        printf("fail!\n");
-    }
-    free(encrypt_data);
-    free(decrypt_data);
-    return 0;
-}
-#endif
+//char_t* keys = "a3a2836d-0a32-1c";
+char_t* keys = "ly876";
+char_t* sign = "leyou544";
 
 #define CHUNK 16384
 
@@ -138,7 +117,7 @@ DEF_FIAL:
     (void)deflateEnd(&strm);
     fclose(fp);
 
-    _cc_free_buf(&buf);
+    _cc_free_buf(buf);
     
     return false;
 }
@@ -218,17 +197,49 @@ void _xxtea_decrypt_file(const tchar_t* source_path, const tchar_t* save_path) {
     _cc_buf_t fdata;
     byte_t* output;
     size_t output_length;
+    size_t off = 0;
 
     if (_cc_buf_from_file(&fdata,source_path)) {
-        output = _cc_xxtea_decrypt(fdata.bytes, fdata.length, keys,
-                                   &output_length);
+        if (sign) {
+            off = strlen(sign);
+            if (memcmp(fdata.bytes, sign, off) != 0) {
+                printf("_cc_xxtea_decrypt sign error. %s\n", source_path);
+                _cc_free_buf(&fdata);
+                return ;
+            }
+        }
+        output = _cc_xxtea_decrypt(fdata.bytes + off, fdata.length - off, (byte_t*)keys, &output_length);
         if (output) {
+            size_t left = 0;
+            size_t bytes_write;
+            _cc_file_t* w = _cc_open_file(save_path, _T("w"));
+            if (w == nullptr) {
+                printf("_cc_xxtea_decrypt open file fail. %s\n", source_path);
+                _cc_free(output);
+                return;
+            }
+            do {
+                bytes_write = _cc_file_write(w, output + left, sizeof(byte_t), output_length - left);
+                if (bytes_write <= 0) {
+                    break;
+                }
+                left += bytes_write;
+            } while (output_length != left);
+            _cc_file_close(w);
+            if (output_length == left) {
+                printf("successfully. %s\n", save_path);
+            } else {
+                printf("fwrite fail. %s\n", save_path);
+            }
+#if 0
             int res = _gzip_inf(save_path, output, output_length);
             if (res != Z_OK) {
                 printf("_gzip_inf fail. %s\n", source_path);
             } else {
                 printf("successfully. %s\n", save_path);
             }
+#endif
+
             _cc_free(output);
         } else {
             printf("_cc_xxtea_decrypt fail. %s\n", source_path);
@@ -252,10 +263,13 @@ void _xxtea_encrypt_file(const tchar_t* source_path, const tchar_t* save_path) {
         size_t left;
         size_t bytes_write;
         output_length = 0;
-        output = _cc_xxtea_encrypt(fdata.bytes, fdata.length, keys,
+        output = _cc_xxtea_encrypt(fdata.bytes, fdata.length, (byte_t*)keys,
                                    &output_length);
         if (output && output_length > 0) {
             left = 0;
+            if (sign) {
+                _cc_file_write(w, sign, sizeof(char_t), strlen(sign));
+            }
             do {
                 bytes_write = _cc_file_write(w, output + left, sizeof(byte_t),
                                              output_length - left);
@@ -302,18 +316,23 @@ void finder(const tchar_t* source_path, const tchar_t* save_path) {
             continue;
         }
 
-        _sntprintf(fpath, _cc_countof(fpath), _T("%s/%s"), source_path,
-                   d->d_name);
-        _sntprintf(spath, _cc_countof(spath), _T("%s/%s"), save_path,
-                   d->d_name);
+        _sntprintf(fpath, _cc_countof(fpath), _T("%s/%s"), source_path, d->d_name);
+        _sntprintf(spath, _cc_countof(spath), _T("%s/%s"), save_path, d->d_name);
 
         if (d->d_type == DT_DIR) {
             finder(fpath, spath);
         } else {
             ext = _tcsrchr(spath, '.');
-            if (ext && _tcsicmp(".jsc", ext) == 0) {
-                _cc_mkdir(spath);
-                *(ext + 3) = 0;
+            if (ext) {
+                if (_tcsicmp(".jsc", ext) == 0) {
+                    _cc_mkdir(spath);
+                    *(ext + 3) = 0;
+                } else if (_tcsicmp(".luac", ext) == 0) {
+                    _cc_mkdir(spath);
+                    *(ext + 4) = 0;
+                } else {
+                    continue;
+                }
                 _xxtea_decrypt_file(fpath, spath);
             }
         }
@@ -325,48 +344,6 @@ void finder(const tchar_t* source_path, const tchar_t* save_path) {
 static int print_usage(void) {
     return fprintf(stdout,
                    _T("Usage:xxtea [-e,-d]... -f[File]...-o[File]\n"));
-}
-
-
-static void _injectJS(const tchar_t *source_path, const tchar_t* save_path) {
-    _cc_buf_t buf;
-    _cc_buf_t inject_file;
-    _cc_buf_t modify;
-    tchar_t *packageUrl;
-    size_t pos = 0;
-    FILE *wf;
-
-    // 解压注入
-    if (!_cc_buf_from_file(&inject_file,_T("./inject.js"))) {
-        return;
-    }
-
-    if (!_cc_buf_from_file(&buf,  source_path)) {
-        return;
-    }
-    _cc_alloc_buf(&modify, buf.length + 2480 + inject_file.length);
-    packageUrl = _tcsstr((tchar_t *)buf.bytes, "updateManifestUrls: function(");
-    if (packageUrl) {
-        _cc_AString_t updateManifestUrls = _cc_String(
-            "updateManifestUrls: function(e, t, n){return this.old_updateManifestUrls(e,dyad.packageUrl,n);},old_");
-        pos = (size_t)(packageUrl - (tchar_t *)buf.bytes);
-        _cc_buf_append(&modify, buf.bytes, pos);
-        _cc_buf_append(&modify, updateManifestUrls.data, updateManifestUrls.length);
-        _cc_buf_append(&modify, buf.bytes + pos, buf.length - pos);
-    }
-
-    _cc_buf_append(&modify, inject_file.bytes, inject_file.length);
-
-    wf = _tfopen(source_path, _T("wb"));
-    if (wf) {
-        fwrite(modify.bytes, sizeof(byte_t), modify.length, wf);
-        fclose(wf);
-    }
-
-    _xxtea_encrypt_file(source_path, save_path);
-    _cc_free_buf(&modify);
-    _cc_free_buf(&buf);
-    _cc_free_buf(&inject_file);
 }
 
 int main(int argc, char* const argv[]) {
@@ -390,10 +367,6 @@ int main(int argc, char* const argv[]) {
                 case 'd':
                 case 'D':
                     m = 2;
-                    break;
-                case 'i':
-                case 'I':
-                    m = 3;
                     break;
                 case 'f':
                 case 'F':
@@ -449,12 +422,7 @@ int main(int argc, char* const argv[]) {
         } else {
             _xxtea_decrypt_file(src, dest);
         }
-    } else if (m == 3) {
-        _xxtea_decrypt_file(src, dest);
-        _injectJS(dest, src);
     }
 
-    /*finder("/Users/Desktop/Inject/Android-Inject/WePoker",
-     "/Users/Desktop/Inject/Android-Inject/WePoker2");*/
     return 0;
 }
