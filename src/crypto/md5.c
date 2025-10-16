@@ -164,40 +164,40 @@ _CC_API_PUBLIC(void) _cc_md5_process(_cc_md5_t *ctx, const byte_t data[64]) {
 /*
  * MD5 process buffer
  */
-_CC_API_PUBLIC(void) _cc_md5_update(_cc_md5_t *ctx, const byte_t *input, size_t ilen) {
+_CC_API_PUBLIC(void) _cc_md5_update(_cc_md5_t *ctx, const byte_t *input, size_t length) {
     size_t fill;
     uint32_t left;
 
-    if (ilen == 0) {
+    if (length == 0) {
         return;
     }
 
     left = ctx->total[0] & 0x3F;
     fill = 64 - left;
 
-    ctx->total[0] += (uint32_t)ilen;
+    ctx->total[0] += (uint32_t)length;
     ctx->total[0] &= 0xFFFFFFFF;
 
-    if (ctx->total[0] < (uint32_t)ilen) {
+    if (ctx->total[0] < (uint32_t)length) {
         ctx->total[1]++;
     }
 
-    if (left && ilen >= fill) {
+    if (left && length >= fill) {
         memcpy((void *)(ctx->buffer + left), input, fill);
         _cc_md5_process(ctx, ctx->buffer);
         input += fill;
-        ilen -= fill;
+        length -= fill;
         left = 0;
     }
 
-    while (ilen >= 64) {
+    while (length >= 64) {
         _cc_md5_process(ctx, input);
         input += 64;
-        ilen -= 64;
+        length -= 64;
     }
 
-    if (ilen > 0) {
-        memcpy((void *)(ctx->buffer + left), input, ilen);
+    if (length > 0) {
+        memcpy((void *)(ctx->buffer + left), input, length);
     }
 }
 
