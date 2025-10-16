@@ -2,73 +2,31 @@
 #include <locale.h>
 #include <libcc/event.h>
 
-//A simple example program which connects to a daytime server and prints the response:
-//
+//A simple example program which connects to a server
 
-static bool_t onConnected(_cc_async_event_t *async, _cc_event_t *e);
-static bool_t onClose(_cc_async_event_t *async, _cc_event_t *e);
-static bool_t onRead(_cc_async_event_t *async, _cc_event_t *e);
-static bool_t onWrite(_cc_async_event_t *async, _cc_event_t *e);
-static bool_t onTimeout(_cc_async_event_t *async, _cc_event_t *e);
-
-static bool_t doEvent(_cc_async_event_t *async, _cc_event_t *e, const uint32_t which) {
+static bool_t _do_event_handler(_cc_async_event_t *async, _cc_event_t *e, const uint32_t which) {
     if (which & _CC_EVENT_CONNECT_) {
-        return onConnected(async, e);
+        return true;
     } else if (which & _CC_EVENT_CLOSED_) {
-        return onClose(async, e);
+        _cc_logger_info(_T("closed event %d"), e->ident);
+        return false;
     } else if (which & _CC_EVENT_READABLE_) {
-        if (!onRead(async, e)) {
-            return false;
-        }
+
     }
+
     if (which & _CC_EVENT_WRITABLE_) {
-        if (!onWrite(async, e)) {
-            return false;
-        }
+        
     }
+
     if (which & _CC_EVENT_TIMEOUT_) {
-        if (!onTimeout(async, e)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-static bool_t onConnected(_cc_async_event_t *async, _cc_event_t *e) {
-    _cc_logger_info(_T("connect to server!"));
-    return true;
-}
-
-static bool_t onClose(_cc_async_event_t *async, _cc_event_t *e) {
-    _cc_logger_debug(_T("%d onDisconnect."), e->ident);
-    return true;
-}
-
-static bool_t onRead(_cc_async_event_t *async, _cc_event_t *e) {
-    _cc_logger_debug(_T("%d onRead."), e->ident);
-    //time_t ulTime = 0;
-    byte_t buf[1024];
-    int32_t off = _cc_recv(e->fd, (byte_t*)&buf, 1024);
-    if (off <= 0) {
-        _tprintf(_T("TCP close %d\n"), e->fd);
+        _cc_logger_info(_T("timeout event %d"), e->ident);
         return false;
     }
-    buf[off] = 0;
-    _cc_logger_info(_T("%d,%s"), off, buf);
+
     return true;
 }
 
-static bool_t onWrite(_cc_async_event_t *async, _cc_event_t *e) {
-    _cc_logger_debug(_T("%d onWrite."), e->ident);
-    return false;
-}
-
-static bool_t onTimeout(_cc_async_event_t *async, _cc_event_t *e) {
-    _cc_logger_debug(_T("%d onTimeout."), e->ident);
-    return false;
-}
-
-bool_t addConnectListener(const tchar_t *host, uint16_t port) {
+bool_t _connect_server(const tchar_t *host, uint16_t port) {
     struct sockaddr_in sa;
     _cc_event_t *event;
     _cc_async_event_t *async = _cc_get_async_event();
@@ -81,7 +39,7 @@ bool_t addConnectListener(const tchar_t *host, uint16_t port) {
     }
 
     event->timeout = 10000;
-    event->callback = doEvent;
+    event->callback = _do_event_handler;
 
     _cc_inet_ipv4_addr(&sa, host, port);
     _cc_logger_info(_T("connect to %s:%d!"),host,port);
@@ -96,7 +54,7 @@ int main (int argc, char * const argv[]) {
     int c;
     _cc_alloc_async_event(0, nullptr);
 
-    addConnectListener(_T("time-nw.nist.gov"), 13);
+    _connect_server(_T("time-nw.nist.gov"), 13);
 
     while((c = getchar()) != 'q') {
         _cc_sleep(100);
